@@ -1,0 +1,197 @@
+.ui-sortable {
+  --_gap: var(--ui-space-2);
+  /* Items replace it with their content's corner radius once focused or dragged. */
+  --_radius: var(--ui-radius-md);
+
+  /* Items are measured relative to the list. */
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--_gap);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ui-sortable[data-layout='horizontal'] {
+  flex-direction: row;
+}
+
+/* A row overflows (put it in a scroll container) rather than squeezing its items. */
+.ui-sortable[data-layout='horizontal'] > .ui-sortable__item {
+  flex: none;
+}
+
+.ui-sortable[data-layout='grid'] {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(var(--ui-sortable-min-width, 220px), 100%), 1fr));
+}
+
+/* One-cell grid: the item content fills the slot (equal-height cards in a grid row). */
+.ui-sortable__item {
+  position: relative;
+  display: grid;
+  /* The slot is as wide as the item, not as its content: a no-wrap line inside truncates instead of
+     pushing the row's trailing actions past the edge. */
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
+  border-radius: var(--_radius);
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    box-shadow var(--ui-duration-fast) var(--ui-ease),
+    scale var(--ui-duration) var(--ui-ease-spring);
+}
+
+.ui-sortable__item[data-draggable] {
+  cursor: grab;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.ui-sortable__item:focus-visible {
+  box-shadow: var(--ui-focus-ring);
+}
+
+/* Lifted with the keyboard. */
+.ui-sortable__item[data-grabbed] {
+  z-index: 1;
+  box-shadow:
+    0 0 0 2px var(--ui-accent),
+    var(--ui-shadow-popover);
+  scale: 1.02;
+}
+
+/* The slot the dragged item will drop into. */
+.ui-sortable__item[data-placeholder] > * {
+  visibility: hidden;
+}
+
+.ui-sortable__item[data-placeholder]::after {
+  position: absolute;
+  inset: 0;
+  border: 1.5px dashed color-mix(in srgb, var(--ui-accent) 55%, transparent);
+  border-radius: var(--_radius);
+  background: color-mix(in srgb, var(--ui-accent) 6%, transparent);
+  content: '';
+}
+
+/* ── The copy that follows the pointer ── */
+.ui-sortable__overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: var(--ui-z-tooltip);
+  display: grid;
+  pointer-events: none;
+  will-change: transform;
+}
+
+@keyframes ui-sortable-lift {
+  from {
+    scale: 1;
+    filter: none;
+  }
+}
+
+/* Scale lives on an inner box: on the overlay it would also scale the translate from the corner. */
+.ui-sortable__lift {
+  display: grid;
+  min-width: 0;
+  filter: drop-shadow(0 12px 22px color-mix(in srgb, var(--ui-overlay) 70%, transparent));
+  scale: 1.03;
+  animation: ui-sortable-lift var(--ui-duration) var(--ui-ease-spring);
+  transition:
+    scale var(--ui-duration) var(--ui-ease),
+    filter var(--ui-duration) var(--ui-ease);
+}
+
+.ui-sortable__overlay[data-dropping] .ui-sortable__lift {
+  filter: none;
+  scale: 1;
+}
+
+html[data-ui-sorting] {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+html[data-ui-sorting],
+html[data-ui-sorting] * {
+  cursor: grabbing !important;
+}
+
+/* ── Handle ── */
+.ui-sortable__handle {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--ui-radius-sm);
+  background: transparent;
+  color: var(--ui-fg-faint);
+  font: inherit;
+  cursor: grab;
+  outline: none;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color var(--ui-duration-fast) var(--ui-ease),
+    color var(--ui-duration-fast) var(--ui-ease);
+}
+
+.ui-sortable__handle[data-decorative] {
+  cursor: inherit;
+}
+
+.ui-sortable__handle:not([data-decorative], :disabled):hover {
+  background: var(--ui-hover);
+  color: var(--ui-fg-muted);
+}
+
+.ui-sortable__handle:focus-visible {
+  box-shadow: var(--ui-focus-ring);
+}
+
+.ui-sortable__handle[aria-pressed='true'] {
+  background: var(--ui-accent-soft);
+  color: var(--ui-accent-text);
+}
+
+.ui-sortable__handle:disabled {
+  color: var(--ui-fg-disabled);
+  cursor: not-allowed;
+}
+
+@media (pointer: coarse) {
+  .ui-sortable__handle:not([data-decorative]) {
+    width: 32px;
+    height: 36px;
+  }
+}
+
+@media (forced-colors: active) {
+  .ui-sortable__item[data-grabbed] {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+
+  .ui-sortable__item[data-placeholder]::after {
+    border-color: Highlight;
+    background: Canvas;
+  }
+
+  .ui-sortable__handle[aria-pressed='true'] {
+    background: Highlight;
+    color: HighlightText;
+  }
+}

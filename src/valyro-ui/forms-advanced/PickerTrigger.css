@@ -1,0 +1,45 @@
+.ui-picker-trigger {
+  cursor: pointer;
+  text-align: start;
+  user-select: none;
+}
+
+.ui-picker-trigger:disabled {
+  cursor: not-allowed;
+}
+
+/* Open: the same emphasis as a hovered field (base.css), so the field never fades while its popup is up. */
+.ui-picker-trigger[data-state='open']:not(:focus-visible) {
+  border-color: var(--ui-field-border-hover, color-mix(in srgb, var(--ui-border-field), var(--ui-fg) 25%));
+}
+
+.ui-picker-trigger__value {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.ui-picker-trigger__value[data-placeholder] {
+  color: var(--ui-fg-subtle);
+}
+
+/* After base.css, so these replace the .ui-field shadows (Glass: a glass rim instead of the drop shadow,
+   and no ring while focus came from the pointer). */
+.ui-picker-trigger {
+  box-shadow: var(--ui-compound-field-shadow);
+}
+
+.ui-picker-trigger:focus-within {
+  box-shadow: var(--ui-picker-trigger-shadow-focus-within);
+}
+
+.ui-picker-trigger.ui-field:focus-visible {
+  box-shadow: var(--ui-highlight), var(--ui-focus-ring);
+}
+
+.ui-picker-trigger.ui-field[data-invalid='true']:focus-visible {
+  box-shadow: var(--ui-picker-trigger-shadow-focus-invalid);
+}

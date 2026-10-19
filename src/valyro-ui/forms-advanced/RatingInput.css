@@ -1,0 +1,125 @@
+.ui-rating-input {
+  --_color: var(--ui-rating-fg);
+  --_empty: var(--ui-rating-input-empty-fg);
+
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ui-space-3);
+}
+
+.ui-rating-input[data-invalid] {
+  --_empty: var(--ui-danger);
+}
+
+.ui-rating-input[data-disabled] {
+  opacity: var(--ui-disabled-opacity, 0.5);
+}
+
+.ui-rating-input__stars {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.ui-rating-input[data-size='lg'] .ui-rating-input__stars {
+  gap: var(--ui-space-1);
+}
+
+.ui-rating-input__star {
+  position: relative;
+  display: inline-flex;
+  border-radius: var(--ui-rating-input-star-radius);
+  color: var(--_empty);
+  transition: transform var(--ui-duration) var(--ui-ease-spring);
+}
+
+/* Lifted, so the next star does not cover a wide ring. */
+.ui-rating-input__star:has(.ui-rating-input__hit:focus-visible) {
+  z-index: 1;
+  box-shadow: var(--ui-focus-ring);
+}
+
+.ui-rating-input__fill {
+  position: absolute;
+  inset: 0;
+  display: inline-flex;
+  width: var(--_fill);
+  overflow: hidden;
+  color: var(--_color);
+  pointer-events: none;
+  transition: width var(--ui-duration-fast) var(--ui-ease);
+}
+
+/* A partly filled star (4.3, 3.5) keeps its whole contour in the fill color, so the fill reads as part of
+   one star, not a loose shard next to a faint empty outline. */
+.ui-rating-input__star[data-partial] > .ui-rating-input__empty {
+  color: var(--_color);
+}
+
+.ui-rating-input__star[data-filled] .ui-rating-input__fill {
+  filter: var(--ui-rating-input-fill-filter);
+}
+
+.ui-rating-input__fill > svg {
+  flex-shrink: 0;
+}
+
+.ui-rating-input__hit {
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
+  outline: none;
+}
+
+.ui-rating-input__hit[data-half='start'] {
+  inset-inline-end: 50%;
+}
+
+.ui-rating-input__hit[data-half='end'] {
+  inset-inline-start: 50%;
+}
+
+/* Press first, so a hover alone still lifts the star; the last rule covers both at once. */
+.ui-rating-input:not([data-readonly], [data-disabled]) .ui-rating-input__star:active {
+  transform: var(--ui-rating-input-star-transform-active);
+}
+
+.ui-rating-input:not([data-readonly], [data-disabled]) .ui-rating-input__star:hover {
+  transform: scale(1.15);
+}
+
+.ui-rating-input:not([data-readonly], [data-disabled]) .ui-rating-input__star:hover:active {
+  transform: var(--ui-rating-input-star-transform-hover-active);
+}
+
+.ui-rating-input[data-disabled] .ui-rating-input__hit {
+  cursor: not-allowed;
+}
+
+.ui-rating-input__caption {
+  min-width: 6em;
+  color: var(--ui-fg-muted);
+  font-size: var(--ui-text-sm);
+  font-weight: var(--ui-weight-medium);
+}
+
+.ui-rating-input[data-readonly] .ui-rating-input__caption {
+  min-width: 0;
+}
+
+/* Touch: stars sit side by side, so only the height grows to the 44px target (WCAG 2.5.5); a 4px gap keeps
+   20px stars 24px apart centre to centre (WCAG 2.5.8 spacing). */
+@media (pointer: coarse) {
+  .ui-rating-input__stars {
+    gap: max(4px, var(--ui-space-1));
+  }
+
+  .ui-rating-input__hit::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: max(100%, 44px);
+    translate: 0 -50%;
+  }
+}

@@ -1,0 +1,207 @@
+.ui-checkbox {
+  --_size: var(--ui-choice-size);
+  --_radius: var(--ui-checkbox-radius);
+
+  display: inline-flex;
+  align-items: flex-start;
+  gap: var(--ui-space-2);
+  color: var(--ui-fg);
+  font-size: var(--ui-text-md);
+  line-height: 1.43;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ui-checkbox[data-size='sm'] {
+  --_size: var(--ui-choice-size-sm);
+  --_radius: var(--ui-checkbox-radius-sm);
+  font-size: var(--ui-text-sm);
+}
+
+.ui-checkbox[data-size='lg'] {
+  --_size: var(--ui-choice-size-lg);
+  --_radius: var(--ui-checkbox-radius-lg);
+  gap: var(--ui-space-3);
+  font-size: var(--ui-text-lg);
+}
+
+.ui-checkbox[data-disabled] {
+  cursor: not-allowed;
+  opacity: var(--ui-disabled-opacity, 0.5);
+}
+
+.ui-checkbox__control {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  width: var(--_size);
+  height: var(--_size);
+  /* Centre the box on the first line of the label. */
+  margin-top: max(0px, calc((1lh - var(--_size)) / 2));
+}
+
+/* The native input stays in place (invisible) so clicks, focus and screen readers hit the real control. */
+.ui-checkbox__input {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+
+.ui-checkbox__box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border: 1px solid var(--ui-choice-border, var(--ui-fg-faint));
+  border-radius: var(--_radius);
+  background: var(--ui-bg);
+  color: var(--ui-primary-fg);
+  box-shadow: var(--ui-raised-shadow);
+  -webkit-backdrop-filter: var(--ui-blur);
+  backdrop-filter: var(--ui-blur);
+  transition:
+    background-color var(--ui-duration-fast) var(--ui-ease),
+    border-color var(--ui-duration-fast) var(--ui-ease),
+    box-shadow var(--ui-duration-fast) var(--ui-ease),
+    transform var(--ui-duration) var(--ui-ease-spring);
+}
+
+.ui-checkbox:hover:not([data-disabled]) .ui-checkbox__box {
+  border-color: var(--ui-fg-subtle);
+}
+
+.ui-checkbox[data-state='unchecked']:hover:not([data-disabled]) .ui-checkbox__box {
+  background: var(--ui-surface-2);
+}
+
+.ui-checkbox:is([data-state='checked'], [data-state='indeterminate']) .ui-checkbox__box {
+  border-color: var(--ui-primary);
+  background: var(--ui-checked-sheen) var(--ui-primary);
+  box-shadow: var(--ui-checked-shadow);
+}
+
+.ui-checkbox:is([data-state='checked'], [data-state='indeterminate']):hover:not([data-disabled]) .ui-checkbox__box {
+  border-color: var(--ui-choice-checked-border-color-hover);
+}
+
+.ui-checkbox[data-invalid] .ui-checkbox__box {
+  border-color: var(--ui-danger);
+}
+
+.ui-checkbox[data-invalid]:is([data-state='checked'], [data-state='indeterminate']) .ui-checkbox__box {
+  background: var(--ui-checked-sheen) var(--ui-danger);
+  color: var(--ui-danger-fg, #fff);
+}
+
+/* :where() keeps this at the specificity of the rule above it, so it only has to come later. */
+.ui-checkbox:where([data-invalid]):is([data-state='checked'], [data-state='indeterminate']):hover:not([data-disabled]) .ui-checkbox__box {
+  border-color: var(--ui-checkbox-invalid-checked-border-color-hover);
+}
+
+/* After the checked rules: the ring replaces their shadow. */
+.ui-checkbox__input:focus-visible + .ui-checkbox__box {
+  box-shadow: var(--ui-highlight), var(--ui-focus-ring);
+}
+
+.ui-checkbox:active:not([data-disabled]) .ui-checkbox__box {
+  transform: var(--ui-press-transform);
+}
+
+.ui-checkbox__icon {
+  width: 100%;
+  height: 100%;
+  stroke-width: var(--ui-checkbox-icon-stroke-width);
+  overflow: visible;
+  transform: var(--ui-checkbox-icon-transform);
+  transition: var(--ui-checkbox-icon-transition);
+}
+
+.ui-checkbox:is([data-state='checked'], [data-state='indeterminate']) .ui-checkbox__icon {
+  transform: none;
+}
+
+.ui-checkbox__check {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset var(--ui-duration) var(--ui-ease);
+}
+
+.ui-checkbox[data-state='checked'] .ui-checkbox__check {
+  stroke-dashoffset: 0;
+}
+
+.ui-checkbox__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.ui-checkbox__description {
+  color: var(--ui-fg-muted);
+  font-size: var(--ui-text-sm);
+}
+
+.ui-checkbox[data-size='sm'] .ui-checkbox__description {
+  font-size: var(--ui-text-xs);
+}
+
+@media (forced-colors: active) {
+  .ui-checkbox__box {
+    border-color: CanvasText;
+  }
+
+  .ui-checkbox:is([data-state='checked'], [data-state='indeterminate']) .ui-checkbox__box {
+    border-color: Highlight;
+    background: Highlight;
+    color: HighlightText;
+  }
+
+  .ui-checkbox__input:focus-visible + .ui-checkbox__box {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+}
+
+/* Touch: the row's hit area grows to 44px (WCAG 2.5.5) without changing the layout. */
+@media (pointer: coarse) {
+  .ui-checkbox {
+    position: relative;
+  }
+
+  .ui-checkbox::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+    translate: -50% -50%;
+  }
+}
+
+/* animation="spring": the check draws on a critically damped curve (an overshoot would open a gap in
+   the dashed stroke) and the mixed dash grows out of the centre with a bounce. The box bounce is a Web
+   Animation started on toggle (Checkbox.tsx). */
+.ui-checkbox[data-motion='spring'][data-state='checked'] .ui-checkbox__check {
+  transition: stroke-dashoffset calc(var(--ui-duration-slow) * 1.92) var(--ui-spring-smooth);
+}
+
+.ui-checkbox[data-motion='spring'][data-state='indeterminate'] .ui-checkbox__icon path {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ui-checkbox-dash calc(var(--ui-duration-slow) * 2.61) var(--ui-spring-bouncy);
+}
+
+@keyframes ui-checkbox-dash {
+  from {
+    transform: scaleX(0);
+  }
+}

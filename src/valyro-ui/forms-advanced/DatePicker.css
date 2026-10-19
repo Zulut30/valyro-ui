@@ -1,0 +1,4 @@
+.ui-date-picker__popover {
+  padding: var(--ui-popover-padding);
+  border-radius: var(--ui-picker-popover-radius);
+}

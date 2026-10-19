@@ -1,0 +1,244 @@
+/* The bar spans the top edge, or (Glass) floats inset from it as a capsule. */
+.ui-navbar {
+  container: ui-navbar / inline-size;
+  width: 100%;
+  padding: var(--ui-navbar-padding);
+}
+
+.ui-navbar[data-sticky] {
+  position: sticky;
+  top: 0;
+  z-index: var(--ui-z-sticky);
+}
+
+.ui-navbar__bar {
+  --_bar-h: var(--ui-navbar-bar-h);
+
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-6);
+  height: var(--_bar-h);
+  padding-block: 0;
+  padding-inline: var(--ui-navbar-bar-padding-inline);
+  border: var(--ui-material-border);
+  border-bottom: var(--ui-navbar-bar-border-bottom);
+  border-radius: var(--ui-navbar-bar-radius);
+  background: var(--ui-navbar-bar-bg);
+  box-shadow: var(--ui-inset-panel-shadow);
+  -webkit-backdrop-filter: var(--ui-blur-strong);
+  backdrop-filter: var(--ui-blur-strong);
+}
+
+.ui-navbar__brand {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--ui-space-2);
+  color: var(--ui-fg);
+  font-family: var(--ui-font-display, inherit);
+  font-size: var(--ui-text-lg);
+  font-weight: var(--ui-weight-semibold);
+  letter-spacing: var(--ui-tracking-tight);
+  white-space: nowrap;
+}
+
+.ui-navbar__nav {
+  flex: 1;
+  min-width: 0;
+}
+
+.ui-navbar__links {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ui-navbar__link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  height: var(--ui-navbar-link-h);
+  padding: 0 var(--ui-navbar-link-padding-x);
+  border: 0;
+  border-radius: var(--ui-navbar-link-radius);
+  corner-shape: var(--ui-control-corner-shape);
+  background: transparent;
+  color: var(--ui-nav-item-fg);
+  font: inherit;
+  font-size: var(--ui-text-md);
+  font-weight: var(--ui-navbar-link-weight, inherit);
+  letter-spacing: var(--ui-label-tracking, var(--ui-control-tracking, inherit));
+  text-transform: var(--ui-label-transform, inherit);
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  outline: none;
+  transition:
+    color var(--ui-duration-fast) var(--ui-ease),
+    background-color var(--ui-duration-fast) var(--ui-ease);
+}
+
+/* Before the hover rule: a theme may fill the active link (see the state rules below). */
+.ui-navbar__link[data-active] {
+  background: var(--ui-navbar-link-active-bg);
+  box-shadow: var(--ui-navbar-link-active-shadow);
+  color: var(--ui-fg);
+}
+
+.ui-navbar__link:hover {
+  background: var(--ui-hover);
+  color: var(--ui-fg);
+}
+
+/* The active link can be underlined on the bar's bottom edge, like Vercel's dashboard tabs. */
+.ui-navbar__nav .ui-navbar__link[data-active]::after {
+  content: var(--ui-navbar-link-underline-content);
+  position: absolute;
+  inset-inline: 10px;
+  bottom: calc((32px - var(--_bar-h)) / 2);
+  height: 2px;
+  border-radius: 2px 2px 0 0;
+  background: var(--ui-fg);
+}
+
+/* The inline links' active fill and underline as one indicator that slides to the new link (Navbar.tsx
+   measures it). Isolated, so the indicator (z-index -1) paints under the links. */
+.ui-navbar__nav .ui-navbar__links {
+  position: relative;
+  isolation: isolate;
+}
+
+.ui-navbar__indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  border-radius: var(--ui-navbar-link-radius);
+  corner-shape: var(--ui-control-corner-shape);
+  background: var(--ui-navbar-link-active-bg);
+  box-shadow: var(--ui-navbar-link-active-shadow);
+  pointer-events: none;
+  transition:
+    transform var(--ui-duration-slow) var(--ui-ease-spring),
+    width var(--ui-duration-slow) var(--ui-ease-spring);
+}
+
+.ui-navbar__indicator::after {
+  content: var(--ui-navbar-link-underline-content);
+  position: absolute;
+  inset-inline: 10px;
+  bottom: calc((32px - var(--_bar-h)) / 2);
+  height: 2px;
+  border-radius: 2px 2px 0 0;
+  background: var(--ui-fg);
+}
+
+.ui-navbar__links[data-indicator] .ui-navbar__link[data-active]:not(:hover) {
+  background: transparent;
+}
+
+.ui-navbar__links[data-indicator] .ui-navbar__link[data-active]:not(:focus-visible) {
+  box-shadow: none;
+}
+
+.ui-navbar__nav .ui-navbar__links[data-indicator] .ui-navbar__link[data-active]::after {
+  content: none;
+}
+
+.ui-navbar__link:active:not([data-active]) {
+  background: var(--ui-active);
+}
+
+.ui-navbar__link:focus-visible {
+  box-shadow: var(--ui-focus-ring);
+}
+
+/* A filled active link keeps its fill under the pointer and, where the theme says so, its depth when focused. */
+.ui-navbar__link[data-active]:hover {
+  background: var(--ui-navbar-link-active-bg-hover);
+}
+
+.ui-navbar__link[data-active]:focus-visible {
+  box-shadow: var(--ui-navbar-link-active-shadow-focus);
+}
+
+.ui-navbar__actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--ui-space-2);
+  margin-inline-start: auto;
+}
+
+.ui-navbar .ui-navbar__toggle {
+  display: none;
+}
+
+@container ui-navbar (max-width: 767px) {
+  .ui-navbar__bar {
+    gap: var(--ui-space-3);
+    height: 56px;
+    padding-block: 0;
+    padding-inline: var(--ui-navbar-bar-padding-inline-compact);
+  }
+
+  .ui-navbar__nav {
+    display: none;
+  }
+
+  .ui-navbar .ui-navbar__toggle {
+    display: inline-flex;
+  }
+}
+
+/* Sheet with the collapsed links (portaled under the bar) */
+.ui-navbar__sheet {
+  padding: var(--ui-space-2);
+  border-radius: var(--ui-navbar-sheet-radius);
+}
+
+.ui-navbar__sheet .ui-navbar__links {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.ui-navbar__sheet .ui-navbar__link {
+  width: 100%;
+  height: var(--ui-navbar-sheet-link-h);
+  padding: 0 var(--ui-navbar-sheet-link-padding-x);
+  border-radius: var(--ui-navbar-sheet-link-radius);
+  font-size: var(--ui-text-lg);
+}
+
+.ui-navbar__sheet .ui-navbar__link[data-active] {
+  background: var(--ui-navbar-sheet-link-active-bg);
+}
+
+/* Active pill (Windows 11), visible only when the theme sets --ui-active-indicator. */
+.ui-navbar__sheet .ui-navbar__link[data-active]::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  inset-inline-start: 0;
+  width: 3px;
+  height: 16px;
+  border-radius: 9999px;
+  background: var(--ui-active-indicator, transparent);
+  translate: 0 -50%;
+  pointer-events: none;
+}
+
+@media (forced-colors: active) {
+  .ui-navbar__indicator {
+    display: none;
+  }
+
+  .ui-navbar__link[data-active] {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 6px;
+  }
+}

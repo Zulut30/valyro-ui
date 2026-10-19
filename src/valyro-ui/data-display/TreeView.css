@@ -1,0 +1,178 @@
+.ui-tree {
+  --_indent: var(--ui-tree-indent);
+  --_pad: var(--ui-tree-pad);
+  --_chevron: 16px;
+  /* Never under 32px, whatever the theme's density: rows are click targets too. */
+  --_row-h: max(32px, var(--ui-tree-row-h));
+
+  margin: 0;
+  padding: 0;
+  color: var(--ui-fg);
+  font-size: var(--ui-tree-font-size);
+  list-style: none;
+}
+
+.ui-tree__group {
+  position: relative;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Indentation guide under the parent's chevron. */
+.ui-tree__group::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  inset-inline-start: calc(var(--_pad) + (var(--ui-tree-level) - 1) * var(--_indent) + var(--_chevron) / 2 - 0.5px);
+  width: 1px;
+  background: var(--ui-tree-guide-color);
+  pointer-events: none;
+  transition: background-color var(--ui-duration) var(--ui-ease);
+}
+
+/* The guide of the folder that holds the selection is emphasised, as in VS Code. */
+.ui-tree__group:has(> .ui-tree__item > .ui-tree__row[data-selected])::before {
+  background: var(--ui-tree-guide-color-selected);
+}
+
+.ui-tree__item {
+  outline: none;
+}
+
+.ui-tree__row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: var(--_row-h);
+  padding-block: 0;
+  padding-inline: calc(var(--_pad) + var(--ui-tree-level) * var(--_indent)) var(--ui-space-2);
+  border-radius: var(--ui-tree-row-radius);
+  cursor: pointer;
+  user-select: none;
+  transition: background-color var(--ui-duration-fast) var(--ui-ease);
+}
+
+.ui-tree__row:hover {
+  background: var(--ui-hover);
+}
+
+/* Pressed: the theme's pressed tint over the row's fill. */
+.ui-tree__row:active {
+  background-image: linear-gradient(var(--ui-active), var(--ui-active));
+}
+
+.ui-tree__row[data-selected] {
+  background: var(--ui-active);
+  font-weight: var(--ui-weight-medium);
+}
+
+/* Selection pill (Windows 11), visible only when the theme sets --ui-active-indicator. */
+.ui-tree__row[data-selected]::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  inset-inline-start: 0;
+  width: 3px;
+  height: 16px;
+  border-radius: 9999px;
+  background: var(--ui-active-indicator, transparent);
+  translate: 0 -50%;
+  pointer-events: none;
+}
+
+.ui-tree__item:focus-visible > .ui-tree__row {
+  z-index: 1;
+  box-shadow: var(--ui-focus-ring);
+}
+
+/* Selection while the tree has focus (Glass: Finder's accent selection; neutral grey otherwise). */
+.ui-tree:focus-within .ui-tree__row[data-selected] {
+  background: var(--ui-tree-row-bg-selected-focus);
+  box-shadow: var(--ui-tree-row-shadow-selected-focus);
+  color: var(--ui-tree-row-fg-selected-focus);
+}
+
+.ui-tree__item:focus-visible > .ui-tree__row[data-selected] {
+  box-shadow: var(--ui-tree-row-shadow-selected-focus-visible);
+}
+
+.ui-tree__chevron {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: var(--_chevron);
+  height: var(--_chevron);
+  color: var(--ui-fg-subtle);
+  transition: transform var(--ui-duration) var(--ui-ease-spring);
+}
+
+.ui-tree__chevron[data-open] {
+  transform: rotate(90deg);
+}
+
+.ui-tree__icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: var(--ui-fg-muted);
+}
+
+.ui-tree__icon[data-folder] {
+  color: var(--ui-tree-folder-fg);
+}
+
+.ui-tree:focus-within .ui-tree__row[data-selected] .ui-tree__icon {
+  color: var(--ui-tree-icon-fg-selected-focus);
+}
+
+.ui-tree:focus-within .ui-tree__row[data-selected] .ui-tree__chevron {
+  color: var(--ui-tree-chevron-fg-selected-focus);
+}
+
+.ui-tree__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  /* Direction from the label's own text, so the ellipsis lands at its end under dir="rtl" too. */
+  unicode-bidi: plaintext;
+}
+
+/* Touch: rows grow to the 44px minimum target (WCAG 2.5.5), like iOS list rows. */
+@media (pointer: coarse) {
+  .ui-tree {
+    --_row-h: 44px;
+  }
+}
+
+/* Forced colours drop the selection fill: mark the selected row with the system highlight. */
+@media (forced-colors: active) {
+  .ui-tree__row[data-selected] {
+    forced-color-adjust: none;
+    background: Highlight;
+    color: HighlightText;
+  }
+}
+
+/* animation="spring": a branch unfolds and folds (TreeView.tsx animates its height and opacity), clipped
+   meanwhile; the chevron turns with a bounce and the folder icon pops when it opens. */
+.ui-tree[data-motion='spring'] .ui-tree__group {
+  overflow: clip;
+}
+
+.ui-tree[data-motion='spring'] .ui-tree__chevron {
+  transition: transform calc(var(--ui-duration-slow) * 2.61) var(--ui-spring-bouncy);
+}
+
+.ui-tree[data-motion='spring'] .ui-tree__item[aria-expanded='true'] > .ui-tree__row .ui-tree__icon[data-folder] > svg {
+  animation: ui-tree-folder-pop calc(var(--ui-duration-slow) * 2.61) var(--ui-spring-bouncy);
+}
+
+@keyframes ui-tree-folder-pop {
+  from {
+    transform: scale(0.75);
+  }
+}

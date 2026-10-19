@@ -1,0 +1,292 @@
+.ui-stepper {
+  --_size: var(--ui-stepper-indicator-size);
+  --_line: var(--ui-stepper-line-w);
+
+  display: flex;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ui-stepper__step {
+  display: flex;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.ui-stepper__trigger {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+  /* Room for the focus ring without shifting the layout. */
+  margin: -4px;
+  padding: 4px;
+  border: 0;
+  border-radius: var(--ui-radius-sm);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  outline: none;
+}
+
+button.ui-stepper__trigger {
+  cursor: pointer;
+}
+
+/* The underline is always there, transparent at rest, so hovering fades it in. */
+button.ui-stepper__trigger .ui-stepper__title {
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
+  transition: text-decoration-color var(--ui-duration-fast) var(--ui-ease);
+}
+
+button.ui-stepper__trigger:hover .ui-stepper__title {
+  text-decoration-color: var(--ui-border-strong);
+}
+
+button.ui-stepper__trigger:active .ui-stepper__indicator {
+  transform: var(--ui-press-transform);
+}
+
+/* The current step takes focus after a passed step is chosen (it is no longer a button). */
+.ui-stepper__trigger:focus-visible {
+  outline: none;
+  box-shadow: var(--ui-focus-ring);
+}
+
+.ui-stepper__indicator {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--_size);
+  height: var(--_size);
+  border-radius: var(--ui-radius-full);
+  background: var(--ui-bg);
+  box-shadow: var(--ui-stepper-indicator-shadow);
+  color: var(--ui-fg-muted);
+  font-size: var(--ui-text-xs);
+  font-weight: var(--ui-weight-semibold);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  transition:
+    background-color var(--ui-duration) var(--ui-ease),
+    box-shadow var(--ui-duration) var(--ui-ease),
+    color var(--ui-duration) var(--ui-ease),
+    transform var(--ui-duration) var(--ui-ease-spring);
+  -webkit-backdrop-filter: var(--ui-blur);
+  backdrop-filter: var(--ui-blur);
+}
+
+.ui-stepper__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding-top: calc((var(--_size) - 20px) / 2);
+}
+
+.ui-stepper__title {
+  color: var(--ui-fg-muted);
+  font-size: var(--ui-text-md);
+  font-weight: var(--ui-weight-medium);
+  line-height: 20px;
+  letter-spacing: var(--ui-label-tracking, var(--ui-control-tracking, inherit));
+  text-transform: var(--ui-label-transform, inherit);
+}
+
+.ui-stepper__description {
+  color: var(--ui-fg-subtle);
+  font-size: var(--ui-text-sm);
+  line-height: 1.4;
+}
+
+.ui-stepper__connector {
+  flex: 1;
+  min-width: var(--ui-space-4);
+  height: var(--_line);
+  margin: calc(var(--_size) / 2 - var(--_line) / 2) var(--ui-space-3) 0;
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--_line);
+  background: var(--ui-stepper-connector-bg);
+}
+
+/* The passed colour fills the line from the step it leaves (scaleX from the inline start, scaleY down in
+   a column), so moving on draws the line instead of recolouring it. */
+.ui-stepper__connector::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--ui-stepper-connector-bg-passed);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform var(--ui-duration-slow) var(--ui-ease);
+}
+
+.ui-stepper__connector:dir(rtl)::after {
+  transform-origin: right center;
+}
+
+.ui-stepper__step[data-passed] .ui-stepper__connector::after {
+  transform: none;
+}
+
+/* States */
+.ui-stepper__step[data-state='complete'] .ui-stepper__indicator {
+  background: var(--ui-stepper-indicator-complete-bg);
+  box-shadow: var(--ui-stepper-indicator-complete-shadow);
+  color: var(--ui-primary-fg);
+}
+
+.ui-stepper__step[data-state='current'] .ui-stepper__indicator {
+  box-shadow: var(--ui-stepper-indicator-current-shadow);
+  color: var(--ui-action-fg);
+}
+
+.ui-stepper__step:is([data-state='complete'], [data-state='current']) .ui-stepper__title {
+  color: var(--ui-fg);
+}
+
+.ui-stepper__step[data-state='error'] .ui-stepper__indicator {
+  background: var(--ui-stepper-indicator-error-bg);
+  box-shadow: var(--ui-stepper-indicator-error-shadow);
+  color: var(--ui-danger-fg, #fff);
+}
+
+.ui-stepper__step[data-state='error'] .ui-stepper__title {
+  color: var(--ui-danger-text);
+}
+
+/* Horizontal: steps share the width, connectors stretch between them */
+.ui-stepper[data-orientation='horizontal'] {
+  container: ui-stepper / inline-size;
+  width: 100%;
+}
+
+.ui-stepper[data-orientation='horizontal'] .ui-stepper__step {
+  flex: 1 1 0;
+}
+
+.ui-stepper[data-orientation='horizontal'] .ui-stepper__step:last-child {
+  flex: 0 1 auto;
+}
+
+/* Narrow: indicators only, plus the current step's title. Hidden titles stay readable by screen readers. */
+@container ui-stepper (max-width: 559px) {
+  .ui-stepper__step {
+    min-width: auto;
+  }
+
+  .ui-stepper__description {
+    display: none;
+  }
+
+  .ui-stepper__step:not([aria-current='step']) .ui-stepper__text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .ui-stepper .ui-stepper__step[aria-current='step'] {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .ui-stepper__step[aria-current='step'] .ui-stepper__title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+/* Vertical: the connector runs down from the indicator to the next step */
+.ui-stepper[data-orientation='vertical'] {
+  flex-direction: column;
+}
+
+/* A step without a description is as tall as one with a one-line description (title 20px + 2px gap +
+   the description line), so every connector has the same length. */
+.ui-stepper[data-orientation='vertical'] .ui-stepper__step {
+  position: relative;
+  min-block-size: calc(
+    max(var(--_size), (var(--_size) - 20px) / 2 + 22px + var(--ui-text-sm) * 1.4) + var(--ui-space-6)
+  );
+  padding-bottom: var(--ui-space-6);
+}
+
+.ui-stepper[data-orientation='vertical'] .ui-stepper__step:last-child {
+  min-block-size: 0;
+  padding-bottom: 0;
+}
+
+.ui-stepper[data-orientation='vertical'] .ui-stepper__connector {
+  position: absolute;
+  top: calc(var(--_size) + 6px);
+  bottom: 6px;
+  inset-inline-start: calc(var(--_size) / 2 - var(--_line) / 2);
+  width: var(--_line);
+  height: auto;
+  min-width: 0;
+  margin: 0;
+}
+
+.ui-stepper[data-orientation='vertical'] .ui-stepper__connector::after {
+  transform: scaleY(0);
+  transform-origin: center top;
+}
+
+.ui-stepper[data-orientation='vertical'] .ui-stepper__step[data-passed] .ui-stepper__connector::after {
+  transform: none;
+}
+
+.ui-stepper[data-orientation='vertical'] .ui-stepper__trigger {
+  gap: var(--ui-space-3);
+}
+
+@media (forced-colors: active) {
+  .ui-stepper__indicator {
+    border: 1px solid CanvasText;
+  }
+
+  /* Without opting out, Chromium paints a Canvas backplate behind the step number, hiding it on Highlight. */
+  .ui-stepper__step:is([data-state='complete'], [data-state='current']) .ui-stepper__indicator {
+    forced-color-adjust: none;
+    border-color: Highlight;
+    background: Highlight;
+    color: HighlightText;
+  }
+
+  .ui-stepper__connector {
+    background: GrayText;
+  }
+
+  .ui-stepper__connector::after {
+    background: Highlight;
+  }
+}
+
+/* Touch: clickable steps get a hit area of at least 44×44px (WCAG 2.5.5). */
+@media (pointer: coarse) {
+  button.ui-stepper__trigger {
+    position: relative;
+  }
+
+  button.ui-stepper__trigger::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+    translate: -50% -50%;
+  }
+}

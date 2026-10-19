@@ -1,0 +1,257 @@
+.ui-file-uploader {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-3);
+  width: 100%;
+}
+
+.ui-file-uploader__dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ui-space-1);
+  width: 100%;
+  min-height: 168px;
+  padding: var(--ui-space-8) var(--ui-space-6);
+  border: 1px dashed var(--ui-border-strong);
+  border-radius: var(--ui-radius-card);
+  background: var(--ui-surface);
+  box-shadow: var(--ui-highlight);
+  -webkit-backdrop-filter: var(--ui-blur);
+  backdrop-filter: var(--ui-blur);
+  color: var(--ui-fg-muted);
+  font: inherit;
+  font-size: var(--ui-text-sm);
+  text-align: center;
+  cursor: pointer;
+  outline: none;
+  transition:
+    border-color var(--ui-duration-fast) var(--ui-ease),
+    background-color var(--ui-duration-fast) var(--ui-ease),
+    box-shadow var(--ui-duration-fast) var(--ui-ease);
+}
+
+.ui-file-uploader__dropzone:hover:not(:disabled) {
+  border-color: var(--ui-file-uploader-dropzone-border-color-hover);
+  background: var(--ui-file-uploader-dropzone-bg-hover);
+}
+
+.ui-file-uploader__dropzone:focus-visible {
+  border-color: var(--ui-accent);
+  box-shadow: var(--ui-highlight), var(--ui-focus-ring);
+}
+
+.ui-file-uploader__dropzone[aria-invalid='true'] {
+  border-color: var(--ui-danger);
+}
+
+.ui-file-uploader__dropzone[data-dragging] {
+  border-style: solid;
+  border-color: var(--ui-accent);
+  background: var(--ui-accent-soft);
+  box-shadow: var(--ui-file-uploader-dropzone-shadow-dragging);
+}
+
+.ui-file-uploader__dropzone[data-dragging]:focus-visible {
+  box-shadow: var(--ui-file-uploader-dropzone-shadow-dragging-focus);
+}
+
+.ui-file-uploader__dropzone[data-dragging] .ui-file-uploader__title {
+  color: var(--ui-accent-text);
+  font-weight: var(--ui-weight-medium);
+}
+
+/* Children must not steal drag events from the zone (avoids enter/leave flicker). */
+.ui-file-uploader__dropzone > * {
+  pointer-events: none;
+}
+
+.ui-file-uploader__dropzone:disabled {
+  cursor: not-allowed;
+  opacity: var(--ui-disabled-opacity, 0.55);
+}
+
+.ui-file-uploader__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--ui-file-uploader-icon-size);
+  height: var(--ui-file-uploader-icon-size);
+  margin-bottom: var(--ui-space-2);
+  border: var(--ui-tile-border);
+  border-radius: var(--ui-radius-full);
+  background: var(--ui-file-uploader-icon-bg);
+  color: var(--ui-file-uploader-icon-fg);
+  box-shadow: var(--ui-file-uploader-icon-shadow);
+  transition:
+    transform var(--ui-duration) var(--ui-ease-spring),
+    color var(--ui-duration-fast) var(--ui-ease);
+}
+
+.ui-file-uploader__dropzone[data-dragging] .ui-file-uploader__icon {
+  color: var(--ui-file-uploader-icon-fg-dragging);
+  transform: var(--ui-file-uploader-icon-transform-dragging);
+}
+
+.ui-file-uploader__title {
+  color: var(--ui-fg);
+  font-size: var(--ui-text-md);
+}
+
+.ui-file-uploader__browse {
+  color: var(--ui-file-uploader-browse-fg);
+  font-weight: var(--ui-weight-medium);
+  text-decoration: var(--ui-file-uploader-browse-decoration);
+  text-underline-offset: 3px;
+}
+
+.ui-file-uploader__hint {
+  color: var(--ui-fg-subtle);
+  font-size: var(--ui-text-xs);
+  /* Two even lines rather than one long line and an orphaned last word on narrow zones. */
+  text-wrap: balance;
+}
+
+/* ── File list ── */
+.ui-file-uploader__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ui-file-uploader__item {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-3);
+  padding-block: 10px;
+  padding-inline: var(--ui-space-3) var(--ui-space-2);
+  border: 1px solid var(--ui-glass-border);
+  border-radius: var(--ui-file-uploader-item-radius);
+  background: var(--ui-surface);
+  box-shadow: var(--ui-raised-shadow);
+  -webkit-backdrop-filter: var(--ui-blur);
+  backdrop-filter: var(--ui-blur);
+  animation: ui-slide-up var(--ui-duration) var(--ui-ease-spring);
+}
+
+.ui-file-uploader__item[data-status='error'] {
+  border-color: var(--ui-file-uploader-item-error-border-color);
+  background: var(--ui-file-uploader-item-error-bg);
+}
+
+.ui-file-uploader__file-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  overflow: hidden;
+  border-radius: var(--ui-file-uploader-file-icon-radius);
+  background: var(--ui-file-uploader-file-icon-bg);
+  color: var(--ui-action-fg-muted);
+}
+
+.ui-file-uploader__file-icon[data-preview] {
+  position: relative;
+  background: var(--ui-surface-2);
+}
+
+.ui-file-uploader__file-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: ui-fade-in var(--ui-duration) var(--ui-ease);
+}
+
+/* Hairline inside the thumbnail so white images keep an edge. */
+.ui-file-uploader__file-icon[data-preview]::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ui-fg) 10%, transparent);
+}
+
+.ui-file-uploader__item[data-status='error'] .ui-file-uploader__file-icon {
+  background: var(--ui-danger-soft);
+  color: var(--ui-danger-text);
+}
+
+.ui-file-uploader__item[data-status='error'] .ui-file-uploader__file-icon[data-preview] {
+  background: var(--ui-file-uploader-file-icon-preview-bg-error);
+}
+
+.ui-file-uploader__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.ui-file-uploader__row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.ui-file-uploader__name {
+  overflow: hidden;
+  color: var(--ui-fg);
+  font-size: var(--ui-text-sm);
+  font-weight: var(--ui-weight-medium);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  /* Direction from the label's own text, so the ellipsis lands at its end under dir="rtl" too. */
+  unicode-bidi: plaintext;
+}
+
+.ui-file-uploader__status-icon {
+  flex-shrink: 0;
+}
+
+.ui-file-uploader__item[data-status='done'] .ui-file-uploader__status-icon {
+  color: var(--ui-success);
+}
+
+.ui-file-uploader__item[data-status='error'] .ui-file-uploader__status-icon {
+  color: var(--ui-danger);
+}
+
+.ui-file-uploader__meta {
+  display: flex;
+  gap: 6px;
+  color: var(--ui-fg-subtle);
+  font-size: var(--ui-text-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.ui-file-uploader__meta > span + span::before {
+  content: '·';
+  margin-inline-end: 6px;
+}
+
+.ui-file-uploader__error {
+  color: var(--ui-danger-text);
+}
+
+.ui-file-uploader__progress {
+  margin-top: 6px;
+}
+
+.ui-file-uploader__remove {
+  flex-shrink: 0;
+  color: var(--ui-fg-muted);
+}
+
+@media (forced-colors: active) {
+  .ui-file-uploader__dropzone[data-dragging] {
+    border-color: Highlight;
+  }
+}

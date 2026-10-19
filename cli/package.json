@@ -1,0 +1,51 @@
+{
+  "name": "valyro-cli",
+  "version": "0.1.0",
+  "description": "Install ValyroUI React components into your project as source, with their dependencies; includes an MCP server and Agent Skills for AI assistants. ValyroUI Pro items install after `valyro login`.",
+  "keywords": [
+    "react",
+    "components",
+    "ui",
+    "valyro",
+    "valyro-ui",
+    "shadcn",
+    "registry",
+    "cli",
+    "mcp",
+    "model-context-protocol",
+    "agent-skills"
+  ],
+  "homepage": "https://valyro.xyz",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Zulut30/valyro-ui.git",
+    "directory": "cli"
+  },
+  "bugs": {
+    "url": "https://github.com/Zulut30/valyro-ui/issues"
+  },
+  "author": "Zulut30 (https://valyro.xyz)",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "valyro": "./bin/valyro.mjs"
+  },
+  "files": [
+    "bin",
+    "src",
+    "skills",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "prepack": "node -e \"require('fs').cpSync('../skills', 'skills', { recursive: true, filter: (f) => !f.endsWith('.test.mjs') })\"",
+    "postpack": "node -e \"require('fs').rmSync('skills', { recursive: true, force: true })\""
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}

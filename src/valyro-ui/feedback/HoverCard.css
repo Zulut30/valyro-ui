@@ -1,0 +1,6 @@
+.ui-hover-card {
+  width: 320px;
+  max-width: calc(100vw - 16px);
+  padding: var(--ui-hover-card-padding);
+  font-size: var(--ui-text-sm);
+}

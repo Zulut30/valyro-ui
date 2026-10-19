@@ -1,0 +1,138 @@
+.ui-alert {
+  --_c: var(--ui-info);
+  --_soft: var(--ui-info-soft);
+  --_text: var(--ui-info-text);
+  --_icon-w: var(--ui-alert-icon-w);
+
+  container: ui-alert / inline-size;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: var(--ui-alert-align);
+  gap: var(--ui-space-3);
+  width: 100%;
+  padding: var(--ui-alert-padding);
+  border: 1px solid var(--ui-alert-border-color, color-mix(in srgb, var(--_c) 30%, transparent));
+  border-radius: var(--ui-alert-radius);
+  /* A soft status fill (`initial` fill), or a status-tinted wash layer (`initial` wash; empty: none) over a
+     frosted surface. */
+  background:
+    var(--ui-alert-bg-wash, linear-gradient(100deg, color-mix(in srgb, var(--_c) 14%, transparent), transparent 55%),)
+    var(--ui-alert-bg, var(--_soft));
+  color: var(--ui-fg);
+  font-size: var(--ui-text-sm);
+  line-height: 20px;
+  box-shadow: var(--ui-raised-shadow);
+  -webkit-backdrop-filter: var(--ui-blur);
+  backdrop-filter: var(--ui-blur);
+}
+
+.ui-alert[data-variant='success'] {
+  --_c: var(--ui-success);
+  --_soft: var(--ui-success-soft);
+  --_text: var(--ui-success-text);
+}
+
+.ui-alert[data-variant='warning'] {
+  --_c: var(--ui-warning);
+  --_soft: var(--ui-warning-soft);
+  --_text: var(--ui-warning-text);
+}
+
+.ui-alert[data-variant='danger'] {
+  --_c: var(--ui-danger);
+  --_soft: var(--ui-danger-soft);
+  --_text: var(--ui-danger-text);
+}
+
+.ui-alert[data-variant='neutral'] {
+  --_c: var(--ui-gray);
+  --_soft: var(--ui-surface-2);
+  --_text: var(--ui-fg);
+}
+
+/* A bare status icon, or (`initial` fill, glow and colour) an iOS-style glyph circle in the status colour. */
+.ui-alert__icon {
+  display: var(--ui-alert-icon-display);
+  flex-shrink: 0;
+  place-items: var(--ui-alert-icon-place-items);
+  align-self: var(--ui-alert-icon-align);
+  width: var(--ui-alert-icon-size);
+  height: var(--ui-alert-icon-size);
+  margin-top: var(--ui-alert-icon-margin-top);
+  border-radius: var(--ui-alert-icon-radius);
+  background: var(--ui-alert-icon-bg, linear-gradient(180deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0) 60%), var(--_c));
+  box-shadow: var(
+    --ui-alert-icon-shadow,
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 4px 10px -4px color-mix(in srgb, var(--_c) 70%, transparent)
+  );
+  color: var(--ui-alert-icon-fg, var(--_text));
+}
+
+/* Free-form children (lists, links) read like the description: body ink, so only the icon and the title carry the
+   status colour (`initial` body colour). */
+.ui-alert__content {
+  flex: 1;
+  align-self: var(--ui-alert-content-align);
+  min-width: 0;
+  color: var(--ui-alert-body-fg, var(--ui-fg));
+}
+
+.ui-alert[data-variant='neutral'] .ui-alert__content {
+  color: var(--ui-fg-muted);
+}
+
+.ui-alert__title {
+  color: var(--ui-alert-title-fg, var(--_text));
+  font-weight: var(--ui-weight-semibold);
+}
+
+.ui-alert__description {
+  color: var(--ui-alert-body-fg, var(--ui-fg));
+}
+
+.ui-alert[data-variant='neutral'] .ui-alert__description {
+  color: var(--ui-fg-muted);
+}
+
+.ui-alert__title + .ui-alert__description {
+  margin-top: 2px;
+}
+
+/* Centred on the alert, and the close button with it, so both sit on one axis with even room above and below. */
+.ui-alert__action {
+  display: flex;
+  flex-shrink: 0;
+  align-self: center;
+  align-items: center;
+  gap: var(--ui-space-2);
+}
+
+.ui-alert:has(> .ui-alert__action) > .ui-alert__close {
+  align-self: center;
+}
+
+.ui-alert__close {
+  flex-shrink: 0;
+  align-self: var(--ui-alert-close-align);
+  margin: var(--ui-alert-close-margin);
+  color: var(--ui-alert-close-fg, var(--_text));
+}
+
+/* Narrow alerts move the actions under the text instead of squeezing it into a column. */
+@container ui-alert (max-width: 440px) {
+  .ui-alert__action {
+    order: 1;
+    flex-basis: 100%;
+    margin-inline-start: calc(var(--_icon-w) + var(--ui-space-3));
+  }
+
+  /* The actions moved under the text: the close button goes back to the first line. */
+  .ui-alert:has(> .ui-alert__action) > .ui-alert__close {
+    align-self: var(--ui-alert-close-align);
+  }
+
+  .ui-alert__content:first-child ~ .ui-alert__action {
+    margin-inline-start: 0;
+  }
+}

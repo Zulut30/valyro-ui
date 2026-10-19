@@ -1,0 +1,113 @@
+.ui-copy-button[data-status='copied'] .ui-button__icon {
+  color: var(--ui-success);
+  animation: ui-pop-in var(--ui-duration) var(--ui-ease-spring);
+}
+
+.ui-copy-button[data-status='error'] {
+  color: var(--ui-danger-text);
+}
+
+.ui-copy-button[data-status='error'] .ui-button__icon {
+  animation: ui-pop-in var(--ui-duration) var(--ui-ease-spring);
+}
+
+/* Idle and copied labels stack in one cell (only the active one is visible); the rare error label may widen it. */
+.ui-copy-button__labels {
+  display: inline-grid;
+  justify-items: center;
+}
+
+.ui-copy-button__labels > * {
+  grid-area: 1 / 1;
+  visibility: hidden;
+}
+
+.ui-copy-button__labels > [data-active] {
+  visibility: visible;
+}
+
+.ui-copy-button__labels > [data-label='error']:not([data-active]) {
+  display: none;
+}
+
+/* Solid buttons keep their own foreground; only the glyph changes. */
+.ui-copy-button:is([data-variant='primary'], [data-variant='accent'], [data-variant='danger'])[data-status] .ui-button__icon,
+.ui-copy-button:is([data-variant='primary'], [data-variant='accent'], [data-variant='danger'])[data-status='error'] {
+  color: inherit;
+}
+
+/* ── Snippet ── */
+.ui-copy-snippet {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-2);
+  width: 100%;
+  max-width: 100%;
+  min-height: var(--ui-control-h-md);
+  padding-block: 0;
+  padding-inline: var(--ui-space-3) 4px;
+  border: var(--ui-border-width, 1px) solid var(--ui-copy-snippet-border-color);
+  border-radius: var(--ui-radius-field);
+  background: var(--ui-copy-snippet-bg);
+  box-shadow: var(--ui-highlight);
+  -webkit-backdrop-filter: var(--ui-blur);
+  backdrop-filter: var(--ui-blur);
+  color: var(--ui-fg);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-sm);
+}
+
+.ui-copy-snippet__prompt {
+  flex-shrink: 0;
+  color: var(--ui-fg-subtle);
+  user-select: none;
+}
+
+/* A value longer than the field ends in an ellipsis (it still scrolls sideways, and the button copies all of it). */
+.ui-copy-snippet__code {
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  font: inherit;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  scrollbar-width: none;
+}
+
+.ui-copy-snippet__code::-webkit-scrollbar {
+  display: none;
+}
+
+.ui-copy-snippet__button {
+  flex-shrink: 0;
+  color: var(--ui-fg-muted);
+}
+
+/* animation="spring": from the first copy on, every icon swap (copy → check → copy) spins in with a
+   bounce and the label slides up into place. The icon element is new on each swap, so the animation
+   restarts by itself. */
+.ui-copy-button[data-swapped] .ui-button__icon > svg {
+  animation: ui-copy-button-swap calc(var(--ui-duration-slow) * 2.61) var(--ui-spring-bouncy);
+}
+
+.ui-copy-button[data-motion='spring'][data-status] .ui-button__icon {
+  animation: none;
+}
+
+.ui-copy-button[data-swapped] .ui-copy-button__labels > [data-active] {
+  animation: ui-copy-button-label calc(var(--ui-duration-slow) * 1.36) var(--ui-spring-snappy);
+}
+
+@keyframes ui-copy-button-swap {
+  from {
+    opacity: 0;
+    transform: scale(0.3) rotate(-90deg);
+  }
+}
+
+@keyframes ui-copy-button-label {
+  from {
+    opacity: 0;
+    transform: translateY(40%);
+  }
+}

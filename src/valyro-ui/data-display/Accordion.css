@@ -1,0 +1,158 @@
+/* Vercel: hairline-separated rows. Glass: an inset grouped list (iOS Settings) on a frosted slab. */
+.ui-accordion {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  overflow: var(--ui-accordion-overflow);
+  border: var(--ui-accordion-border);
+  border-radius: var(--ui-accordion-radius);
+  background: var(--ui-accordion-bg);
+  box-shadow: var(--ui-accordion-shadow);
+  -webkit-backdrop-filter: var(--ui-blur);
+  backdrop-filter: var(--ui-blur);
+}
+
+.ui-accordion__item {
+  position: var(--ui-accordion-item-position);
+  border-bottom: var(--ui-accordion-item-border);
+}
+
+/* Inset separator between rows (Glass only: `content` is `none` elsewhere). */
+.ui-accordion__item + .ui-accordion__item::before {
+  content: var(--ui-accordion-separator-content);
+  position: absolute;
+  top: 0;
+  inset-inline: var(--ui-space-4) 0;
+  height: 0.5px;
+  background: var(--ui-divider);
+}
+
+.ui-accordion__heading {
+  margin: 0;
+  font: inherit;
+}
+
+.ui-accordion__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ui-space-3);
+  width: 100%;
+  min-height: var(--ui-accordion-trigger-h);
+  padding: var(--ui-accordion-trigger-padding-y) var(--ui-accordion-padding-x);
+  border: 0;
+  border-radius: var(--ui-accordion-trigger-radius);
+  background: transparent;
+  color: var(--ui-fg);
+  font: inherit;
+  font-size: var(--ui-accordion-trigger-size);
+  font-weight: var(--ui-accordion-trigger-weight);
+  text-align: start;
+  cursor: pointer;
+  transition: var(--ui-accordion-trigger-transition) var(--ui-duration-fast) var(--ui-ease);
+}
+
+.ui-accordion__trigger:hover:not(:disabled) .ui-accordion__title {
+  text-decoration: var(--ui-accordion-title-decoration-hover);
+  text-underline-offset: 4px;
+}
+
+.ui-accordion__trigger:hover:not(:disabled) {
+  background: var(--ui-accordion-trigger-bg-hover);
+}
+
+.ui-accordion__trigger:active:not(:disabled) {
+  background: var(--ui-accordion-trigger-bg-active);
+}
+
+.ui-accordion__trigger:focus-visible {
+  outline: none;
+  box-shadow: var(--ui-accordion-trigger-shadow-focus);
+}
+
+.ui-accordion__trigger:disabled {
+  color: var(--ui-fg-disabled);
+  cursor: not-allowed;
+}
+
+.ui-accordion__trigger[aria-disabled='true'] {
+  cursor: default;
+}
+
+.ui-accordion__title {
+  flex: 1;
+  min-width: 0;
+  /* A title in another script keeps its punctuation in place; alignment follows the layout. */
+  unicode-bidi: plaintext;
+  text-align: match-parent;
+}
+
+/* Vercel: a muted chevron that flips when open. Glass (SwiftUI DisclosureGroup): an accent chevron pointing
+   right that turns down when open. */
+.ui-accordion__chevron {
+  flex-shrink: 0;
+  color: var(--ui-accordion-chevron-fg);
+  transform: var(--ui-accordion-chevron-transform);
+  transition: transform var(--ui-accordion-chevron-duration) var(--ui-ease-spring);
+}
+
+.ui-accordion__item[data-state='open'] .ui-accordion__chevron {
+  transform: var(--ui-accordion-chevron-transform-open);
+}
+
+.ui-accordion__trigger:disabled .ui-accordion__chevron {
+  color: var(--ui-accordion-chevron-fg-disabled);
+}
+
+.ui-accordion__item[data-state='open'] .ui-accordion__trigger {
+  font-weight: var(--ui-weight-medium);
+}
+
+/* Height animation without measuring: a 0fr → 1fr grid row. */
+.ui-accordion__panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition:
+    grid-template-rows var(--ui-duration-slow) var(--ui-ease),
+    opacity var(--ui-duration) var(--ui-ease);
+  opacity: 0;
+}
+
+.ui-accordion__panel[data-state='open'] {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.ui-accordion__panel-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.ui-accordion__content {
+  padding: 0 var(--ui-accordion-padding-x) var(--ui-space-4);
+  color: var(--ui-fg-muted);
+  font-size: var(--ui-text-md);
+  line-height: var(--ui-leading);
+}
+
+/* animation="spring": the row opens on a critically damped spring (an overshoot would bounce the page
+   below), the content drops into place and the chevron turns with a bounce. */
+.ui-accordion[data-motion='spring'] .ui-accordion__panel {
+  transition:
+    grid-template-rows calc(var(--ui-duration-slow) * 1.92) var(--ui-spring-smooth),
+    opacity var(--ui-duration) var(--ui-ease);
+}
+
+.ui-accordion[data-motion='spring'] .ui-accordion__content {
+  transform: translateY(-10px);
+  transition: transform var(--ui-duration) var(--ui-ease);
+}
+
+.ui-accordion[data-motion='spring'] .ui-accordion__panel[data-state='open'] .ui-accordion__content {
+  transform: none;
+  transition: transform calc(var(--ui-duration-slow) * 1.36) var(--ui-spring-snappy);
+}
+
+.ui-accordion[data-motion='spring'] .ui-accordion__chevron {
+  transition: transform calc(var(--ui-duration-slow) * 2.61) var(--ui-spring-bouncy);
+}

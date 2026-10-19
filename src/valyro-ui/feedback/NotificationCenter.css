@@ -1,0 +1,282 @@
+/* Bell trigger with an unread badge */
+.ui-notification-center__trigger .ui-button__icon {
+  position: relative;
+}
+
+.ui-notification-center__badge {
+  position: absolute;
+  top: -7px;
+  inset-inline-start: 9px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: var(--ui-radius-full);
+  background: var(--ui-danger);
+  box-shadow: var(--ui-notification-center-badge-shadow);
+  color: var(--ui-danger-fg, #fff);
+  font-size: 10px;
+  font-weight: var(--ui-weight-semibold);
+  font-variant-numeric: tabular-nums;
+  line-height: 16px;
+  text-align: center;
+  pointer-events: none;
+}
+
+/* Panel (doubled class beats the popover's own padding in both themes) */
+.ui-popover.ui-notification-center {
+  display: flex;
+  flex-direction: column;
+  width: min(380px, calc(100vw - 16px));
+  max-width: none;
+  max-height: min(540px, calc(100vh - 80px));
+  overflow: hidden;
+  padding: 0;
+}
+
+.ui-notification-center__header {
+  --_pad-start: var(--ui-space-4);
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ui-space-2);
+  min-height: 48px;
+  padding-block: var(--ui-space-2) 0;
+  padding-inline: var(--ui-space-4) var(--ui-space-2);
+  /* `initial`: the start side keeps the shorthand's physical value (left; the right one in RTL). */
+  padding-inline-start: var(--ui-notification-center-header-pad-start, var(--_pad-start));
+}
+
+.ui-notification-center__header:dir(rtl) {
+  --_pad-start: var(--ui-space-2);
+}
+
+.ui-notification-center__title {
+  margin: 0;
+  color: var(--ui-fg);
+  font-family: var(--ui-font-display, inherit);
+  font-size: var(--ui-notification-center-title-size);
+  font-weight: var(--ui-weight-semibold);
+}
+
+/* A row of filter buttons over a rule, or a segmented capsule. */
+.ui-notification-center__tabs {
+  display: flex;
+  gap: var(--ui-space-1);
+  margin: var(--ui-notification-center-tabs-margin);
+  padding: var(--ui-notification-center-tabs-padding);
+  border-bottom: var(--ui-notification-center-tabs-border-bottom);
+  border-radius: var(--ui-notification-center-tabs-radius);
+  background: var(--ui-notification-center-tabs-bg);
+}
+
+.ui-notification-center__tab {
+  display: inline-flex;
+  flex: var(--ui-notification-center-tab-flex);
+  align-items: center;
+  justify-content: var(--ui-notification-center-tab-justify);
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--ui-radius-button);
+  background: transparent;
+  color: var(--ui-fg-muted);
+  font: inherit;
+  font-size: var(--ui-text-sm);
+  font-weight: var(--ui-weight-medium);
+  cursor: pointer;
+  transition:
+    background-color var(--ui-duration-fast) var(--ui-ease),
+    color var(--ui-duration-fast) var(--ui-ease),
+    box-shadow var(--ui-duration-fast) var(--ui-ease);
+}
+
+.ui-notification-center__tab:hover {
+  color: var(--ui-fg);
+}
+
+.ui-notification-center__tab:active:not([aria-pressed='true']) {
+  background: var(--ui-active);
+}
+
+.ui-notification-center__tab[aria-pressed='true'] {
+  background: var(--ui-notification-center-tab-bg-selected);
+  box-shadow: var(--ui-raised-shadow);
+  color: var(--ui-fg);
+}
+
+.ui-notification-center__tab:focus-visible {
+  outline: none;
+  box-shadow: var(--ui-focus-ring);
+}
+
+.ui-notification-center__tab[aria-pressed='true']:focus-visible {
+  box-shadow: var(--ui-raised-shadow-focus);
+}
+
+.ui-notification-center__count {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: var(--ui-radius-full);
+  background: var(--ui-accent);
+  color: var(--ui-accent-fg);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  line-height: 18px;
+  text-align: center;
+}
+
+.ui-notification-center__list {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 0;
+  padding: var(--ui-notification-center-list-padding);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  list-style: none;
+}
+
+.ui-notification-center__item {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--ui-space-3);
+  width: 100%;
+  padding: 10px var(--ui-space-3);
+  border: 0;
+  border-radius: calc(var(--ui-radius-popover) - 4px);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+}
+
+button.ui-notification-center__item {
+  cursor: pointer;
+  transition:
+    background-color var(--ui-duration-fast) var(--ui-ease),
+    box-shadow var(--ui-duration-fast) var(--ui-ease);
+}
+
+button.ui-notification-center__item:hover {
+  background: var(--ui-hover);
+}
+
+button.ui-notification-center__item:active {
+  background: var(--ui-active);
+}
+
+button.ui-notification-center__item:focus-visible {
+  outline: none;
+  box-shadow: var(--ui-focus-ring);
+}
+
+/* A ringed circle, or an accent app-icon glyph. */
+.ui-notification-center__icon {
+  display: inline-grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--ui-notification-center-icon-radius);
+  background: var(--ui-notification-center-icon-bg);
+  box-shadow: var(--ui-notification-center-icon-shadow);
+  color: var(--ui-notification-center-icon-fg);
+}
+
+.ui-notification-center__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  font-size: var(--ui-text-sm);
+  line-height: 18px;
+}
+
+/* Lines in another script than the layout ("2 minutes ago" under dir="rtl") keep their own order. */
+.ui-notification-center__text > * {
+  unicode-bidi: plaintext;
+  text-align: match-parent;
+}
+
+.ui-notification-center__item-title {
+  color: var(--ui-fg);
+}
+
+.ui-notification-center__item[data-unread] .ui-notification-center__item-title {
+  font-weight: var(--ui-weight-medium);
+}
+
+.ui-notification-center__item-body {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--ui-fg-muted);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.ui-notification-center__time {
+  color: var(--ui-fg-subtle);
+  font-size: var(--ui-text-xs);
+}
+
+.ui-notification-center__dot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  margin-top: 5px;
+  border-radius: 50%;
+  background: var(--ui-accent);
+}
+
+.ui-notification-center__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ui-space-3);
+  padding: var(--ui-space-10) var(--ui-space-4);
+  color: var(--ui-fg-muted);
+  font-size: var(--ui-text-sm);
+  text-align: center;
+}
+
+/* Same tile as EmptyState size="sm", so every empty state in the kit reads alike. */
+.ui-notification-center__empty-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: var(--ui-tile-border);
+  border-radius: var(--ui-notification-center-empty-icon-radius);
+  background: var(--ui-notification-center-empty-icon-bg);
+  box-shadow: var(--ui-notification-center-empty-icon-shadow);
+  color: var(--ui-notification-center-empty-icon-fg);
+}
+
+.ui-notification-center__footer {
+  display: flex;
+  flex-shrink: 0;
+  justify-content: center;
+  padding: var(--ui-space-2);
+  border-top: 1px solid var(--ui-notification-center-footer-border-color);
+}
+
+/* Forced colors repaint backgrounds with Canvas: the pressed filter, unread dots and the badge need system colours. */
+@media (forced-colors: active) {
+  .ui-notification-center__tabs .ui-notification-center__tab[aria-pressed='true'] {
+    background: Highlight;
+    color: HighlightText;
+    forced-color-adjust: none;
+  }
+
+  .ui-notification-center__dot {
+    background: CanvasText;
+  }
+
+  .ui-notification-center__badge {
+    border: 1px solid CanvasText;
+  }
+}

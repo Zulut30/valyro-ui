@@ -1,0 +1,27 @@
+.ui-area-chart__stop {
+  stop-color: var(--_color);
+  stop-opacity: var(--ui-area-chart-fill-opacity);
+}
+
+.ui-area-chart__stop[data-pos='end'] {
+  stop-opacity: 0;
+}
+
+.ui-area-chart[data-stacked] .ui-area-chart__stop {
+  stop-opacity: var(--ui-area-chart-fill-opacity-stacked);
+}
+
+/* Stacked bands are flat: a gradient inside each band blurs the borders between them. */
+.ui-area-chart[data-stacked] .ui-area-chart__stop[data-pos='end'] {
+  stop-opacity: var(--ui-area-chart-fill-opacity-stacked);
+}
+
+.ui-area-chart__area {
+  stroke: var(--ui-chart-mark-stroke, none);
+  stroke-width: var(--ui-chart-mark-stroke-width, 1);
+  animation: ui-fade-in calc(var(--ui-duration-slow) * 3) var(--ui-ease) both;
+}
+
+.ui-area-chart .ui-chart__line {
+  stroke-width: var(--ui-area-chart-line-width);
+}

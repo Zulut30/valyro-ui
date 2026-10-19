@@ -1,0 +1,199 @@
+.ui-resizable-panels {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.ui-resizable-panels[data-direction='vertical'] {
+  flex-direction: column;
+}
+
+.ui-resizable-panel {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Keyboard steps, collapse and expand glide; drags follow the pointer 1:1. */
+.ui-resizable-panel[data-animate] {
+  transition:
+    flex-grow var(--ui-duration) var(--ui-ease),
+    visibility var(--ui-duration);
+}
+
+/* Pointer capture keeps the drag on the handle, but embedded documents (iframes) could still grab it. */
+.ui-resizable-panels[data-resizing] .ui-resizable-panel {
+  pointer-events: none;
+}
+
+/* ── Handle: a hairline with a wider invisible hit area ── */
+.ui-resizable-handle {
+  --_hit: 4px;
+
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 1px;
+  background: var(--ui-divider);
+  cursor: col-resize;
+  outline: none;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ui-resizable-handle[data-direction='vertical'] {
+  width: auto;
+  height: 1px;
+  cursor: row-resize;
+}
+
+@media (pointer: coarse) {
+  .ui-resizable-handle {
+    --_hit: 10px;
+  }
+}
+
+.ui-resizable-handle::before,
+.ui-resizable-handle::after {
+  position: absolute;
+  content: '';
+}
+
+.ui-resizable-handle::before {
+  inset-block: 0;
+  inset-inline: calc(-1 * var(--_hit));
+}
+
+.ui-resizable-handle[data-direction='vertical']::before {
+  inset-block: calc(-1 * var(--_hit));
+  inset-inline: 0;
+}
+
+/* Accent line: on hover after a beat (passing over doesn't flash), at once while dragging or focused. */
+.ui-resizable-handle::after {
+  inset-block: 0;
+  inset-inline: -1px;
+  background: var(--ui-resizable-handle-line-bg);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--ui-duration-fast) var(--ui-ease);
+}
+
+.ui-resizable-handle[data-direction='vertical']::after {
+  inset-block: -1px;
+  inset-inline: 0;
+}
+
+.ui-resizable-handle:hover::after {
+  opacity: 1;
+  transition-delay: 160ms;
+}
+
+.ui-resizable-handle:is([data-active], :focus-visible)::after {
+  opacity: 1;
+  transition-delay: 0s;
+}
+
+.ui-resizable-handle[data-disabled] {
+  cursor: default;
+}
+
+.ui-resizable-handle[data-disabled]::after {
+  display: none;
+}
+
+/* A theme whose grip makes the divider obvious can hide the accent line, which would only cover it. */
+.ui-resizable-handle:has(.ui-resizable-handle__grip):not(:focus-visible, [data-disabled])::after {
+  display: var(--ui-resizable-handle-grip-line-display);
+}
+
+/* ── Grip: a small outlined tab with dots, or (Glass) a soft frosted capsule like the iPadOS split-view divider ── */
+.ui-resizable-handle__grip {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--ui-resizable-handle-grip-w);
+  height: var(--ui-resizable-handle-grip-h);
+  border: var(--ui-resizable-handle-grip-border);
+  border-radius: var(--ui-resizable-handle-grip-radius);
+  background: var(--ui-resizable-handle-grip-bg);
+  box-shadow: var(--ui-highlight);
+  color: var(--ui-fg-faint);
+  transition: var(--ui-resizable-handle-grip-transition);
+  -webkit-backdrop-filter: var(--ui-blur);
+  backdrop-filter: var(--ui-blur);
+}
+
+.ui-resizable-handle__grip svg {
+  display: var(--ui-resizable-handle-grip-icon-display);
+  flex: none;
+}
+
+.ui-resizable-handle[data-direction='vertical'] .ui-resizable-handle__grip {
+  width: var(--ui-resizable-handle-grip-h);
+  height: var(--ui-resizable-handle-grip-w);
+}
+
+.ui-resizable-handle[data-direction='vertical'] .ui-resizable-handle__grip svg {
+  rotate: 90deg;
+}
+
+.ui-resizable-handle[data-active] .ui-resizable-handle__grip {
+  background: var(--ui-resizable-handle-grip-bg-active);
+}
+
+.ui-resizable-handle:is(:hover, [data-active]):not([data-disabled]) .ui-resizable-handle__grip {
+  border-color: var(--ui-accent);
+  background: var(--ui-resizable-handle-grip-bg-hover);
+  color: var(--ui-fg);
+  scale: var(--ui-resizable-handle-grip-scale-hover);
+}
+
+.ui-resizable-handle:focus-visible .ui-resizable-handle__grip {
+  border-color: var(--ui-accent);
+  box-shadow: var(--ui-focus-ring);
+}
+
+/* While dragging, the resize cursor holds everywhere, even off the handle. */
+html[data-ui-resizing] {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+html[data-ui-resizing='horizontal'],
+html[data-ui-resizing='horizontal'] * {
+  cursor: col-resize !important;
+}
+
+html[data-ui-resizing='vertical'],
+html[data-ui-resizing='vertical'] * {
+  cursor: row-resize !important;
+}
+
+@media (forced-colors: active) {
+  .ui-resizable-handle {
+    background: CanvasText;
+  }
+
+  .ui-resizable-handle::after {
+    background: Highlight;
+  }
+
+  .ui-resizable-handle__grip {
+    border: 1px solid CanvasText;
+    background: Canvas;
+    color: CanvasText;
+  }
+}

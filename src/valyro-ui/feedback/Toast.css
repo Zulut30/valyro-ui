@@ -1,0 +1,288 @@
+/*
+ * Sonner-style stack. Every toast is absolutely positioned at the list edge and
+ * moved with transforms, so re-stacking, expanding and exits all animate.
+ * --_index / --_offset / --_h / --_sx / --_sy come from Toaster.tsx.
+ */
+.ui-toaster {
+  --_width: 356px;
+  --_gap: 12px;
+  --_peek: 14px;
+  --_edge: var(--ui-space-6);
+
+  position: fixed;
+  z-index: var(--ui-z-toast);
+  width: var(--_width);
+  max-width: calc(100vw - 2 * var(--_edge));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  outline: none;
+  transition: height var(--ui-duration-slow) var(--ui-ease);
+}
+
+.ui-toaster[data-y='bottom'] {
+  --_dir: -1;
+  bottom: max(var(--_edge), env(safe-area-inset-bottom));
+}
+
+.ui-toaster[data-y='top'] {
+  --_dir: 1;
+  top: max(var(--_edge), env(safe-area-inset-top));
+}
+
+.ui-toaster[data-x='left'] {
+  left: var(--_edge);
+}
+
+.ui-toaster[data-x='right'] {
+  right: var(--_edge);
+}
+
+.ui-toaster[data-x='center'] {
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Phones: every position spans the width, like iOS banners. */
+@media (max-width: 600px) {
+  .ui-toaster[data-x] {
+    --_edge: var(--ui-space-3);
+    right: var(--_edge);
+    left: var(--_edge);
+    width: auto;
+    max-width: none;
+    transform: none;
+  }
+}
+
+/* ── Toast ── */
+.ui-toast {
+  --_c: var(--ui-fg);
+  --_y: calc(var(--_dir) * var(--_index) * var(--_peek));
+  --_scale: calc(1 - var(--_index) * 0.05);
+
+  position: absolute;
+  right: 0;
+  left: 0;
+  height: var(--_h, auto);
+  border-radius: var(--ui-toast-radius);
+  font-size: var(--ui-text-sm);
+  line-height: var(--ui-toast-line-height);
+  opacity: 1;
+  transform: translate(var(--_sx, 0px), var(--_sy, 0px)) translateY(var(--_y)) scale(var(--_scale));
+  touch-action: none;
+  user-select: none;
+  transition:
+    transform var(--ui-duration-slow) var(--ui-ease-spring),
+    opacity var(--ui-duration-slow) var(--ui-ease),
+    height var(--ui-duration-slow) var(--ui-ease);
+}
+
+/* Theme hook (e.g. an inverse snackbar); doubled class so it beats .ui-floating whatever the CSS order. */
+.ui-floating.ui-toast {
+  background-color: var(--ui-toast-bg, var(--ui-elevated));
+}
+
+.ui-toaster[data-y='bottom'] .ui-toast {
+  bottom: 0;
+}
+
+.ui-toaster[data-y='top'] .ui-toast {
+  top: 0;
+}
+
+.ui-toast:focus-visible {
+  box-shadow: var(--ui-highlight), var(--ui-shadow-popover), var(--ui-focus-ring);
+}
+
+.ui-toast[data-type='success'] { --_c: var(--ui-success); }
+.ui-toast[data-type='error'] { --_c: var(--ui-danger); }
+.ui-toast[data-type='warning'] { --_c: var(--ui-warning); }
+.ui-toast[data-type='info'] { --_c: var(--ui-info); }
+.ui-toast[data-type='loading'] { --_c: var(--ui-toast-loading-color); }
+
+/* Expanded: real heights, stacked with a gap */
+.ui-toaster[data-expanded] .ui-toast {
+  --_y: calc(var(--_dir) * var(--_offset));
+  --_scale: 1;
+}
+
+/* Collapsed: cards behind the front one take its height and hide their content */
+.ui-toaster:not([data-expanded]) .ui-toast:not([data-front]) {
+  height: var(--_front-h);
+}
+
+.ui-toaster:not([data-expanded]) .ui-toast:not([data-front]) :is(.ui-toast__inner, .ui-toast__close) {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.ui-toaster .ui-toast[data-hidden] {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Enter from (and exit to) the screen edge */
+.ui-toaster .ui-toast:not([data-mounted]) {
+  --_y: calc(var(--_dir) * -100%);
+  opacity: 0;
+}
+
+.ui-toaster .ui-toast[data-removed] {
+  opacity: 0;
+  pointer-events: none;
+  transition-duration: var(--ui-duration);
+}
+
+.ui-toaster .ui-toast[data-removed][data-front] {
+  --_y: calc(var(--_dir) * -100%);
+}
+
+.ui-toaster .ui-toast[data-removed]:not([data-front]) {
+  --_scale: 0.95;
+}
+
+.ui-toast[data-swiping] {
+  cursor: grabbing;
+  transition: none;
+}
+
+.ui-toast__clip {
+  height: 100%;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.ui-toast__inner {
+  display: flex;
+  align-items: var(--ui-toast-inner-align);
+  gap: var(--ui-toast-inner-gap);
+  padding: var(--ui-toast-inner-padding);
+  transition:
+    opacity var(--ui-duration) var(--ui-ease),
+    visibility var(--ui-duration);
+}
+
+/* A bare status icon, or (`initial` fill, glow and colour) an iOS app-icon glyph tile in the status colour. */
+.ui-toast__icon {
+  display: var(--ui-toast-icon-display);
+  flex-shrink: 0;
+  place-items: var(--ui-toast-icon-place-items);
+  width: var(--ui-toast-icon-size);
+  height: var(--ui-toast-icon-size);
+  margin-top: var(--ui-toast-icon-margin-top);
+  border-radius: var(--ui-toast-icon-radius);
+  background: var(--ui-toast-icon-bg, linear-gradient(180deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0) 60%), var(--_c));
+  box-shadow: var(
+    --ui-toast-icon-shadow,
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 4px 12px -4px color-mix(in srgb, var(--_c) 60%, transparent)
+  );
+  color: var(--ui-toast-icon-fg, var(--_c));
+}
+
+.ui-toast__icon > svg {
+  width: var(--ui-toast-icon-glyph-size);
+  height: var(--ui-toast-icon-glyph-size);
+}
+
+.ui-toast__content {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.ui-toast__title {
+  color: var(--ui-toast-fg, var(--ui-fg));
+  font-weight: var(--ui-weight-label);
+  letter-spacing: var(--ui-toast-title-tracking, inherit);
+}
+
+.ui-toast__description {
+  margin-top: 2px;
+  color: var(--ui-toast-fg, var(--ui-fg-muted));
+}
+
+/* Negative margins let a 28px button sit on a 20px text line without growing the toast. */
+.ui-toast__action {
+  flex-shrink: 0;
+  align-self: center;
+  margin-block: -4px;
+}
+
+/* Close badge on the top start corner (Sonner / macOS), shown on hover and focus. */
+.ui-toast__close {
+  position: absolute;
+  top: 0;
+  inset-inline-start: 0;
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 1px solid var(--ui-toast-close-border-color);
+  border-radius: var(--ui-radius-full);
+  background: var(--ui-elevated);
+  box-shadow: var(--ui-highlight), var(--ui-shadow-sm);
+  color: var(--ui-fg-muted);
+  cursor: pointer;
+  opacity: 0;
+  transform: translate(-35%, -35%);
+  transition:
+    opacity var(--ui-duration-fast) var(--ui-ease),
+    background-color var(--ui-duration-fast) var(--ui-ease),
+    color var(--ui-duration-fast) var(--ui-ease);
+}
+
+.ui-toast__close:dir(rtl) {
+  transform: translate(35%, -35%);
+}
+
+.ui-toast__close:hover {
+  background: var(--ui-surface-2);
+  color: var(--ui-fg);
+}
+
+.ui-toast__close:active {
+  background-image: linear-gradient(var(--ui-active), var(--ui-active));
+}
+
+.ui-toast__close:focus-visible {
+  outline: none;
+  box-shadow: var(--ui-raised-shadow-focus);
+}
+
+.ui-toast:hover .ui-toast__close,
+.ui-toast:focus-within .ui-toast__close {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .ui-toast__close {
+    opacity: 1;
+  }
+}
+
+/* ── Rich colors: the whole card takes the status tint ── */
+.ui-toaster[data-rich-colors] .ui-toast[data-type='success'] { --_text: var(--ui-success-text); }
+.ui-toaster[data-rich-colors] .ui-toast[data-type='error'] { --_text: var(--ui-danger-text); }
+.ui-toaster[data-rich-colors] .ui-toast[data-type='warning'] { --_text: var(--ui-warning-text); }
+.ui-toaster[data-rich-colors] .ui-toast[data-type='info'] { --_text: var(--ui-info-text); }
+
+.ui-toaster[data-rich-colors] .ui-toast:is([data-type='success'], [data-type='error'], [data-type='warning'], [data-type='info']) {
+  border-color: color-mix(in srgb, var(--_c) 28%, transparent);
+  background: color-mix(in srgb, var(--_c) 9%, var(--ui-elevated));
+}
+
+.ui-toaster[data-rich-colors] .ui-toast:is([data-type='success'], [data-type='error'], [data-type='warning'], [data-type='info']) .ui-toast__title {
+  color: var(--_text);
+}
+
+/* A glyph tile keeps its own symbol colour; only the text takes the tint. */
+.ui-toaster[data-rich-colors] .ui-toast:is([data-type='success'], [data-type='error'], [data-type='warning'], [data-type='info']) .ui-toast__icon {
+  color: var(--ui-toast-icon-fg, var(--_text));
+}
+
+.ui-toaster[data-rich-colors] .ui-toast:is([data-type='success'], [data-type='error'], [data-type='warning'], [data-type='info']) .ui-toast__description {
+  color: color-mix(in srgb, var(--_text) 80%, var(--ui-fg));
+}

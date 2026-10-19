@@ -1,0 +1,96 @@
+.ui-time-picker__popover {
+  padding: var(--ui-popover-padding);
+  border-radius: var(--ui-picker-popover-radius);
+}
+
+/* `inline`: the same panel in the page flow, under the field, as wide as its columns. */
+.ui-time-picker__popover[data-inline] {
+  align-self: flex-start;
+  width: max-content;
+  max-width: 100%;
+  margin-block-start: var(--ui-space-1);
+}
+
+.ui-time-picker__columns {
+  display: flex;
+  /* Clock digits read hours→minutes left to right in every script, like the trigger's "10:30". */
+  direction: ltr;
+}
+
+.ui-time-picker__column {
+  --_col-h: var(--ui-time-picker-column-h);
+  --_opt-h: var(--ui-time-picker-option-h);
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: var(--ui-time-picker-column-w);
+  height: var(--_col-h);
+  /* Lets the first and last options scroll to the middle row too, like a wheel. */
+  padding: calc((var(--_col-h) - var(--_opt-h)) / 2) var(--ui-space-1);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-radius: var(--ui-time-picker-column-radius);
+  outline: none;
+  scrollbar-width: none;
+  /* Options fade out towards the edges, wheel-style. */
+  -webkit-mask-image: linear-gradient(transparent, #000 16%, #000 84%, transparent);
+  mask-image: linear-gradient(transparent, #000 16%, #000 84%, transparent);
+}
+
+.ui-time-picker__column::-webkit-scrollbar {
+  display: none;
+}
+
+.ui-time-picker__column + .ui-time-picker__column {
+  border-top-left-radius: var(--ui-time-picker-column-joined-radius);
+  border-bottom-left-radius: var(--ui-time-picker-column-joined-radius);
+  border-left: 1px solid var(--ui-divider);
+}
+
+/* The ring goes on the selected option: the column's own edges fade out under the mask. */
+.ui-time-picker__column:focus-visible .ui-time-picker__option[data-selected] {
+  box-shadow: var(--ui-time-picker-option-selected-shadow), var(--ui-focus-ring);
+}
+
+.ui-time-picker__column:focus-visible:not(:has([data-selected])) {
+  background: var(--ui-hover);
+}
+
+.ui-time-picker__option {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  height: var(--_opt-h);
+  border-radius: var(--ui-time-picker-option-radius);
+  color: var(--ui-fg-muted);
+  font-size: var(--ui-time-picker-option-size);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  user-select: none;
+  transition:
+    background-color var(--ui-duration-fast) var(--ui-ease),
+    color var(--ui-duration-fast) var(--ui-ease);
+}
+
+.ui-time-picker__option:hover {
+  background: var(--ui-hover);
+  color: var(--ui-fg);
+}
+
+.ui-time-picker__option[data-selected] {
+  background: var(--ui-picker-selected-bg);
+  color: var(--ui-primary-fg);
+  font-weight: var(--ui-weight-medium);
+  box-shadow: var(--ui-time-picker-option-selected-shadow);
+}
+
+@media (forced-colors: active) {
+  .ui-time-picker__columns .ui-time-picker__option[data-selected] {
+    background: Highlight;
+    color: HighlightText;
+    forced-color-adjust: none;
+  }
+}

@@ -1,0 +1,273 @@
+.ui-switch {
+  --_w: var(--ui-switch-w);
+  --_h: var(--ui-switch-h);
+  --_pad: 2px;
+  --_knob: calc(var(--_h) - 2 * var(--_pad));
+  /* Knob width (a capsule when the stretch is above 1); grows while pressed. */
+  --_kw: calc(var(--_knob) * var(--ui-switch-knob-stretch));
+
+  display: inline-flex;
+  align-items: flex-start;
+  gap: var(--ui-space-3);
+  color: var(--ui-fg);
+  font-size: var(--ui-text-md);
+  line-height: 1.43;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ui-switch[data-size='sm'] {
+  --_w: var(--ui-switch-w-sm);
+  --_h: var(--ui-switch-h-sm);
+  gap: var(--ui-space-2);
+  font-size: var(--ui-text-sm);
+}
+
+.ui-switch[data-size='lg'] {
+  --_w: var(--ui-switch-w-lg);
+  --_h: var(--ui-switch-h-lg);
+  font-size: var(--ui-text-lg);
+}
+
+.ui-switch[data-disabled] {
+  cursor: not-allowed;
+  opacity: var(--ui-disabled-opacity, 0.5);
+}
+
+.ui-switch__control {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  width: var(--_w);
+  height: var(--_h);
+  margin-top: max(0px, calc((1lh - var(--_h)) / 2));
+}
+
+.ui-switch__input {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+
+.ui-switch__track {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--ui-radius-full);
+  background: var(--ui-surface-3);
+  box-shadow: var(--ui-switch-track-shadow);
+  transition:
+    background-color var(--ui-duration) var(--ui-ease),
+    box-shadow var(--ui-duration-fast) var(--ui-ease);
+}
+
+.ui-switch__knob {
+  position: absolute;
+  top: var(--_pad);
+  inset-inline-start: var(--_pad);
+  z-index: 1;
+  width: var(--_kw);
+  height: var(--_knob);
+  border-radius: var(--ui-radius-full);
+  background: var(--ui-switch-knob-bg-off, var(--ui-switch-knob-bg, #fff));
+  box-shadow: var(--ui-switch-knob-shadow);
+  pointer-events: none;
+  transition: var(--ui-switch-knob-transition);
+}
+
+.ui-switch[data-checked] .ui-switch__knob {
+  inset-inline-start: calc(100% - var(--_kw) - var(--_pad));
+  background: var(--ui-switch-knob-bg, #fff);
+}
+
+.ui-switch:active:not([data-disabled]) {
+  --_kw: calc(var(--_knob) * var(--ui-switch-knob-stretch) + var(--_h) * var(--ui-switch-knob-stretch-active));
+}
+
+/* Pressing: Glass turns the knob into a magnified glass lens. */
+.ui-switch:active:not([data-disabled]) .ui-switch__knob {
+  background: var(--ui-switch-knob-bg-active);
+  box-shadow: var(--ui-switch-knob-shadow-active);
+  transform: var(--ui-switch-knob-transform-active);
+  -webkit-backdrop-filter: var(--ui-blur);
+  backdrop-filter: var(--ui-blur);
+}
+
+.ui-switch:hover:not([data-disabled], [data-checked]) .ui-switch__track {
+  background: var(--ui-switch-track-bg-hover);
+}
+
+.ui-switch[data-checked] .ui-switch__track {
+  background: var(--ui-switch-track-bg-checked);
+  box-shadow: var(--ui-switch-track-shadow-checked);
+}
+
+.ui-switch__input:focus-visible ~ .ui-switch__track {
+  box-shadow: var(--ui-focus-ring);
+}
+
+.ui-switch__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  /* When the track is taller than a text line, centre the first line on it. */
+  margin-top: max(0px, calc((var(--_h) - 1lh) / 2));
+}
+
+.ui-switch__description {
+  color: var(--ui-fg-muted);
+  font-size: var(--ui-text-sm);
+}
+
+@media (forced-colors: active) {
+  .ui-switch__track {
+    border: 1px solid CanvasText;
+  }
+
+  /* The pressed-knob selectors out-rank the press rule above. */
+  .ui-switch__knob,
+  .ui-switch:active:not([data-disabled]) .ui-switch__knob {
+    background: CanvasText;
+  }
+
+  .ui-switch[data-checked] .ui-switch__track {
+    border-color: Highlight;
+    background: Highlight;
+  }
+
+  .ui-switch[data-checked] .ui-switch__knob,
+  .ui-switch[data-checked]:active:not([data-disabled]) .ui-switch__knob {
+    background: HighlightText;
+  }
+
+  .ui-switch__input:focus-visible ~ .ui-switch__track {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+}
+
+/* Touch: the hit area grows to 44px (WCAG 2.5.5) without changing the layout. */
+@media (pointer: coarse) {
+  .ui-switch {
+    position: relative;
+  }
+
+  .ui-switch::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+    translate: -50% -50%;
+  }
+}
+
+/* ── Icons (startIcon / endIcon on the track, thumbIcon in the knob) ── */
+.ui-switch__icon {
+  position: absolute;
+  top: var(--_pad);
+  display: grid;
+  place-items: center;
+  width: var(--_knob);
+  height: var(--_knob);
+  transition:
+    opacity var(--ui-duration) var(--ui-ease),
+    scale var(--ui-duration) var(--ui-ease);
+}
+
+.ui-switch__icon[data-side='start'] {
+  inset-inline-start: var(--_pad);
+  color: var(--ui-switch-knob-bg, #fff);
+}
+
+.ui-switch__icon[data-side='end'] {
+  inset-inline-end: var(--_pad);
+  color: var(--ui-fg-muted);
+}
+
+/* The side under the knob shrinks away, so no edge of it peeks out around the knob. */
+.ui-switch:not([data-checked]) .ui-switch__icon[data-side='start'],
+.ui-switch[data-checked] .ui-switch__icon[data-side='end'] {
+  opacity: 0;
+  scale: 0.5;
+}
+
+/* Never below 10px, where a sun or a moon stops reading as one. */
+.ui-switch__icon > svg,
+.ui-switch__thumb-icon > svg {
+  width: max(62%, 10px);
+  height: max(62%, 10px);
+}
+
+/* The small knob has no room for a legible icon. */
+.ui-switch[data-size='sm'] :is(.ui-switch__icon, .ui-switch__thumb-icon) {
+  display: none;
+}
+
+.ui-switch__knob:has(.ui-switch__thumb-icon) {
+  display: grid;
+  place-items: center;
+}
+
+.ui-switch__thumb-icon {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  color: var(--ui-fg-muted);
+  transition:
+    color var(--ui-duration) var(--ui-ease),
+    rotate var(--ui-duration-slow) var(--ui-ease);
+}
+
+.ui-switch[data-checked] .ui-switch__thumb-icon {
+  color: var(--ui-switch-track-bg-checked);
+  rotate: 360deg;
+}
+
+/* pressedWidth: the knob's width while pressed, never narrower than the knob itself. */
+.ui-switch[data-pressed-width]:active:not([data-disabled]) {
+  --_kw: max(var(--_knob), var(--_pressed-w));
+}
+
+/* ── animation="spring": the knob stays at the start and travels by `translate` (composes with the
+   theme's press `transform`), its width on the same spring so the far edge holds still. ── */
+.ui-switch[data-motion='spring'] .ui-switch__knob {
+  --_travel: calc(var(--_w) - var(--_kw) - var(--_pad) * 2);
+
+  inset-inline-start: var(--_pad);
+  transition:
+    translate calc(var(--ui-duration-slow) * 1.36) var(--ui-spring-snappy),
+    width calc(var(--ui-duration-slow) * 1.36) var(--ui-spring-snappy),
+    background-color var(--ui-duration) var(--ui-ease),
+    box-shadow var(--ui-duration-fast) var(--ui-ease),
+    transform var(--ui-duration) var(--ui-ease);
+}
+
+.ui-switch[data-motion='spring'][data-checked] .ui-switch__knob {
+  inset-inline-start: var(--_pad);
+  translate: var(--_travel) 0;
+}
+
+.ui-switch[data-motion='spring'][data-checked]:dir(rtl) .ui-switch__knob {
+  translate: calc(var(--_travel) * -1) 0;
+}
+
+.ui-switch[data-motion='spring'] .ui-switch__icon {
+  transition:
+    opacity var(--ui-duration) var(--ui-ease),
+    scale calc(var(--ui-duration-slow) * 2.61) var(--ui-spring-bouncy);
+}
+
+.ui-switch[data-motion='spring'] .ui-switch__thumb-icon {
+  transition:
+    color var(--ui-duration) var(--ui-ease),
+    rotate calc(var(--ui-duration-slow) * 1.36) var(--ui-spring-snappy);
+}

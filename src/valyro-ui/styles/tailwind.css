@@ -1,0 +1,109 @@
+/*
+ * ValyroUI × Tailwind CSS v4 (valyro-ui/tailwind.css): Tailwind utilities that read the ValyroUI tokens, so
+ * `bg-accent text-fg border-border rounded-md shadow-card font-sans` follow the active theme and mode.
+ *
+ *   @import 'tailwindcss';
+ *   @import 'valyro-ui/styles.css';
+ *   @import 'valyro-ui/tailwind.css';
+ *
+ * `@theme inline` makes each utility use the var(--ui-…) itself instead of copying a value, so a ThemeScope,
+ * a dark subtree or a Theme Builder override restyles the utilities too. Tailwind itself is not a dependency:
+ * without Tailwind the at-rules below are ignored. Spacing, type sizes and breakpoints stay Tailwind's own.
+ * Every name mapped here is checked against the theme files (styles/tailwind.test.ts).
+ */
+@custom-variant dark (&:where([data-mode='dark'], [data-mode='dark'] *));
+
+@theme inline {
+  /* Surfaces */
+  --color-bg: var(--ui-bg);
+  --color-surface: var(--ui-surface);
+  --color-surface-2: var(--ui-surface-2);
+  --color-surface-3: var(--ui-surface-3);
+  --color-elevated: var(--ui-elevated);
+  --color-field: var(--ui-field-bg);
+  --color-hover: var(--ui-hover);
+  --color-active: var(--ui-active);
+  --color-overlay: var(--ui-overlay);
+  --color-tooltip: var(--ui-tooltip-bg);
+  --color-tooltip-fg: var(--ui-tooltip-fg);
+
+  /* Text */
+  --color-fg: var(--ui-fg);
+  --color-fg-muted: var(--ui-fg-muted);
+  --color-fg-subtle: var(--ui-fg-subtle);
+  --color-fg-faint: var(--ui-fg-faint);
+  --color-fg-disabled: var(--ui-fg-disabled);
+  --color-fg-inverse: var(--ui-fg-inverse);
+
+  /* Borders */
+  --color-border: var(--ui-border);
+  --color-border-strong: var(--ui-border-strong);
+  --color-border-field: var(--ui-border-field);
+  --color-divider: var(--ui-divider);
+  --color-focus: var(--ui-focus-color);
+
+  /* Brand and actions */
+  --color-accent: var(--ui-accent);
+  --color-accent-hover: var(--ui-accent-hover);
+  --color-accent-fg: var(--ui-accent-fg);
+  --color-accent-soft: var(--ui-accent-soft);
+  --color-accent-text: var(--ui-accent-text);
+  --color-primary: var(--ui-primary);
+  --color-primary-hover: var(--ui-primary-hover);
+  --color-primary-fg: var(--ui-primary-fg);
+
+  /* Status */
+  --color-success: var(--ui-success);
+  --color-success-soft: var(--ui-success-soft);
+  --color-success-text: var(--ui-success-text);
+  --color-warning: var(--ui-warning);
+  --color-warning-soft: var(--ui-warning-soft);
+  --color-warning-text: var(--ui-warning-text);
+  --color-danger: var(--ui-danger);
+  --color-danger-hover: var(--ui-danger-hover);
+  --color-danger-soft: var(--ui-danger-soft);
+  --color-danger-text: var(--ui-danger-text);
+  --color-info: var(--ui-info);
+  --color-info-soft: var(--ui-info-soft);
+  --color-info-text: var(--ui-info-text);
+
+  /* Data visualisation */
+  --color-chart-1: var(--ui-chart-1);
+  --color-chart-2: var(--ui-chart-2);
+  --color-chart-3: var(--ui-chart-3);
+  --color-chart-4: var(--ui-chart-4);
+  --color-chart-5: var(--ui-chart-5);
+  --color-chart-6: var(--ui-chart-6);
+  --color-chart-7: var(--ui-chart-7);
+  --color-chart-8: var(--ui-chart-8);
+  --color-chart-grid: var(--ui-chart-grid);
+  --color-chart-axis: var(--ui-chart-axis);
+
+  /* Shape: the scale, then the radius of each kind of piece */
+  --radius-xs: var(--ui-radius-xs);
+  --radius-sm: var(--ui-radius-sm);
+  --radius-md: var(--ui-radius-md);
+  --radius-lg: var(--ui-radius-lg);
+  --radius-xl: var(--ui-radius-xl);
+  --radius-button: var(--ui-radius-button);
+  --radius-field: var(--ui-radius-field);
+  --radius-card: var(--ui-radius-card);
+  --radius-popover: var(--ui-radius-popover);
+  --radius-modal: var(--ui-radius-modal);
+
+  /* Elevation */
+  --shadow-sm: var(--ui-shadow-sm);
+  --shadow-card: var(--ui-shadow-card);
+  --shadow-popover: var(--ui-shadow-popover);
+  --shadow-modal: var(--ui-shadow-modal);
+  --shadow-focus: var(--ui-focus-ring);
+
+  /* Type: display and prose fall back to the surrounding font in themes without one */
+  --font-sans: var(--ui-font-sans);
+  --font-mono: var(--ui-font-mono);
+  --font-display: var(--ui-font-display);
+  --font-prose: var(--ui-font-prose);
+
+  /* Motion */
+  --ease-ui: var(--ui-ease);
+}

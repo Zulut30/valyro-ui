@@ -1,0 +1,200 @@
+.ui-checkbox-tree {
+  /* Row height, indent per level and the x of a parent's chevron centre, which the guides start from. */
+  --ui-checkbox-tree-row: 40px;
+  --ui-checkbox-tree-indent: 28px;
+  --ui-checkbox-tree-guide: 18px;
+  margin: 0;
+  padding: 0;
+  color: var(--ui-fg);
+  font-size: var(--ui-text-md);
+  list-style: none;
+}
+
+.ui-checkbox-tree[data-size='sm'] {
+  --ui-checkbox-tree-row: 32px;
+  --ui-checkbox-tree-indent: 24px;
+  font-size: var(--ui-text-sm);
+}
+
+.ui-checkbox-tree__group {
+  margin: 0;
+  padding: 0;
+  padding-inline-start: var(--ui-checkbox-tree-indent);
+  list-style: none;
+}
+
+.ui-checkbox-tree__item {
+  position: relative;
+  outline: none;
+}
+
+.ui-checkbox-tree__row {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-2);
+  min-height: var(--ui-checkbox-tree-row);
+  padding-inline: var(--ui-space-2);
+  border-radius: var(--ui-checkbox-tree-radius, var(--ui-radius-md));
+  cursor: pointer;
+  user-select: none;
+  transition:
+    background-color var(--ui-duration-fast) var(--ui-ease),
+    box-shadow var(--ui-duration-fast) var(--ui-ease);
+}
+
+.ui-checkbox-tree__row:hover {
+  background: var(--ui-hover);
+}
+
+/* Pressed: the theme's pressed tint over the row's fill. */
+.ui-checkbox-tree__row:active {
+  background-image: linear-gradient(var(--ui-active), var(--ui-active));
+}
+
+.ui-checkbox-tree__row:is([data-state='checked'], [data-state='mixed']) {
+  background: var(--ui-surface-2);
+}
+
+.ui-checkbox-tree__item:focus-visible > .ui-checkbox-tree__row {
+  box-shadow: var(--ui-focus-ring);
+}
+
+.ui-checkbox-tree__item[aria-disabled='true'] > .ui-checkbox-tree__row {
+  cursor: not-allowed;
+  opacity: var(--ui-disabled-opacity, 0.5);
+}
+
+.ui-checkbox-tree__toggle {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--ui-radius-xs);
+  color: var(--ui-fg-subtle);
+}
+
+.ui-checkbox-tree__toggle svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform var(--ui-duration) var(--ui-ease);
+}
+
+.ui-checkbox-tree__toggle:dir(rtl) svg {
+  scale: -1 1;
+}
+
+.ui-checkbox-tree__toggle[data-open] svg {
+  transform: rotate(90deg);
+}
+
+.ui-checkbox-tree__toggle:dir(rtl)[data-open] svg {
+  transform: rotate(-90deg);
+}
+
+.ui-checkbox-tree__box {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--ui-choice-border, var(--ui-fg-faint));
+  border-radius: var(--ui-checkbox-tree-box-radius, 5px);
+  background: var(--ui-bg);
+  color: var(--ui-primary-fg);
+  transition:
+    background-color var(--ui-duration-fast) var(--ui-ease),
+    border-color var(--ui-duration-fast) var(--ui-ease);
+}
+
+.ui-checkbox-tree__box svg {
+  width: 13px;
+  height: 13px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0;
+  transform: scale(0.6);
+  transition:
+    opacity var(--ui-duration-fast) var(--ui-ease),
+    transform var(--ui-duration) var(--ui-ease-spring);
+}
+
+.ui-checkbox-tree__box:is([data-state='checked'], [data-state='mixed']) {
+  border-color: var(--ui-primary);
+  background: var(--ui-primary);
+}
+
+/* The mark grows in on the theme's spring curve, like Checkbox. */
+.ui-checkbox-tree__box:is([data-state='checked'], [data-state='mixed']) svg {
+  opacity: 1;
+  transform: none;
+}
+
+.ui-checkbox-tree__icon {
+  display: inline-flex;
+  flex: none;
+  color: var(--ui-fg-subtle);
+}
+
+.ui-checkbox-tree__icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.ui-checkbox-tree__label {
+  min-width: 0;
+  font-weight: var(--ui-weight-medium);
+  overflow-wrap: anywhere;
+}
+
+/* Guides: a line down from the parent's chevron, with an elbow into each child row. */
+.ui-checkbox-tree[data-guides] .ui-checkbox-tree__group > .ui-checkbox-tree__item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  inset-inline-start: calc(var(--ui-checkbox-tree-guide) - var(--ui-checkbox-tree-indent));
+  border-inline-start: 1px solid var(--ui-border-strong);
+  pointer-events: none;
+}
+
+.ui-checkbox-tree[data-guides] .ui-checkbox-tree__group > .ui-checkbox-tree__item:last-child::before {
+  bottom: auto;
+  width: calc(var(--ui-checkbox-tree-indent) - var(--ui-checkbox-tree-guide) - 2px);
+  height: calc(var(--ui-checkbox-tree-row) / 2);
+  border-bottom: 1px solid var(--ui-border-strong);
+  border-end-start-radius: 8px;
+}
+
+.ui-checkbox-tree[data-guides] .ui-checkbox-tree__group > .ui-checkbox-tree__item:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: calc(var(--ui-checkbox-tree-row) / 2);
+  inset-inline-start: calc(var(--ui-checkbox-tree-guide) - var(--ui-checkbox-tree-indent));
+  width: calc(var(--ui-checkbox-tree-indent) - var(--ui-checkbox-tree-guide) - 2px);
+  border-top: 1px solid var(--ui-border-strong);
+  pointer-events: none;
+}
+
+@media (forced-colors: active) {
+  .ui-checkbox-tree__box:is([data-state='checked'], [data-state='mixed']) {
+    forced-color-adjust: none;
+    border-color: Highlight;
+    background: Highlight;
+    color: HighlightText;
+  }
+
+  .ui-checkbox-tree__item:focus-visible > .ui-checkbox-tree__row {
+    outline: 2px solid Highlight;
+  }
+}

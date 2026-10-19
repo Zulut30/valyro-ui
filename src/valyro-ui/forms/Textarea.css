@@ -1,0 +1,87 @@
+.ui-textarea {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  min-height: 0;
+  padding: 0;
+  cursor: text;
+}
+
+.ui-textarea[data-disabled] {
+  cursor: not-allowed;
+}
+
+.ui-textarea[data-readonly] {
+  background: var(--ui-surface-2);
+}
+
+.ui-textarea__input {
+  display: block;
+  width: 100%;
+  min-height: 0;
+  margin: 0;
+  padding: 10px var(--ui-space-3);
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  line-height: var(--ui-leading);
+  resize: vertical;
+}
+
+.ui-textarea__input::placeholder {
+  color: var(--ui-fg-subtle);
+}
+
+.ui-textarea__input:disabled {
+  cursor: not-allowed;
+  resize: none;
+}
+
+.ui-textarea[data-auto-resize] .ui-textarea__input {
+  overflow-y: hidden;
+  resize: none;
+}
+
+/* With a counter the footer sits under the textarea, so the resize grip moves to the field itself: into its
+   corner instead of half way up the side, over the count. */
+.ui-textarea[data-counter]:not([data-auto-resize], [data-disabled]) {
+  overflow: hidden;
+  resize: vertical;
+  min-height: min-content;
+}
+
+.ui-textarea[data-counter] .ui-textarea__input {
+  flex: 1 0 auto;
+  resize: none;
+}
+
+.ui-textarea__footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 var(--ui-space-3) var(--ui-space-2);
+  pointer-events: none;
+}
+
+/* Keeps the count clear of the grip in the corner. */
+.ui-textarea[data-counter]:not([data-auto-resize], [data-disabled]) .ui-textarea__footer {
+  padding-inline-end: var(--ui-space-6);
+}
+
+.ui-textarea__count {
+  color: var(--ui-fg-subtle);
+  font-size: var(--ui-text-xs);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  transition: color var(--ui-duration-fast) var(--ui-ease);
+}
+
+.ui-textarea__count[data-state='near'] {
+  color: var(--ui-warning-text);
+}
+
+.ui-textarea__count[data-state='limit'] {
+  color: var(--ui-danger-text);
+}
+

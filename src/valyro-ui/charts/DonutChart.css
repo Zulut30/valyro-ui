@@ -1,0 +1,83 @@
+/* Wrapped (legend under the ring), the lines pack to the top: donuts side by side in a grid line up. */
+.ui-donut-chart {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  align-content: flex-start;
+  justify-content: center;
+  gap: var(--ui-space-4) var(--ui-space-8);
+}
+
+.ui-donut-chart__figure {
+  position: relative;
+  flex: 0 0 auto;
+  width: min(100%, var(--_size));
+  aspect-ratio: 1;
+}
+
+.ui-donut-chart__svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* The hovered segment grows from the ring's centre with a transform (Safari cannot transition `d`). */
+.ui-donut-chart__segment {
+  fill: var(--_color);
+  stroke: var(--ui-chart-mark-stroke, none);
+  stroke-width: var(--ui-chart-mark-stroke-width, 1);
+  filter: var(--ui-chart-glow, var(--_glow));
+  transform-box: view-box;
+  transform-origin: 50% 50%;
+  transition:
+    transform var(--ui-duration) var(--ui-ease-spring),
+    opacity var(--ui-duration-fast) var(--ui-ease);
+}
+
+.ui-donut-chart__segment[data-active] {
+  transform: scale(var(--_pop));
+}
+
+.ui-donut-chart__segment[data-dimmed] {
+  opacity: 0.35;
+}
+
+.ui-donut-chart__track {
+  stroke: var(--ui-surface-3);
+}
+
+/* Alpha mask: only coverage counts, so a forced or inverted stroke colour can't hide the ring. */
+.ui-donut-chart__svg mask {
+  mask-type: alpha;
+}
+
+/* Dash only while drawing in (see .ui-chart__line in Chart.css). */
+.ui-donut-chart__reveal {
+  animation: ui-chart-draw calc(var(--ui-duration-slow) * 3) var(--ui-ease) backwards;
+}
+
+/* Center label: SVG text sized in JS to fit the hole */
+.ui-donut-chart__value {
+  fill: var(--ui-fg);
+  font-weight: var(--ui-weight-heading);
+  letter-spacing: var(--ui-tracking-tight);
+  font-variant-numeric: tabular-nums;
+}
+
+.ui-donut-chart__caption {
+  fill: var(--ui-fg-muted);
+}
+
+/* As wide as its longest row (values in a column right after the names), within limits. */
+.ui-donut-chart__legend {
+  flex: 0 1 auto;
+  min-width: min(100%, 200px);
+  max-width: 360px;
+}
+
+.ui-donut-chart__percent {
+  display: inline-block;
+  min-width: 5ch;
+  margin-inline-start: var(--ui-space-2);
+  color: var(--ui-fg-subtle);
+  text-align: end;
+}

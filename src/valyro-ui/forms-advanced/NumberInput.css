@@ -1,0 +1,111 @@
+.ui-number-input {
+  --_step-w: 36px;
+  --_step-h: var(--ui-number-input-steppers-h);
+
+  overflow: hidden;
+  padding-inline-end: var(--ui-number-input-padding-end);
+  box-shadow: var(--ui-compound-field-shadow);
+}
+
+.ui-number-input:focus-within {
+  box-shadow: var(--ui-highlight), var(--ui-focus-ring);
+}
+
+.ui-number-input[data-invalid='true']:focus-within {
+  box-shadow: var(--ui-highlight), var(--ui-focus-ring-invalid);
+}
+
+.ui-number-input[data-size='sm'] {
+  --_step-w: 30px;
+  --_step-h: var(--ui-number-input-steppers-h-sm);
+  padding-inline-end: var(--ui-number-input-padding-end-sm);
+}
+
+.ui-number-input[data-size='lg'] {
+  --_step-w: 44px;
+  --_step-h: var(--ui-number-input-steppers-h-lg);
+  padding-inline-end: var(--ui-number-input-padding-end-lg);
+}
+
+.ui-number-input__input {
+  font-variant-numeric: tabular-nums;
+}
+
+/* The stepper pair: flush buttons in the field, or a capsule inside it (Glass, iOS-style). */
+.ui-number-input__steppers {
+  display: flex;
+  flex-shrink: 0;
+  align-self: var(--ui-number-input-steppers-align);
+  height: var(--_step-h);
+  overflow: var(--ui-number-input-steppers-overflow);
+  border-radius: var(--ui-number-input-steppers-radius);
+  background: var(--ui-number-input-steppers-bg);
+}
+
+.ui-number-input__step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: var(--ui-number-input-step-position);
+  width: calc(var(--_step-w) + var(--ui-number-input-step-extra-w));
+  padding: 0;
+  border: 0;
+  border-inline-start: var(--ui-number-input-step-border);
+  background: transparent;
+  color: var(--ui-number-input-step-fg);
+  cursor: pointer;
+  /* Press-and-hold must not select text or open the touch callout. */
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color var(--ui-duration-fast) var(--ui-ease),
+    color var(--ui-duration-fast) var(--ui-ease),
+    transform var(--ui-duration) var(--ui-ease-spring);
+}
+
+.ui-number-input__step:hover:not(:disabled) {
+  background: var(--ui-hover);
+  color: var(--ui-fg);
+}
+
+.ui-number-input__step:active:not(:disabled) {
+  background: var(--ui-active);
+  transform: var(--ui-number-input-step-transform-active);
+}
+
+.ui-number-input__step:disabled {
+  color: var(--ui-fg-disabled);
+  cursor: not-allowed;
+}
+
+/* Hairline between the two buttons of a capsule stepper. */
+.ui-number-input__step + .ui-number-input__step::before {
+  content: var(--ui-number-input-step-divider-content);
+  position: absolute;
+  top: 25%;
+  bottom: 25%;
+  inset-inline-start: 0;
+  width: 1px;
+  background: var(--ui-border-strong);
+}
+
+
+/* Touch: the steppers' hit area reaches 44px tall (WCAG 2.5.5); widths stay, the buttons touch. */
+@media (pointer: coarse) {
+  .ui-number-input__step {
+    position: relative;
+  }
+
+  .ui-number-input__step::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: max(100%, 44px);
+    translate: 0 -50%;
+  }
+}

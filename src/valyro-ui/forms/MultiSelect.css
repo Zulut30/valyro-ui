@@ -1,0 +1,266 @@
+.ui-multi-select {
+  --_chip-h: 24px;
+  --_chip-font: var(--ui-text-sm);
+  /* Pulls the first chip towards the start edge so its inset matches the gap above and below it. */
+  --_chip-inset: -5px;
+
+  position: relative;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ui-multi-select[data-size='sm'] {
+  --_chip-h: 20px;
+  --_chip-font: var(--ui-text-xs);
+  --_chip-inset: -3px;
+}
+
+.ui-multi-select[data-size='lg'] {
+  --_chip-h: 30px;
+  --_chip-font: var(--ui-text-md);
+  --_chip-inset: -8px;
+}
+
+.ui-multi-select[data-disabled] {
+  cursor: not-allowed;
+}
+
+/* Transparent combobox button stretched over the field; chips' remove buttons sit above it. */
+.ui-multi-select__trigger {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: inherit;
+  outline: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ui-multi-select__values {
+  position: relative;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: var(--ui-space-1);
+  min-width: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.ui-multi-select[data-has-value] .ui-multi-select__values {
+  margin-inline-start: var(--_chip-inset);
+}
+
+.ui-multi-select__placeholder {
+  overflow: hidden;
+  color: var(--ui-fg-subtle);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ui-multi-select__chip {
+  display: inline-flex;
+  flex-shrink: 1;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  max-width: 50%;
+  height: var(--_chip-h);
+  padding-block: 0;
+  padding-inline: var(--ui-chip-text-inset) 3px;
+  border: var(--ui-border-width, 1px) solid var(--ui-multi-select-chip-border-color);
+  border-radius: var(--ui-radius-chip);
+  background: var(--ui-chip-bg);
+  color: var(--ui-action-fg);
+  font-size: var(--_chip-font);
+  font-weight: var(--ui-weight-medium);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* maxChips="auto": chips keep their whole width (the ones that don't fit move into "+N"); only a first chip
+   too wide for the field on its own is truncated. */
+.ui-multi-select[data-max-chips='auto'] .ui-multi-select__chip {
+  flex-shrink: 0;
+  max-width: none;
+}
+
+.ui-multi-select[data-max-chips='auto']:not([data-measuring]) .ui-multi-select__chip:first-child {
+  flex-shrink: 1;
+  max-width: 100%;
+}
+
+/* The "+N" measured while the chips are counted takes no room. */
+.ui-multi-select__more[data-measure] {
+  position: absolute;
+  visibility: hidden;
+}
+
+.ui-multi-select[data-disabled] .ui-multi-select__chip {
+  padding-inline-end: var(--ui-chip-text-inset);
+}
+
+.ui-multi-select__chip-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ui-multi-select__chip-remove {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: calc(var(--_chip-h) - 6px);
+  height: calc(var(--_chip-h) - 6px);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--ui-multi-select-chip-remove-radius);
+  outline: none;
+  background: transparent;
+  color: var(--ui-multi-select-chip-remove-fg);
+  opacity: var(--ui-multi-select-chip-remove-opacity);
+  cursor: pointer;
+  pointer-events: auto;
+  transition:
+    background-color var(--ui-duration-fast) var(--ui-ease),
+    color var(--ui-duration-fast) var(--ui-ease),
+    opacity var(--ui-duration-fast) var(--ui-ease);
+}
+
+.ui-multi-select__chip-remove:hover {
+  background: var(--ui-multi-select-chip-remove-bg-hover);
+  color: var(--ui-multi-select-chip-remove-fg-hover);
+  opacity: 1;
+}
+
+/* Pressed: the theme's pressed tint over the hover fill. */
+.ui-multi-select__chip-remove:active {
+  background-image: linear-gradient(var(--ui-active), var(--ui-active));
+}
+
+/* A filled button instead of an outer ring, which the chip row would clip. */
+.ui-multi-select__chip-remove:focus-visible {
+  background: var(--ui-accent);
+  color: var(--ui-accent-fg);
+  opacity: 1;
+}
+
+.ui-multi-select__more {
+  flex-shrink: 0;
+  padding: 0 var(--ui-space-1);
+  color: var(--ui-fg-muted);
+  font-size: var(--_chip-font);
+  font-weight: var(--ui-weight-medium);
+  font-variant-numeric: tabular-nums;
+}
+
+.ui-multi-select__chevron {
+  position: relative;
+  flex-shrink: 0;
+  color: var(--ui-fg-faint);
+  pointer-events: none;
+  transition: transform var(--ui-duration) var(--ui-ease-spring);
+}
+
+.ui-multi-select[data-size='lg'] .ui-multi-select__chevron {
+  width: var(--ui-icon-lg);
+  height: var(--ui-icon-lg);
+}
+
+.ui-multi-select[data-open] .ui-multi-select__chevron {
+  transform: rotate(180deg);
+}
+
+/* Popover */
+.ui-multi-select__search {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--ui-space-2);
+  height: var(--ui-multi-select-search-h);
+  margin: var(--ui-multi-select-search-margin);
+  padding: 0 var(--ui-space-3);
+  border-bottom: var(--ui-multi-select-search-border);
+  border-radius: var(--ui-multi-select-search-radius);
+  background: var(--ui-multi-select-search-bg);
+}
+
+.ui-multi-select__search-icon {
+  flex-shrink: 0;
+  color: var(--ui-fg-faint);
+}
+
+.ui-multi-select__search-input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--ui-fg);
+  font: inherit;
+  font-size: var(--ui-text-md);
+}
+
+.ui-multi-select__search-input::placeholder {
+  color: var(--ui-fg-subtle);
+}
+
+.ui-multi-select__footer {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ui-space-2);
+  margin: var(--ui-multi-select-footer-margin);
+  padding-block: var(--ui-space-1);
+  padding-inline: var(--ui-multi-select-footer-padding-x);
+  border-top: 1px solid var(--ui-divider);
+  color: var(--ui-fg-muted);
+  font-size: var(--ui-text-sm);
+}
+
+.ui-multi-select__count {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (forced-colors: active) {
+  .ui-multi-select__chip-remove:focus-visible {
+    background: Highlight;
+    color: HighlightText;
+  }
+}
+
+/* Touch: a taller hit area for the chip's remove button. Kept narrow so a tap on the next chip
+   or on the field never removes this one by accident. */
+@media (pointer: coarse) {
+  .ui-multi-select__chip-remove {
+    position: relative;
+  }
+
+  .ui-multi-select__chip-remove::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 28px;
+    height: 44px;
+    translate: -50% -50%;
+  }
+}
+
+/* Touch: iOS Safari zooms the page into a text field whose text is under 16px as it takes focus. */
+@media (pointer: coarse) {
+  .ui-multi-select__search-input {
+    font-size: max(16px, var(--ui-text-md));
+  }
+}

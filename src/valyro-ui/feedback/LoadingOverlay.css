@@ -1,0 +1,67 @@
+.ui-loading-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: var(--ui-z-sticky);
+  display: grid;
+  place-items: center;
+  padding: var(--ui-space-4);
+  border-radius: inherit;
+  background: color-mix(in srgb, var(--ui-bg) var(--ui-loading-overlay-bg-mix), transparent);
+  -webkit-backdrop-filter: var(--ui-loading-overlay-backdrop);
+  backdrop-filter: var(--ui-loading-overlay-backdrop);
+  color: var(--ui-fg);
+  cursor: progress;
+}
+
+.ui-loading-overlay[data-fullscreen] {
+  position: fixed;
+  z-index: var(--ui-z-modal);
+  border-radius: 0;
+  background: var(--ui-overlay);
+}
+
+/* Bare text over the scrim, or a frosted HUD card like the macOS volume / iOS progress overlays. */
+.ui-loading-overlay__panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ui-space-3);
+  min-width: var(--ui-loading-overlay-panel-min-w);
+  max-width: 280px;
+  padding: var(--ui-loading-overlay-panel-padding);
+  border: var(--ui-loading-overlay-panel-border);
+  border-radius: var(--ui-loading-overlay-panel-radius);
+  background: var(--ui-loading-overlay-panel-bg);
+  box-shadow: var(--ui-loading-overlay-panel-shadow);
+  -webkit-backdrop-filter: var(--ui-blur-strong);
+  backdrop-filter: var(--ui-blur-strong);
+  color: var(--ui-loading-overlay-panel-fg);
+  font-size: var(--ui-text-sm);
+  text-align: center;
+  animation: var(--ui-loading-overlay-panel-animation);
+}
+
+.ui-loading-overlay[data-fullscreen] .ui-loading-overlay__panel {
+  min-width: 200px;
+  padding: var(--ui-space-6);
+  border: 1px solid var(--ui-glass-border);
+  border-radius: var(--ui-radius-modal);
+  background: var(--ui-elevated);
+  box-shadow: var(--ui-highlight), var(--ui-shadow-modal);
+  color: var(--ui-fg);
+  animation: ui-pop-in var(--ui-duration-slow) var(--ui-ease-spring);
+}
+
+.ui-loading-overlay__message {
+  font-weight: var(--ui-weight-medium);
+}
+
+.ui-loading-overlay__progress {
+  width: 200px;
+  max-width: 100%;
+}
+
+/* It takes focus only to hold it while the content underneath is inert; the spinner and message already show it. */
+.ui-loading-overlay:focus {
+  outline: none;
+}

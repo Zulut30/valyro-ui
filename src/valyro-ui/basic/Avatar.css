@@ -1,0 +1,211 @@
+.ui-avatar {
+  --_size: 32px;
+  --_c: var(--ui-gray);
+
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: var(--_size);
+  height: var(--_size);
+  border-radius: var(--ui-avatar-radius, 50%);
+  /* Share of the hue in the initials; the rest is --ui-fg, which keeps them ≥ 4.5:1 on the tint (pale hues need more). */
+  --_ink-mix: 50%;
+
+  background: color-mix(in srgb, var(--_c) 18%, var(--ui-surface));
+  color: color-mix(in srgb, var(--_c) var(--_ink-mix), var(--ui-fg));
+  box-shadow: 0 0 0 1px var(--ui-border);
+  /* Readable initials even on the 20px size. */
+  font-size: max(9px, calc(var(--_size) * 0.38));
+  font-weight: var(--ui-weight-semibold);
+  line-height: 1;
+  user-select: none;
+  vertical-align: middle;
+}
+
+.ui-avatar[data-shape='square'] {
+  border-radius: calc(var(--_size) * 0.25);
+}
+
+.ui-avatar[data-size='xs'] { --_size: 20px; }
+.ui-avatar[data-size='sm'] { --_size: 24px; }
+.ui-avatar[data-size='md'] { --_size: 32px; }
+.ui-avatar[data-size='lg'] { --_size: 48px; }
+.ui-avatar[data-size='xl'] { --_size: 64px; }
+
+.ui-avatar[data-hue='blue'] { --_c: var(--ui-blue); }
+.ui-avatar[data-hue='green'] { --_c: var(--ui-green); }
+.ui-avatar[data-hue='amber'] { --_c: var(--ui-amber); }
+.ui-avatar[data-hue='red'] { --_c: var(--ui-red); }
+.ui-avatar[data-hue='purple'] { --_c: var(--ui-purple); }
+.ui-avatar[data-hue='pink'] { --_c: var(--ui-pink); }
+.ui-avatar[data-hue='teal'] { --_c: var(--ui-teal); }
+.ui-avatar:is([data-hue='green'], [data-hue='amber'], [data-hue='teal']) { --_ink-mix: 40%; }
+
+.ui-avatar__image {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  object-fit: cover;
+  transition: opacity var(--ui-duration-slow) var(--ui-ease);
+}
+
+/* Still loading after mount (Avatar.tsx): the tinted circle shows until the photo fades in. */
+.ui-avatar__image[data-loading] {
+  opacity: 0;
+}
+
+.ui-avatar__fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.ui-avatar__fallback > svg {
+  width: 55%;
+  height: 55%;
+}
+
+.ui-avatar__status {
+  position: absolute;
+  inset-inline-end: 0;
+  bottom: 0;
+  width: max(8px, calc(var(--_size) * 0.28));
+  height: max(8px, calc(var(--_size) * 0.28));
+  border-radius: 50%;
+  background: var(--ui-gray);
+  box-shadow: 0 0 0 2px var(--ui-avatar-status-ring);
+}
+
+.ui-avatar__status[data-status='online'] { background: var(--ui-success); }
+.ui-avatar__status[data-status='busy'] { background: var(--ui-danger); }
+.ui-avatar__status[data-status='away'] { background: var(--ui-warning); }
+
+/* Initials: a flat tint with a hairline, or a soft tinted gradient; the theme picks per property
+   (`initial` = the value written here). The gradient stays pale enough that the initials keep ≥ 4.5:1
+   at its darkest stop (white initials on the saturated hues reach only ~2.2:1). */
+.ui-avatar:not(:has(.ui-avatar__image)) {
+  background-color: var(--ui-avatar-fallback-bg, color-mix(in srgb, var(--_c) 18%, var(--ui-surface)));
+  background-image: var(
+    --ui-avatar-fallback-gradient,
+    linear-gradient(
+      160deg,
+      color-mix(in srgb, var(--_c) 10%, var(--ui-surface)),
+      color-mix(in srgb, var(--_c) 26%, var(--ui-surface))
+    )
+  );
+  box-shadow: var(--ui-avatar-fallback-shadow, 0 0 0 1px var(--ui-border));
+}
+
+/* Group */
+.ui-avatar-group {
+  display: inline-flex;
+  align-items: center;
+}
+
+.ui-avatar-group > .ui-avatar {
+  z-index: var(--_z, auto);
+  box-shadow: var(--ui-avatar-group-item-shadow);
+}
+
+/* 12% of the size: with the 2px ring that still reads as a stack, but stops short of the initials of
+   the avatar underneath (two wide letters such as «МИ» reach ~80% of the width). */
+.ui-avatar-group > .ui-avatar + .ui-avatar {
+  margin-inline-start: calc(var(--_size, 32px) * -0.12);
+}
+
+.ui-avatar-group[data-size='xs'] { --_size: 20px; }
+.ui-avatar-group[data-size='sm'] { --_size: 24px; }
+.ui-avatar-group[data-size='lg'] { --_size: 48px; }
+.ui-avatar-group[data-size='xl'] { --_size: 64px; }
+
+.ui-avatar-group__more {
+  font-size: max(9px, calc(var(--_size) * 0.32));
+  font-weight: var(--ui-weight-medium);
+  font-variant-numeric: tabular-nums;
+}
+
+/* "+3" is a signed number: without this the RTL bidi algorithm renders it as "3+". */
+.ui-avatar-group__more > .ui-avatar__fallback {
+  direction: ltr;
+}
+
+/* After the initials fill above, which it replaces. */
+.ui-avatar-group__more:not(:has(.ui-avatar__image)) {
+  background: var(--ui-avatar-group-more-bg);
+  color: var(--ui-avatar-group-more-fg);
+  -webkit-backdrop-filter: var(--ui-blur);
+  backdrop-filter: var(--ui-blur);
+}
+
+/* animation="spring": the avatar under the pointer or focus lifts with a bounce while its neighbours
+   step aside (`translate`, so nothing reflows). */
+.ui-avatar-group[data-motion='spring'] > .ui-avatar {
+  position: relative;
+  transition: translate calc(var(--ui-duration-slow) * 2.61) var(--ui-spring-bouncy);
+}
+
+.ui-avatar-group[data-motion='spring'] > .ui-avatar:is(:hover, :focus-visible) {
+  z-index: 100;
+  translate: 0 -28%;
+}
+
+.ui-avatar-group[data-motion='spring'] > .ui-avatar:is(:hover, :focus-visible) ~ .ui-avatar {
+  translate: 14% 0;
+}
+
+.ui-avatar-group[data-motion='spring'] > .ui-avatar:has(~ .ui-avatar:is(:hover, :focus-visible)) {
+  translate: -14% 0;
+}
+
+.ui-avatar-group[data-motion='spring']:dir(rtl) > .ui-avatar:is(:hover, :focus-visible) ~ .ui-avatar {
+  translate: -14% 0;
+}
+
+.ui-avatar-group[data-motion='spring']:dir(rtl) > .ui-avatar:has(~ .ui-avatar:is(:hover, :focus-visible)) {
+  translate: 14% 0;
+}
+
+/* Above its neighbours, which overlap it and would cover part of the ring. */
+.ui-avatar-group > .ui-avatar:focus-visible {
+  z-index: 100;
+  outline: none;
+  box-shadow: var(--ui-focus-ring);
+}
+
+/* tooltips: one name tag that glides to the avatar it describes. */
+.ui-avatar-group:has(> .ui-avatar-group__tip) {
+  position: relative;
+}
+
+.ui-avatar-group__tip {
+  position: absolute;
+  bottom: calc(100% + var(--_size, 32px) * 0.3 + 6px);
+  left: 0;
+  z-index: 101;
+  padding: 4px 8px;
+  border-radius: var(--ui-radius-sm);
+  background: var(--ui-tooltip-bg);
+  box-shadow: var(--ui-tooltip-shadow);
+  color: var(--ui-tooltip-fg);
+  font-size: var(--ui-text-xs);
+  line-height: 1.3;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  translate: calc(var(--_x) - 50%) 4px;
+  scale: 0.9;
+  transition:
+    opacity var(--ui-duration-fast) var(--ui-ease),
+    translate calc(var(--ui-duration-slow) * 1.36) var(--ui-spring-snappy),
+    scale calc(var(--ui-duration-slow) * 1.36) var(--ui-spring-snappy);
+}
+
+.ui-avatar-group__tip[data-visible] {
+  opacity: 1;
+  translate: calc(var(--_x) - 50%) 0;
+  scale: 1;
+}

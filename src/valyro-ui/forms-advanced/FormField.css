@@ -1,0 +1,68 @@
+.ui-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+}
+
+.ui-form-field__label {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  width: fit-content;
+  /* An inset lines labels up with capsule text (Glass). */
+  padding-inline: var(--ui-form-field-inset);
+  color: var(--ui-form-field-label-fg);
+  font-size: var(--ui-text-sm);
+  font-weight: var(--ui-weight-label);
+  line-height: var(--ui-leading-tight);
+}
+
+.ui-form-field__required {
+  color: var(--ui-danger-text);
+}
+
+.ui-form-field__footer {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--ui-space-3);
+  padding-inline: var(--ui-form-field-inset);
+}
+
+.ui-form-field__message {
+  display: flex;
+  flex: 1;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0;
+  color: var(--ui-fg-subtle);
+  font-size: var(--ui-text-sm);
+  line-height: 1.4;
+}
+
+.ui-form-field__message[data-tone='error'] {
+  color: var(--ui-danger-text);
+  animation: ui-form-field-message-in var(--ui-duration) var(--ui-ease-spring);
+}
+
+.ui-form-field__message-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.ui-form-field__counter {
+  flex-shrink: 0;
+  margin-inline-start: auto;
+  color: var(--ui-fg-subtle);
+  font-size: var(--ui-text-xs);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+}
+
+@keyframes ui-form-field-message-in {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+}

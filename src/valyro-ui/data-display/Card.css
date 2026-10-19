@@ -1,0 +1,127 @@
+.ui-card {
+  --_p: var(--ui-card-padding);
+  --_gap: var(--ui-space-4);
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--_gap);
+  min-width: 0;
+  padding: var(--_p);
+  color: var(--ui-fg);
+  font: inherit;
+  text-align: start;
+  text-decoration: none;
+  /* Decoration hook (styles/tokens.css): frames mark cards and dialogs, not every panel. */
+  border-image: var(--ui-frame);
+}
+
+.ui-card[data-padding='none'] {
+  --_p: 0px;
+  overflow: hidden;
+}
+
+.ui-card[data-padding='sm'] {
+  --_p: var(--ui-space-4);
+  --_gap: var(--ui-space-3);
+}
+
+.ui-card[data-padding='lg'] {
+  --_p: var(--ui-space-8);
+  --_gap: var(--ui-space-5);
+}
+
+.ui-card[data-variant='outline'] {
+  border: var(--ui-border-width, 1px) solid var(--ui-card-outline-border-color);
+  border-radius: var(--ui-radius-card);
+  background: var(--ui-card-outline-bg);
+  box-shadow: var(--ui-highlight);
+  background-image: var(--ui-surface-texture);
+  border-image: var(--ui-frame);
+  corner-shape: var(--ui-surface-corner-shape);
+}
+
+.ui-card[data-variant='interactive'] {
+  cursor: pointer;
+  transition:
+    border-color var(--ui-duration-fast) var(--ui-ease),
+    box-shadow var(--ui-duration) var(--ui-ease),
+    background-color var(--ui-duration) var(--ui-ease),
+    transform var(--ui-duration) var(--ui-ease-spring);
+}
+
+/* Vercel: crisp border + soft shadow, no movement. Glass: lifts onto the elevated material. A disabled card
+   stays put (its hover shadow is the theme's, below); :where() keeps the specificity of the rules below. */
+.ui-card[data-variant='interactive']:hover:where(:not([aria-disabled='true'], :disabled)) {
+  border-color: var(--ui-card-interactive-border-color-hover);
+  background: var(--ui-card-interactive-bg-hover);
+  box-shadow: var(--ui-card-interactive-shadow-hover);
+  transform: var(--ui-card-interactive-transform-hover);
+}
+
+.ui-card[data-variant='interactive']:active:where(:not([aria-disabled='true'], :disabled)) {
+  background-color: var(--ui-card-interactive-bg-active);
+  transform: var(--ui-card-interactive-transform-active);
+}
+
+.ui-card[data-variant='interactive']:focus-visible {
+  outline: none;
+  box-shadow: var(--ui-highlight), var(--ui-shadow-card), var(--ui-focus-ring);
+}
+
+.ui-card[data-variant='interactive']:is([aria-disabled='true'], :disabled) {
+  cursor: not-allowed;
+  opacity: var(--ui-disabled-opacity, 0.55);
+  box-shadow: var(--ui-highlight), var(--ui-shadow-card);
+}
+
+/* Overlapping states: which shadow wins differs per theme (Vercel: disabled > focus > hover, but the dark hover
+   shadow beats both; Glass: focus > hover > disabled), so each overlap reads its own token. */
+.ui-card[data-variant='interactive']:hover:focus-visible {
+  box-shadow: var(--ui-card-interactive-shadow-hover-focus);
+}
+
+.ui-card[data-variant='interactive']:is([aria-disabled='true'], :disabled):hover {
+  box-shadow: var(--ui-card-interactive-shadow-disabled-hover);
+}
+
+.ui-card[data-variant='interactive']:is([aria-disabled='true'], :disabled):focus-visible {
+  box-shadow: var(--ui-card-interactive-shadow-disabled-focus);
+}
+
+/* ── Parts ── */
+.ui-card__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-1);
+  min-width: 0;
+}
+
+.ui-card__title {
+  margin: 0;
+  font-family: var(--ui-font-display, inherit);
+  font-size: var(--ui-card-title-size);
+  font-weight: var(--ui-weight-semibold);
+  line-height: var(--ui-leading-tight);
+  letter-spacing: var(--ui-tracking-tight);
+}
+
+.ui-card__description {
+  margin: 0;
+  color: var(--ui-fg-muted);
+  font-size: var(--ui-text-sm);
+  line-height: var(--ui-leading);
+}
+
+.ui-card__content {
+  min-width: 0;
+  font-size: var(--ui-text-md);
+}
+
+.ui-card__footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ui-space-2);
+  margin-top: auto;
+}

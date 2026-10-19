@@ -1,0 +1,146 @@
+.ui-tags-input {
+  /* Tag sizes match MultiSelect's chips (24 / 20 / 30). */
+  --_tag-h: 24px;
+  --_tag-font: var(--ui-text-sm);
+  --_field-h: var(--ui-control-h-md);
+
+  flex-wrap: wrap;
+  gap: 6px;
+  /* Centres a row of tags in a field of the theme's control height, so a one-line TagsInput is as tall
+     as the inputs next to it. */
+  padding: max(2px, calc((var(--_field-h) - var(--_tag-h)) / 2 - var(--ui-border-width, 1px)));
+  cursor: text;
+  box-shadow: var(--ui-compound-field-shadow);
+}
+
+.ui-tags-input:focus-within {
+  box-shadow: var(--ui-highlight), var(--ui-focus-ring);
+}
+
+.ui-tags-input[data-invalid='true']:focus-within {
+  box-shadow: var(--ui-highlight), var(--ui-focus-ring-invalid);
+}
+
+.ui-tags-input[data-size='sm'] {
+  --_tag-h: 20px;
+  --_tag-font: var(--ui-text-xs);
+  --_field-h: var(--ui-control-h-sm);
+
+  gap: 4px;
+  padding: max(2px, calc((var(--_field-h) - var(--_tag-h)) / 2 - var(--ui-border-width, 1px)));
+}
+
+.ui-tags-input[data-size='lg'] {
+  --_tag-h: 30px;
+  --_tag-font: var(--ui-text-md);
+  --_field-h: var(--ui-control-h-lg);
+
+  padding: max(2px, calc((var(--_field-h) - var(--_tag-h)) / 2 - var(--ui-border-width, 1px)));
+}
+
+.ui-tags-input__input {
+  flex: 1 0 64px;
+  min-height: var(--_tag-h);
+  padding: 0 6px;
+}
+
+/* Nothing can be typed into a disabled field: its input takes no room, so the tags never wrap onto an empty row. */
+.ui-tags-input[data-disabled='true'] .ui-tags-input__input {
+  flex-basis: 0;
+  min-width: 0;
+  padding: 0;
+}
+
+.ui-tags-input__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  max-width: 100%;
+  height: var(--_tag-h);
+  padding-block: 0;
+  padding-inline: var(--ui-chip-text-inset) 3px;
+  border: var(--ui-tags-input-tag-border);
+  border-radius: var(--ui-radius-chip);
+  background: var(--ui-chip-bg);
+  color: var(--ui-action-fg);
+  font-size: var(--_tag-font);
+  font-weight: var(--ui-tags-input-tag-weight);
+  line-height: 1;
+  cursor: default;
+  animation: ui-tags-input-in var(--ui-duration) var(--ui-ease-spring);
+}
+
+.ui-tags-input__tag-label {
+  /* A taller line box than the tag's line-height: 1 keeps descenders clear of the overflow clip. */
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  /* Direction from the label's own text, so the ellipsis lands at its end under dir="rtl" too. */
+  unicode-bidi: plaintext;
+}
+
+.ui-tags-input__remove {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--ui-tags-input-remove-radius);
+  background: transparent;
+  color: var(--ui-tags-input-remove-fg);
+  cursor: pointer;
+  outline: none;
+  transition:
+    background-color var(--ui-duration-fast) var(--ui-ease),
+    color var(--ui-duration-fast) var(--ui-ease),
+    box-shadow var(--ui-duration-fast) var(--ui-ease);
+}
+
+.ui-tags-input__remove:hover {
+  background: var(--ui-tags-input-remove-bg-hover);
+  color: var(--ui-tags-input-remove-fg-hover);
+}
+
+/* Pressed: the theme's pressed tint over the hover fill. */
+.ui-tags-input__remove:active {
+  background-image: linear-gradient(var(--ui-active), var(--ui-active));
+}
+
+.ui-tags-input__remove:focus-visible {
+  box-shadow: var(--ui-focus-ring);
+}
+
+.ui-tags-input__listbox {
+  max-height: 240px;
+  padding: var(--ui-popover-padding);
+  overflow-y: auto;
+}
+
+@keyframes ui-tags-input-in {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+}
+
+/* Touch: a taller hit area for a tag's remove button. Kept narrow so a tap on the next tag never
+   removes this one by accident. */
+@media (pointer: coarse) {
+  .ui-tags-input__remove {
+    position: relative;
+  }
+
+  .ui-tags-input__remove::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 28px;
+    height: 44px;
+    translate: -50% -50%;
+  }
+}

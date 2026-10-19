@@ -1,0 +1,271 @@
+.ui-radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-3);
+}
+
+.ui-radio-group[data-orientation='horizontal'] {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: var(--ui-space-3) var(--ui-space-6);
+}
+
+.ui-radio {
+  --_size: var(--ui-choice-size);
+
+  position: relative;
+  display: inline-flex;
+  align-items: flex-start;
+  gap: var(--ui-space-2);
+  color: var(--ui-fg);
+  font-size: var(--ui-text-md);
+  line-height: 1.43;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ui-radio-group[data-size='sm'] .ui-radio {
+  --_size: var(--ui-choice-size-sm);
+  font-size: var(--ui-text-sm);
+}
+
+.ui-radio-group[data-size='lg'] .ui-radio {
+  --_size: var(--ui-choice-size-lg);
+  gap: var(--ui-space-3);
+  font-size: var(--ui-text-lg);
+}
+
+.ui-radio[data-disabled] {
+  cursor: not-allowed;
+  opacity: var(--ui-disabled-opacity, 0.5);
+}
+
+.ui-radio__control {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  width: var(--_size);
+  height: var(--_size);
+  margin-top: max(0px, calc((1lh - var(--_size)) / 2));
+}
+
+/* Invisible native radio on top of the drawn circle keeps clicks, focus and arrow keys native. */
+.ui-radio__input {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+
+.ui-radio__circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border: 1px solid var(--ui-choice-border, var(--ui-fg-faint));
+  border-radius: 50%;
+  background: var(--ui-bg);
+  box-shadow: var(--ui-raised-shadow);
+  -webkit-backdrop-filter: var(--ui-blur);
+  backdrop-filter: var(--ui-blur);
+  transition:
+    background-color var(--ui-duration-fast) var(--ui-ease),
+    border-color var(--ui-duration-fast) var(--ui-ease),
+    box-shadow var(--ui-duration-fast) var(--ui-ease),
+    transform var(--ui-duration) var(--ui-ease-spring);
+}
+
+.ui-radio__circle::after {
+  content: '';
+  width: var(--ui-radio-dot-size);
+  height: var(--ui-radio-dot-size);
+  border-radius: 50%;
+  background: var(--ui-radio-dot-bg);
+  box-shadow: var(--ui-radio-dot-shadow);
+  transform: scale(0);
+  transition: transform var(--ui-duration) var(--ui-ease-spring);
+}
+
+.ui-radio[data-checked] .ui-radio__circle {
+  border-color: var(--ui-primary);
+  background: var(--ui-checked-sheen) var(--ui-radio-checked-bg);
+  box-shadow: var(--ui-checked-shadow);
+}
+
+.ui-radio[data-checked] .ui-radio__circle::after {
+  transform: scale(1);
+}
+
+.ui-radio[data-invalid] .ui-radio__circle {
+  border-color: var(--ui-danger);
+}
+
+.ui-radio[data-invalid][data-checked] .ui-radio__circle {
+  border-color: var(--ui-radio-invalid-checked-border-color);
+}
+
+/* After the invalid rules: hovering shows the hover edge, also on an invalid radio. */
+.ui-radio:hover:not([data-disabled]) .ui-radio__circle {
+  border-color: var(--ui-fg-subtle);
+}
+
+.ui-radio[data-checked]:hover:not([data-disabled]) .ui-radio__circle {
+  border-color: var(--ui-choice-checked-border-color-hover);
+}
+
+/* After the checked rule: the ring replaces its shadow. */
+.ui-radio__input:focus-visible + .ui-radio__circle {
+  box-shadow: var(--ui-highlight), var(--ui-focus-ring);
+}
+
+.ui-radio:active:not([data-disabled]) .ui-radio__circle {
+  transform: var(--ui-press-transform);
+}
+
+.ui-radio__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.ui-radio__description {
+  color: var(--ui-fg-muted);
+  font-size: var(--ui-text-sm);
+}
+
+.ui-radio-group[data-size='sm'] .ui-radio__description {
+  font-size: var(--ui-text-xs);
+}
+
+/* ── Cards ── */
+.ui-radio-group[data-variant='cards'] {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--ui-space-2);
+}
+
+/* A wrapping flex row rather than a grid: a card left alone on the last row spans it instead of
+   leaving a hole next to it. */
+.ui-radio-group[data-variant='cards'][data-orientation='horizontal'] {
+  display: flex;
+}
+
+.ui-radio-group[data-variant='cards'][data-orientation='horizontal'] > .ui-radio {
+  flex: 1 1 150px;
+}
+
+.ui-radio[data-variant='card'] {
+  justify-content: space-between;
+  gap: var(--ui-space-3);
+  padding: var(--ui-radio-card-padding);
+  border: 1px solid var(--ui-radio-card-border-color);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-surface);
+  box-shadow: var(--ui-raised-shadow);
+  -webkit-backdrop-filter: var(--ui-blur);
+  backdrop-filter: var(--ui-blur);
+  transition:
+    border-color var(--ui-duration-fast) var(--ui-ease),
+    background-color var(--ui-duration-fast) var(--ui-ease),
+    box-shadow var(--ui-duration-fast) var(--ui-ease);
+}
+
+.ui-radio[data-variant='card'] .ui-radio__control {
+  order: 1;
+}
+
+.ui-radio[data-variant='card'] .ui-radio__label {
+  font-weight: var(--ui-weight-medium);
+}
+
+.ui-radio[data-variant='card']:hover:not([data-disabled]) {
+  border-color: var(--ui-border-strong);
+}
+
+.ui-radio[data-variant='card'][data-checked] {
+  border-color: var(--ui-primary);
+  background: var(--ui-radio-card-bg-checked);
+  box-shadow: var(--ui-radio-card-shadow-checked);
+}
+
+.ui-radio[data-variant='card'][data-checked]:hover:not([data-disabled]) {
+  border-color: var(--ui-radio-card-border-color-checked-hover);
+}
+
+.ui-radio[data-variant='card'][data-invalid]:not([data-checked]) {
+  border-color: var(--ui-danger);
+}
+
+.ui-radio[data-variant='card']:has(.ui-radio__input:focus-visible) {
+  box-shadow: var(--ui-highlight), var(--ui-focus-ring);
+}
+
+.ui-radio[data-variant='card'][data-checked]:has(.ui-radio__input:focus-visible) {
+  box-shadow: var(--ui-radio-card-shadow-checked-focus);
+}
+
+/* The card carries the ring; the circle keeps only its rim. */
+.ui-radio[data-variant='card'] .ui-radio__input:focus-visible + .ui-radio__circle {
+  box-shadow: var(--ui-highlight);
+}
+
+@media (forced-colors: active) {
+  .ui-radio__circle {
+    border-color: CanvasText;
+  }
+
+  .ui-radio[data-checked] .ui-radio__circle,
+  .ui-radio[data-invalid][data-checked] .ui-radio__circle {
+    border-color: Highlight;
+  }
+
+  .ui-radio__circle::after {
+    background: Highlight;
+  }
+
+  .ui-radio__input:focus-visible + .ui-radio__circle,
+  .ui-radio[data-variant='card']:has(.ui-radio__input:focus-visible) {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+
+  .ui-radio[data-variant='card'][data-checked] {
+    border-color: Highlight;
+  }
+}
+
+/* Touch: each option's hit area grows to 44px (WCAG 2.5.5) without changing the layout. */
+@media (pointer: coarse) {
+  .ui-radio::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+    translate: -50% -50%;
+  }
+}
+
+/* animation="spring": the dot pops in with a bounce (leaving keeps the quick theme curve, so it never
+   overshoots past zero) and the ring gives a short pulse. */
+.ui-radio-group[data-motion='spring'] .ui-radio[data-checked] .ui-radio__circle::after {
+  transition: transform calc(var(--ui-duration-slow) * 2.61) var(--ui-spring-bouncy);
+}
+
+.ui-radio-group[data-motion='spring'] .ui-radio[data-checked] .ui-radio__circle {
+  animation: ui-radio-pulse calc(var(--ui-duration-slow) * 1.36) var(--ui-spring-snappy);
+}
+
+@keyframes ui-radio-pulse {
+  from {
+    transform: scale(0.86);
+  }
+}

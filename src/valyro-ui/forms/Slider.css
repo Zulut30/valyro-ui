@@ -1,0 +1,244 @@
+.ui-slider {
+  --_track-h: var(--ui-slider-track-h);
+  --_thumb-w: var(--ui-slider-thumb-w);
+  --_thumb-h: var(--ui-slider-thumb-h);
+  --_fill: var(--ui-primary);
+  /* Centers thumbs, ticks and labels on their inline-start offset (a right offset in RTL). */
+  --_shift: -50%;
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  touch-action: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ui-slider:dir(rtl) {
+  --_shift: 50%;
+}
+
+.ui-slider[data-disabled] {
+  cursor: not-allowed;
+  opacity: var(--ui-disabled-opacity, 0.5);
+}
+
+/* An always-on bubble sits above the thumb: room for it, so it doesn't cover what's above the slider. */
+.ui-slider[data-tooltip='always'] {
+  padding-top: max(
+    0px,
+    calc(
+      var(--ui-text-xs) * 1.3 + var(--ui-space-2) + var(--ui-slider-value-offset) -
+        (max(var(--_thumb-h), var(--ui-slider-control-min-h)) - var(--_thumb-h)) / 2
+    )
+  );
+}
+
+/* Padding equal to half a thumb keeps thumbs at 0% / 100% inside the component. */
+.ui-slider__control {
+  display: flex;
+  align-items: center;
+  height: max(var(--_thumb-h), var(--ui-slider-control-min-h));
+  padding: 0 calc(var(--_thumb-w) / 2);
+  cursor: pointer;
+}
+
+.ui-slider[data-disabled] .ui-slider__control {
+  cursor: inherit;
+}
+
+/* The track is the rail the values are laid out on (thumb centres reach its ends); the bar drawn under it runs
+   on by half a thumb at each end, so it spans the whole component and lines up with a label or value above. */
+.ui-slider__track {
+  position: relative;
+  flex: 1;
+  height: var(--_track-h);
+  border-radius: var(--ui-radius-full);
+}
+
+.ui-slider__track::before {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  inset-inline: calc(var(--_thumb-w) / -2);
+  border-radius: inherit;
+  background: var(--ui-surface-3);
+  box-shadow: var(--ui-slider-track-shadow);
+}
+
+.ui-slider__range {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: inherit;
+  background: var(--_fill);
+}
+
+.ui-slider__tick {
+  position: absolute;
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--ui-fg-faint);
+  transform: translate(var(--_shift), -50%);
+  pointer-events: none;
+}
+
+.ui-slider__tick[data-active] {
+  background: var(--ui-primary-fg);
+  opacity: 0.7;
+}
+
+.ui-slider__thumb {
+  position: absolute;
+  top: 50%;
+  z-index: 1;
+  width: var(--_thumb-w);
+  height: var(--_thumb-h);
+  border: var(--ui-slider-thumb-border);
+  border-radius: var(--ui-radius-full);
+  background: var(--ui-slider-thumb-bg, #fff);
+  box-shadow: var(--ui-slider-thumb-shadow);
+  outline: none;
+  cursor: grab;
+  transform: translate(var(--_shift), -50%);
+  transition:
+    box-shadow var(--ui-duration-fast) var(--ui-ease),
+    transform var(--ui-duration) var(--ui-ease-spring);
+}
+
+.ui-slider[data-dragging] .ui-slider__control,
+.ui-slider__thumb[data-dragging] {
+  cursor: grabbing;
+}
+
+.ui-slider[data-disabled] .ui-slider__thumb {
+  cursor: inherit;
+}
+
+.ui-slider:not([data-disabled]) .ui-slider__thumb:hover {
+  box-shadow: var(--ui-slider-thumb-shadow-hover);
+}
+
+/* Dragging: Glass turns the knob into a magnified glass lens. */
+.ui-slider:not([data-disabled]) .ui-slider__thumb[data-dragging] {
+  background: var(--ui-slider-thumb-bg-dragging);
+  box-shadow: var(--ui-slider-thumb-shadow-dragging);
+  transform: translate(var(--_shift), -50%) scale(var(--ui-slider-thumb-scale-dragging));
+  -webkit-backdrop-filter: var(--ui-blur);
+  backdrop-filter: var(--ui-blur);
+}
+
+.ui-slider:not([data-disabled]) .ui-slider__thumb:focus-visible {
+  box-shadow: var(--ui-slider-thumb-shadow-focus);
+}
+
+/* Value bubble */
+.ui-slider__value {
+  position: absolute;
+  bottom: calc(100% + var(--ui-slider-value-offset));
+  left: 50%;
+  padding: var(--ui-slider-value-padding);
+  border-radius: var(--ui-radius-button);
+  background: var(--ui-tooltip-bg);
+  box-shadow: var(--ui-tooltip-shadow);
+  -webkit-backdrop-filter: var(--ui-blur);
+  backdrop-filter: var(--ui-blur);
+  color: var(--ui-tooltip-fg);
+  font-size: var(--ui-text-xs);
+  font-weight: var(--ui-weight-medium);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.3;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, 4px) scale(0.92);
+  transition:
+    opacity var(--ui-duration-fast) var(--ui-ease),
+    transform var(--ui-duration) var(--ui-ease-spring);
+}
+
+.ui-slider[data-tooltip='always'] .ui-slider__value,
+.ui-slider[data-tooltip='auto'] .ui-slider__thumb:is(:hover, :focus-visible, [data-dragging]) .ui-slider__value {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* Mark labels */
+.ui-slider__labels {
+  position: relative;
+  height: 18px;
+  margin: 6px calc(var(--_thumb-w) / 2) 0;
+}
+
+.ui-slider__label {
+  position: absolute;
+  top: 0;
+  color: var(--ui-fg-subtle);
+  font-size: var(--ui-text-xs);
+  font-variant-numeric: tabular-nums;
+  line-height: 18px;
+  white-space: nowrap;
+  transform: translateX(var(--_shift));
+}
+
+.ui-slider__label[data-active] {
+  color: var(--ui-fg-muted);
+}
+
+/* Labels at the two ends stay inside the component: a wide one ends flush with the bar instead of hanging
+   half past it; a narrow one (shorter than a thumb) stays centred under its value. */
+.ui-slider__label[data-edge='start'] {
+  transform: translateX(max(-50%, var(--_thumb-w) / -2));
+}
+
+.ui-slider__label[data-edge='end'] {
+  transform: translateX(min(-50%, var(--_thumb-w) / 2 - 100%));
+}
+
+.ui-slider:dir(rtl) .ui-slider__label[data-edge='start'] {
+  transform: translateX(min(50%, var(--_thumb-w) / 2));
+}
+
+.ui-slider:dir(rtl) .ui-slider__label[data-edge='end'] {
+  transform: translateX(max(50%, 100% - var(--_thumb-w) / 2));
+}
+
+@media (forced-colors: active) {
+  /* An outline, not a border, so the track keeps its height and the thumbs stay centred. */
+  .ui-slider__track::before {
+    outline: 1px solid CanvasText;
+  }
+
+  .ui-slider__range {
+    background: Highlight;
+  }
+
+  .ui-slider__thumb {
+    border: 2px solid CanvasText;
+    background: Canvas;
+  }
+
+  .ui-slider__tick {
+    background: CanvasText;
+  }
+
+  .ui-slider__value {
+    outline: 1px solid CanvasText;
+  }
+}
+
+/* Touch: a 44px grab area around the thumb (WCAG 2.5.5). */
+@media (pointer: coarse) {
+  .ui-slider__thumb::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+    translate: -50% -50%;
+  }
+}

@@ -1,0 +1,196 @@
+.ui-virtual-list {
+  --_pad-x: var(--ui-space-3);
+  /* Glass draws rounded highlights inset from the edges; Vercel rows run full-bleed. */
+  --_inset: var(--ui-virtual-list-inset);
+  --_item-radius: var(--ui-virtual-list-item-radius);
+  --_hover: var(--ui-hover);
+  --_selected: var(--ui-virtual-list-selected-bg);
+  --_selected-hover: var(--ui-virtual-list-selected-bg-hover);
+  /* iOS separators start at the content (`initial` in the theme); Vercel's run full-bleed. */
+  --_divider-start: var(--ui-virtual-list-divider-start, var(--_pad-x));
+
+  position: relative;
+  min-width: 0;
+}
+
+.ui-virtual-list__viewport {
+  position: relative;
+  overflow: auto;
+  overscroll-behavior: contain;
+  outline: none;
+  /* Rows are laid out by the virtualizer; containment keeps their repaints inside the viewport. */
+  contain: content;
+  transition: box-shadow var(--ui-duration-fast) var(--ui-ease);
+}
+
+.ui-virtual-list[data-variant='panel'] .ui-virtual-list__viewport {
+  border-radius: var(--ui-virtual-list-panel-radius);
+}
+
+.ui-virtual-list__viewport:focus-visible {
+  box-shadow: var(--ui-focus-ring);
+}
+
+.ui-virtual-list[data-variant='panel'] .ui-virtual-list__viewport:focus-visible {
+  box-shadow: var(--ui-highlight), var(--ui-shadow-card), var(--ui-focus-ring);
+}
+
+/* In a listbox the ring moves to the active row, the way a menu highlights its item. */
+.ui-virtual-list[data-interactive] .ui-virtual-list__viewport:focus-visible {
+  box-shadow: none;
+}
+
+.ui-virtual-list[data-variant='panel'][data-interactive] .ui-virtual-list__viewport:focus-visible {
+  box-shadow: var(--ui-highlight), var(--ui-shadow-card);
+}
+
+.ui-virtual-list__inner {
+  position: relative;
+  width: 100%;
+}
+
+.ui-virtual-list__item,
+.ui-virtual-list__header:not([data-sticky]),
+.ui-virtual-list__loading {
+  position: absolute;
+  top: 0;
+  inset-inline: var(--_inset);
+}
+
+/* Section headers run full-bleed (the viewport's corners clip them), like an iOS list's frosted bar. */
+.ui-virtual-list__header:not([data-sticky]) {
+  inset-inline: 0;
+}
+
+.ui-virtual-list__item {
+  padding-inline: var(--_pad-x);
+  border-radius: var(--_item-radius);
+  color: var(--ui-fg);
+  transition: background-color var(--ui-duration-fast) var(--ui-ease);
+}
+
+.ui-virtual-list[data-dividers] .ui-virtual-list__item::after {
+  content: '';
+  position: absolute;
+  inset-inline: var(--_divider-start) 0;
+  bottom: 0;
+  height: var(--ui-virtual-list-divider-w);
+  background: var(--ui-divider);
+  pointer-events: none;
+}
+
+.ui-virtual-list__item[data-interactive] {
+  cursor: default;
+  user-select: none;
+}
+
+.ui-virtual-list__item[data-interactive]:hover {
+  background: var(--_hover);
+}
+
+.ui-virtual-list__item[data-selected] {
+  background: var(--_selected);
+}
+
+/* Selection pill (Windows 11), visible only when the theme sets --ui-active-indicator. */
+.ui-virtual-list__item[data-selected]::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  inset-inline-start: 0;
+  width: 3px;
+  height: 16px;
+  border-radius: 9999px;
+  background: var(--ui-active-indicator, transparent);
+  translate: 0 -50%;
+  pointer-events: none;
+}
+
+.ui-virtual-list__item[data-selected]:hover {
+  background: var(--_selected-hover);
+}
+
+.ui-virtual-list__viewport:focus-visible .ui-virtual-list__item[data-active] {
+  outline: 2px solid var(--ui-accent);
+  outline-offset: -2px;
+}
+
+.ui-virtual-list__item[aria-disabled='true'] {
+  color: var(--ui-fg-disabled);
+  cursor: not-allowed;
+}
+
+.ui-virtual-list__item[aria-disabled='true']:hover {
+  background: transparent;
+}
+
+/* ── Section headers ── */
+.ui-virtual-list__header {
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+  padding: var(--ui-space-1) var(--_pad-x);
+  border-bottom: var(--ui-virtual-list-divider-w) solid var(--ui-divider);
+  /* A theme can double a translucent fill, so rows passing under the pinned header read as a blur,
+     not as faint text. */
+  background: var(--ui-virtual-list-header-fill);
+  color: var(--ui-virtual-list-header-fg);
+  font-size: var(--ui-text-xs);
+  font-weight: var(--ui-weight-semibold);
+  letter-spacing: var(--ui-virtual-list-header-tracking);
+  -webkit-backdrop-filter: var(--ui-virtual-list-header-backdrop);
+  backdrop-filter: var(--ui-virtual-list-header-backdrop);
+}
+
+/* The pinned copy sits in flow at the top; the next section's header slides over it. */
+.ui-virtual-list__header[data-sticky] {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin-inline: 0;
+}
+
+.ui-virtual-list__loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ui-space-2);
+  padding: var(--ui-space-3);
+  color: var(--ui-fg-muted);
+  font-size: var(--ui-text-sm);
+}
+
+.ui-virtual-list__empty {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  min-height: 120px;
+  padding: var(--ui-space-6);
+  color: var(--ui-fg-muted);
+  font-size: var(--ui-text-sm);
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-virtual-list__viewport,
+  .ui-virtual-list__item {
+    transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .ui-virtual-list__item[data-selected] {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+
+  .ui-virtual-list__viewport:focus-visible .ui-virtual-list__item[data-active] {
+    outline: 3px solid Highlight;
+    outline-offset: -3px;
+  }
+
+  .ui-virtual-list__viewport:focus-visible {
+    outline: 2px solid Highlight;
+  }
+}

@@ -1,0 +1,217 @@
+.ui-color-picker {
+  --_checker: repeating-conic-gradient(#d4d4d4 0 25%, #ffffff 0 50%) 0 0 / 8px 8px;
+  --_thumb: var(--ui-color-picker-thumb-size);
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-3);
+  width: 256px;
+  padding: var(--ui-color-picker-padding);
+  color: var(--ui-fg);
+}
+
+/* ── Saturation / brightness area ── */
+.ui-color-picker__area {
+  position: relative;
+  height: 160px;
+  border-radius: var(--ui-color-picker-area-radius);
+  background:
+    linear-gradient(to top, #000000, transparent),
+    linear-gradient(to right, #ffffff, var(--_hue));
+  box-shadow: inset 0 0 0 1px var(--ui-divider);
+  cursor: crosshair;
+  outline: none;
+  touch-action: none;
+}
+
+.ui-color-picker__area:focus-visible {
+  box-shadow: inset 0 0 0 1px var(--ui-divider), var(--ui-focus-ring);
+}
+
+.ui-color-picker__thumb {
+  position: absolute;
+  top: 50%;
+  width: var(--_thumb);
+  height: var(--_thumb);
+  border: var(--ui-color-picker-thumb-border-width) solid #ffffff;
+  border-radius: var(--ui-radius-full);
+  background: var(--_swatch);
+  box-shadow: var(--ui-color-picker-thumb-shadow);
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  transition: transform var(--ui-duration) var(--ui-ease-spring);
+}
+
+.ui-color-picker__area:active .ui-color-picker__thumb,
+.ui-color-picker__slider:active .ui-color-picker__thumb {
+  transform: translate(-50%, -50%) scale(1.15);
+}
+
+/* ── Sliders ── */
+.ui-color-picker__controls {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-3);
+}
+
+.ui-color-picker__sliders {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--ui-space-3);
+  min-width: 0;
+}
+
+.ui-color-picker__slider {
+  position: relative;
+  height: var(--ui-color-picker-slider-h);
+  border-radius: var(--ui-radius-full);
+  box-shadow: inset 0 0 0 1px var(--ui-divider);
+  cursor: pointer;
+  outline: none;
+  touch-action: none;
+}
+
+.ui-color-picker__slider[data-channel='hue'] {
+  background: linear-gradient(
+    to right,
+    #ff0000 0%,
+    #ffff00 17%,
+    #00ff00 33%,
+    #00ffff 50%,
+    #0000ff 67%,
+    #ff00ff 83%,
+    #ff0000 100%
+  );
+}
+
+.ui-color-picker__slider[data-channel='alpha'] {
+  background:
+    linear-gradient(to right, rgb(var(--_rgb) / 0), rgb(var(--_rgb))),
+    var(--_checker);
+}
+
+.ui-color-picker__slider:focus-visible .ui-color-picker__thumb {
+  box-shadow: var(--ui-color-picker-thumb-shadow-focus);
+}
+
+.ui-color-picker__preview {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--ui-radius-full);
+  background:
+    linear-gradient(var(--_swatch), var(--_swatch)),
+    var(--_checker, repeating-conic-gradient(#d4d4d4 0 25%, #ffffff 0 50%) 0 0 / 8px 8px);
+  box-shadow: inset 0 0 0 1px var(--ui-divider);
+}
+
+/* ── Hex input ── */
+.ui-color-picker__inputs {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-2);
+}
+
+.ui-color-picker__hex {
+  flex: 1;
+  /* The input's intrinsic 20ch would otherwise push the row (and the % readout) past the picker. */
+  min-width: 0;
+  border-radius: var(--ui-radius-field);
+  font-family: var(--ui-font-mono);
+  text-transform: uppercase;
+  /* "#" + hex digits is a code, read left to right in every script. */
+  direction: ltr;
+}
+
+.ui-color-picker__hex .ui-field__icon {
+  font-size: var(--ui-text-sm);
+}
+
+.ui-color-picker__alpha-value {
+  flex-shrink: 0;
+  min-width: 36px;
+  color: var(--ui-fg-muted);
+  font-size: var(--ui-text-sm);
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}
+
+/* ── Swatches ── */
+.ui-color-picker__swatches {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 6px;
+}
+
+/* Colour hairlines use --ui-divider: Glass --ui-border is a white highlight, which would leave
+   a white swatch without an edge. */
+.ui-color-picker__swatch {
+  aspect-ratio: 1;
+  padding: 0;
+  border: 0;
+  border-radius: var(--ui-color-picker-swatch-radius);
+  background:
+    linear-gradient(var(--_swatch), var(--_swatch)),
+    var(--_checker);
+  box-shadow: inset 0 0 0 1px var(--ui-divider);
+  cursor: pointer;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  transition:
+    transform var(--ui-duration) var(--ui-ease-spring),
+    outline-color var(--ui-duration-fast) var(--ui-ease);
+}
+
+.ui-color-picker__swatch:hover {
+  transform: scale(1.1);
+}
+
+.ui-color-picker__swatch:focus-visible {
+  box-shadow: inset 0 0 0 1px var(--ui-divider), var(--ui-focus-ring);
+}
+
+.ui-color-picker__swatch[aria-pressed='true'] {
+  outline-color: var(--ui-color-picker-swatch-outline-selected);
+}
+
+/* ── Popover trigger ── */
+.ui-color-picker-trigger {
+  font-family: var(--ui-font-mono);
+}
+
+.ui-color-picker-trigger__swatch {
+  width: 20px;
+  height: 20px;
+}
+
+.ui-color-picker-trigger__popover {
+  border-radius: var(--ui-picker-popover-radius);
+}
+
+@media (forced-colors: active) {
+  /* The gradients carry the meaning here, so keep the author colours. */
+  .ui-color-picker__area,
+  .ui-color-picker__slider,
+  .ui-color-picker__swatch,
+  .ui-color-picker__preview {
+    forced-color-adjust: none;
+  }
+
+  .ui-color-picker__swatches .ui-color-picker__swatch[aria-pressed='true'] {
+    outline-color: CanvasText;
+  }
+}
+
+/* Touch: swatches take the gap around them as hit area, without overlapping a neighbour. */
+@media (pointer: coarse) {
+  .ui-color-picker__swatch {
+    position: relative;
+  }
+
+  .ui-color-picker__swatch::after {
+    content: '';
+    position: absolute;
+    inset: -3px;
+  }
+}

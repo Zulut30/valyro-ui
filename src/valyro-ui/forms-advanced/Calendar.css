@@ -1,0 +1,258 @@
+.ui-calendar {
+  --_cell: var(--ui-calendar-cell-size);
+  --_inset: 2px;
+  --_band: var(--ui-calendar-band-bg);
+  --_band-radius: var(--ui-radius-button);
+
+  display: inline-flex;
+  /* Side-by-side months stack when the container is too narrow for them. */
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--ui-space-6);
+  max-width: 100%;
+  padding: var(--ui-space-3);
+  color: var(--ui-fg);
+  font-size: var(--ui-text-md);
+  user-select: none;
+}
+
+.ui-calendar__month {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-2);
+}
+
+.ui-calendar__header {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-2);
+  height: var(--ui-control-h-sm);
+}
+
+.ui-calendar__nav-spacer {
+  flex-shrink: 0;
+  width: var(--ui-control-h-sm);
+}
+
+.ui-calendar__caption {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--ui-calendar-caption-size);
+  font-weight: var(--ui-weight-label);
+  letter-spacing: var(--ui-calendar-caption-tracking);
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Intl gives lowercase month names in many locales ("октябрь 2026 г."). */
+.ui-calendar__caption::first-letter {
+  text-transform: uppercase;
+}
+
+.ui-calendar__grid {
+  border-collapse: collapse;
+  border-spacing: 0;
+  table-layout: fixed;
+}
+
+.ui-calendar__weekday {
+  width: var(--_cell);
+  height: 28px;
+  padding: 0;
+  color: var(--ui-fg-subtle);
+  font-size: var(--ui-text-xs);
+  font-weight: var(--ui-calendar-weekday-weight);
+  letter-spacing: var(--ui-calendar-weekday-tracking);
+  text-align: center;
+  text-transform: var(--ui-calendar-weekday-transform);
+}
+
+.ui-calendar__cell {
+  position: relative;
+  width: var(--_cell);
+  height: calc(var(--_cell) + var(--_inset) * 2);
+  padding: 0;
+  text-align: center;
+  vertical-align: middle;
+}
+
+/* ── Range band: drawn on the cell so it runs continuously between days ── */
+.ui-calendar__cell[data-in-range]::before {
+  content: '';
+  position: absolute;
+  inset: var(--_inset) 0;
+  background: var(--_band);
+  /* Days joining the range (a pick, the hover preview) fade into the band instead of popping in. */
+  animation: ui-fade-in var(--ui-duration-fast) var(--ui-ease);
+}
+
+.ui-calendar__cell[data-preview]::before {
+  opacity: 0.7;
+}
+
+.ui-calendar__cell[data-range-start]::before {
+  inset-inline-start: 50%;
+}
+
+.ui-calendar__cell[data-range-end]::before {
+  inset-inline-end: 50%;
+}
+
+.ui-calendar__cell[data-in-range]:is(:first-child, [data-empty] + *)::before {
+  border-start-start-radius: var(--_band-radius);
+  border-end-start-radius: var(--_band-radius);
+}
+
+.ui-calendar__cell[data-in-range]:is(:last-child, :has(+ [data-empty]))::before {
+  border-start-end-radius: var(--_band-radius);
+  border-end-end-radius: var(--_band-radius);
+}
+
+/* ── Day ── */
+.ui-calendar__day {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--_cell);
+  height: var(--_cell);
+  padding: 0;
+  border: 0;
+  border-radius: var(--ui-radius-button);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: var(--ui-calendar-day-size);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color var(--ui-duration-fast) var(--ui-ease),
+    color var(--ui-duration-fast) var(--ui-ease),
+    box-shadow var(--ui-duration-fast) var(--ui-ease),
+    transform var(--ui-duration) var(--ui-ease-spring);
+}
+
+.ui-calendar__day:hover:not([data-disabled], [data-selected]) {
+  background: var(--ui-hover);
+}
+
+.ui-calendar__day:focus-visible {
+  z-index: 1;
+  box-shadow: var(--ui-focus-ring);
+}
+
+.ui-calendar__day:active:not([data-disabled]) {
+  transform: var(--ui-press-transform);
+}
+
+/* Pressed: a deeper tint, so the press reads in themes without a press transform. */
+.ui-calendar__day:active:not([data-disabled], [data-selected]) {
+  background: var(--ui-active);
+}
+
+/* Before the today rule, which keeps today semibold when selected. */
+.ui-calendar__day[data-selected] {
+  font-weight: var(--ui-calendar-day-selected-weight);
+}
+
+.ui-calendar__day[data-today] {
+  color: var(--ui-calendar-day-today-fg);
+  font-weight: var(--ui-weight-semibold);
+}
+
+/* Today's dot (none in Glass, which tints the number instead). */
+.ui-calendar__day[data-today]::after {
+  content: var(--ui-calendar-day-today-dot);
+  position: absolute;
+  bottom: 5px;
+  left: calc(50% - 2px);
+  width: 4px;
+  height: 4px;
+  border-radius: var(--ui-radius-full);
+  background: currentColor;
+}
+
+/* Outside days stay pickable, so they keep readable (subtle, not disabled) contrast. */
+.ui-calendar__day[data-outside] {
+  color: var(--ui-fg-subtle);
+}
+
+.ui-calendar__day[data-selected] {
+  background: var(--ui-picker-selected-bg);
+  color: var(--ui-primary-fg);
+  box-shadow: var(--ui-calendar-day-selected-shadow);
+  animation: var(--ui-calendar-day-selected-animation);
+}
+
+.ui-calendar__day[data-selected]:focus-visible {
+  box-shadow: var(--ui-calendar-day-selected-shadow-focus);
+}
+
+.ui-calendar__cell[data-preview]:is([data-range-start], [data-range-end]) .ui-calendar__day:not([data-selected]) {
+  box-shadow: inset 0 0 0 1px var(--ui-border-strong);
+}
+
+.ui-calendar__day[data-disabled] {
+  color: var(--ui-fg-disabled);
+  cursor: not-allowed;
+}
+
+.ui-calendar__day[data-disabled][data-selected] {
+  opacity: var(--ui-disabled-opacity, 0.5);
+}
+
+/* Which state colours the number when several apply: Vercel lets disabled win; Glass lets outside, then
+   selected, then today win over disabled. */
+.ui-calendar__day[data-disabled][data-today] {
+  color: var(--ui-calendar-day-today-fg-disabled);
+}
+
+.ui-calendar__day[data-disabled][data-selected] {
+  color: var(--ui-calendar-day-selected-fg-disabled);
+}
+
+.ui-calendar__day[data-outside][data-selected] {
+  color: var(--ui-calendar-day-outside-selected-fg);
+}
+
+.ui-calendar__day[data-outside][data-disabled] {
+  color: var(--ui-calendar-day-outside-disabled-fg);
+}
+
+@keyframes ui-calendar-select {
+  from {
+    transform: scale(0.7);
+  }
+}
+
+/* Forced colors repaint backgrounds with Canvas: selection and range switch to system colours (after the state rules, so they win). */
+@media (forced-colors: active) {
+  .ui-calendar .ui-calendar__cell[data-in-range]::before {
+    background: Highlight;
+    opacity: 0.35;
+    forced-color-adjust: none;
+  }
+
+  .ui-calendar .ui-calendar__day[data-today] {
+    text-decoration: underline;
+  }
+
+  /* No text backplate over the band. */
+  .ui-calendar .ui-calendar__cell[data-in-range] .ui-calendar__day {
+    color: CanvasText;
+    forced-color-adjust: none;
+  }
+
+  .ui-calendar .ui-calendar__cell .ui-calendar__day[data-selected] {
+    background: Highlight;
+    box-shadow: none;
+    color: HighlightText;
+    forced-color-adjust: none;
+  }
+
+  .ui-calendar .ui-calendar__day[data-disabled] {
+    color: GrayText;
+  }
+}

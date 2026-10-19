@@ -1,0 +1,110 @@
+.ui-button-group {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ui-space-2);
+  /* Hug the buttons even as a stretched flex/grid item (matters for the Glass capsule). */
+  width: fit-content;
+  max-width: 100%;
+}
+
+.ui-button-group[data-orientation='vertical'] {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+/* Attached: shared 1px borders via overlap, radius only on the outer ends. A theme can instead draw one
+   frosted capsule with borderless segments inside; the segments shrink by its inset so the capsule keeps
+   the standard control height and lines up with buttons. */
+.ui-button-group[data-attached] {
+  --_inset: var(--ui-button-group-inset);
+
+  gap: var(--ui-button-group-gap);
+  padding: var(--_inset);
+  border-radius: var(--ui-button-group-radius);
+  background: var(--ui-control-track-bg);
+  box-shadow: var(--ui-raised-shadow);
+  -webkit-backdrop-filter: var(--ui-blur);
+  backdrop-filter: var(--ui-blur);
+}
+
+.ui-button-group[data-attached][data-orientation='vertical'] {
+  border-radius: var(--ui-button-group-radius-vertical);
+}
+
+.ui-button-group[data-attached] > .ui-button {
+  --_h: calc(var(--ui-control-h-md) - 2 * var(--_inset));
+  --_shadow: 0 0 #0000;
+  margin: 0;
+  border-radius: var(--ui-button-group-item-radius);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.ui-button-group[data-attached] > .ui-button[data-size='sm'] {
+  --_h: calc(var(--ui-control-h-sm) - 2 * var(--_inset));
+}
+
+.ui-button-group[data-attached] > .ui-button[data-size='lg'] {
+  --_h: calc(var(--ui-control-h-lg) - 2 * var(--_inset));
+}
+
+/* `initial` in the theme keeps the secondary button's own fill and ring. */
+.ui-button-group[data-attached] > .ui-button[data-variant='secondary'] {
+  --_bg: var(--ui-button-group-item-bg, var(--ui-bg));
+  --_bg-hover: var(--ui-button-group-item-bg-hover, var(--ui-surface-2));
+  --_ring: var(--ui-button-group-item-ring, var(--ui-border-field));
+}
+
+/* A toggle in a toolbar (aria-pressed): the pressed segment is filled and sunk in, like a held-down key. */
+.ui-button-group[data-attached] > .ui-button[aria-pressed='true'] {
+  --_bg: var(--ui-surface-3);
+  --_bg-hover: var(--ui-surface-3);
+  --_fg: var(--ui-fg);
+  --_shadow: inset 0 1px 2px color-mix(in srgb, var(--ui-fg) 18%, transparent);
+}
+
+/* Filled neighbours (a split button: action + its menu) get a hairline between them in their own ink. */
+.ui-button-group[data-attached][data-orientation='horizontal']
+  > .ui-button:is([data-variant='primary'], [data-variant='accent'], [data-variant='danger'])
+  + .ui-button:is([data-variant='primary'], [data-variant='accent'], [data-variant='danger']) {
+  --_shadow: inset 1px 0 0 color-mix(in srgb, var(--_fg) 28%, transparent);
+}
+
+.ui-button-group[data-attached][data-orientation='horizontal']:dir(rtl)
+  > .ui-button:is([data-variant='primary'], [data-variant='accent'], [data-variant='danger'])
+  + .ui-button:is([data-variant='primary'], [data-variant='accent'], [data-variant='danger']) {
+  --_shadow: inset -1px 0 0 color-mix(in srgb, var(--_fg) 28%, transparent);
+}
+
+.ui-button-group[data-attached] > .ui-button:hover,
+.ui-button-group[data-attached] > .ui-button:focus-visible {
+  z-index: 1;
+}
+
+.ui-button-group[data-attached][data-orientation='horizontal'] > .ui-button + .ui-button {
+  margin-inline-start: -1px;
+}
+
+.ui-button-group[data-attached][data-orientation='horizontal'] > .ui-button:first-child {
+  border-start-start-radius: var(--ui-radius-button);
+  border-end-start-radius: var(--ui-radius-button);
+}
+
+.ui-button-group[data-attached][data-orientation='horizontal'] > .ui-button:last-child {
+  border-start-end-radius: var(--ui-radius-button);
+  border-end-end-radius: var(--ui-radius-button);
+}
+
+.ui-button-group[data-attached][data-orientation='vertical'] > .ui-button + .ui-button {
+  margin-top: -1px;
+}
+
+.ui-button-group[data-attached][data-orientation='vertical'] > .ui-button:first-child {
+  border-start-start-radius: var(--ui-radius-sm);
+  border-start-end-radius: var(--ui-radius-sm);
+}
+
+.ui-button-group[data-attached][data-orientation='vertical'] > .ui-button:last-child {
+  border-end-start-radius: var(--ui-radius-sm);
+  border-end-end-radius: var(--ui-radius-sm);
+}

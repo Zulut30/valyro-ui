@@ -1,0 +1,151 @@
+.ui-date-range-picker__popover {
+  display: flex;
+  flex-direction: column;
+  max-width: calc(100vw - 16px);
+  border-radius: var(--ui-picker-popover-radius);
+}
+
+/* `inline`: the same panel in the page flow, under the field, as wide as its content allows. */
+.ui-date-range-picker__popover[data-inline] {
+  align-self: flex-start;
+  width: max-content;
+  max-width: 100%;
+  margin-block-start: var(--ui-space-1);
+}
+
+.ui-date-range-picker__body {
+  display: flex;
+  min-width: 0;
+}
+
+.ui-date-range-picker__presets {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: 2px;
+  min-width: 148px;
+  padding: var(--ui-date-range-picker-presets-padding);
+  border-inline-end: 1px solid var(--ui-divider);
+}
+
+.ui-date-range-picker__preset {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  height: var(--ui-menu-item-h);
+  padding: 0 var(--ui-space-3);
+  border: 0;
+  border-radius: var(--ui-radius-button);
+  background: transparent;
+  color: var(--ui-fg-muted);
+  font: inherit;
+  font-size: var(--ui-date-range-picker-preset-size);
+  text-align: start;
+  white-space: nowrap;
+  cursor: pointer;
+  outline: none;
+  transition:
+    background-color var(--ui-duration-fast) var(--ui-ease),
+    color var(--ui-duration-fast) var(--ui-ease);
+}
+
+.ui-date-range-picker__preset:hover:not(:disabled) {
+  background: var(--ui-hover);
+  color: var(--ui-fg);
+}
+
+/* Lifted: the presets sit 2px apart, and the next one's fill would cover the ring's lower edge. */
+.ui-date-range-picker__preset:focus-visible {
+  position: relative;
+  z-index: 1;
+  box-shadow: var(--ui-focus-ring);
+}
+
+.ui-date-range-picker__preset[aria-pressed='true'] {
+  background: var(--ui-date-range-picker-preset-bg-pressed);
+  color: var(--ui-date-range-picker-preset-fg-pressed);
+  font-weight: var(--ui-weight-medium);
+  box-shadow: var(--ui-date-range-picker-preset-shadow-pressed);
+}
+
+.ui-date-range-picker__preset[aria-pressed='true']:hover:not(:disabled) {
+  background: var(--ui-date-range-picker-preset-bg-pressed-hover);
+  color: var(--ui-date-range-picker-preset-fg-pressed);
+}
+
+.ui-date-range-picker__preset[aria-pressed='true']:focus-visible {
+  box-shadow: var(--ui-date-range-picker-preset-shadow-pressed-focus);
+}
+
+.ui-date-range-picker__preset:disabled {
+  color: var(--ui-fg-disabled);
+  cursor: not-allowed;
+}
+
+.ui-date-range-picker__calendar {
+  min-width: 0;
+}
+
+.ui-date-range-picker__footer {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-2);
+  padding: var(--ui-date-range-picker-footer-padding);
+  border-top: 1px solid var(--ui-divider);
+}
+
+.ui-date-range-picker__summary {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ui-fg-muted);
+  font-size: var(--ui-text-sm);
+  font-variant-numeric: tabular-nums;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 799px) {
+  .ui-date-range-picker__body {
+    flex-direction: column;
+  }
+
+  /* Presets become wrapping chips so none hide behind a horizontal scroll. */
+  .ui-date-range-picker__presets {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px;
+    min-width: 0;
+    border-inline-end: 0;
+    border-bottom: 1px solid var(--ui-divider);
+  }
+
+  .ui-date-range-picker__preset {
+    height: 28px;
+    padding: 0 var(--ui-space-3);
+    background: var(--ui-hover);
+  }
+
+  .ui-date-range-picker__calendar {
+    align-self: center;
+  }
+
+  /* The range summary takes its own line above Cancel / Apply instead of being cut ("9–15 окт. 20…"). */
+  .ui-date-range-picker__footer {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .ui-date-range-picker__summary {
+    flex-basis: 100%;
+  }
+}
+
+@media (forced-colors: active) {
+  .ui-date-range-picker__presets .ui-date-range-picker__preset[aria-pressed='true'],
+  .ui-date-range-picker__presets .ui-date-range-picker__preset[aria-pressed='true']:hover:not(:disabled) {
+    background: Highlight;
+    color: HighlightText;
+    forced-color-adjust: none;
+  }
+}

@@ -1,0 +1,290 @@
+.ui-carousel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-3);
+  inline-size: 100%;
+  min-inline-size: 0;
+}
+
+.ui-carousel__stage {
+  position: relative;
+}
+
+.ui-carousel__track {
+  display: flex;
+  gap: var(--_gap);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  border-radius: var(--ui-radius-card);
+  outline: none;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.ui-carousel__track::-webkit-scrollbar {
+  display: none;
+}
+
+.ui-carousel__track:focus-visible {
+  box-shadow: var(--ui-focus-ring);
+}
+
+.ui-carousel__track[data-dragging] {
+  cursor: grabbing;
+  scroll-snap-type: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.ui-carousel__slide {
+  flex: 0 0 calc((100% - (var(--_per-view) - 1) * var(--_gap)) / var(--_per-view));
+  min-inline-size: 0;
+  scroll-snap-align: start;
+}
+
+/* Arrows and the rotation control float over the slides on the glass/elevated material. */
+.ui-carousel__arrow,
+.ui-carousel__rotation {
+  position: absolute;
+  z-index: 1;
+  border-color: var(--ui-floating-border-color);
+  background: var(--ui-elevated);
+  box-shadow: var(--ui-highlight), var(--ui-shadow-popover);
+  -webkit-backdrop-filter: var(--ui-blur-strong);
+  backdrop-filter: var(--ui-blur-strong);
+  /* Button's own transitions too (this list replaces it): the press transform, ring and colour. */
+  transition:
+    opacity var(--ui-duration) var(--ui-ease),
+    background-color var(--ui-duration-fast) var(--ui-ease),
+    box-shadow var(--ui-duration-fast) var(--ui-ease),
+    color var(--ui-duration-fast) var(--ui-ease),
+    transform var(--ui-duration) var(--ui-ease-spring);
+}
+
+.ui-carousel__arrow {
+  top: 50%;
+  translate: 0 -50%;
+}
+
+.ui-carousel__arrow[data-side='start'] {
+  inset-inline-start: var(--ui-space-3);
+}
+
+.ui-carousel__arrow[data-side='end'] {
+  inset-inline-end: var(--ui-space-3);
+}
+
+.ui-carousel__arrow:disabled {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* With a mouse, arrows appear on hover or keyboard focus; touch screens (and showArrows="always") always show them. */
+@media (hover: hover) {
+  .ui-carousel:not([data-arrows='always']) .ui-carousel__stage:not(:hover, :focus-within) .ui-carousel__arrow {
+    opacity: 0;
+  }
+}
+
+/* align="center": the stage is the query container, so slides and the track padding are sized from its
+   width. Half the free space pads each end, which lets the first and the last slide rest in the middle;
+   the neighbours fade out at the edges instead of being cut by a hard line. */
+.ui-carousel[data-align='center'] .ui-carousel__stage {
+  container-type: inline-size;
+}
+
+.ui-carousel[data-align='center'] .ui-carousel__track {
+  --_slide: calc((100cqi - (var(--_per-view) - 1) * var(--_gap)) / var(--_per-view));
+  --_fade: min(8%, var(--ui-space-16));
+  padding-inline: calc((100cqi - var(--_slide)) / 2);
+  border-radius: 0;
+}
+
+/* The fade would also mask the focus ring, so it lifts while the track has keyboard focus. */
+.ui-carousel[data-align='center'] .ui-carousel__track:not(:focus-visible) {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 var(--_fade), #000 calc(100% - var(--_fade)), transparent);
+  mask-image: linear-gradient(to right, transparent, #000 var(--_fade), #000 calc(100% - var(--_fade)), transparent);
+}
+
+.ui-carousel[data-align='center'] .ui-carousel__slide {
+  flex-basis: var(--_slide);
+  scroll-snap-align: center;
+}
+
+.ui-carousel__rotation {
+  inset-block-end: var(--ui-space-3);
+  inset-inline-start: var(--ui-space-3);
+}
+
+.ui-carousel__dots {
+  display: flex;
+  justify-content: center;
+}
+
+/* 24px hit targets around small dots; the current one stretches into a pill. */
+.ui-carousel__dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  outline: none;
+  transition: width var(--ui-duration) var(--ui-ease);
+}
+
+.ui-carousel__dot::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: var(--ui-radius-full);
+  background: var(--ui-border-strong);
+  transition:
+    width var(--ui-duration) var(--ui-ease),
+    background-color var(--ui-duration) var(--ui-ease),
+    transform var(--ui-duration) var(--ui-ease-spring);
+}
+
+.ui-carousel__dot:hover::before {
+  background: var(--ui-fg-subtle);
+}
+
+/* Pressed: the dot dips, then springs back. */
+.ui-carousel__dot:active::before {
+  transform: scale(0.8);
+  transition-duration: var(--ui-duration), var(--ui-duration), var(--ui-duration-fast);
+}
+
+.ui-carousel__dot[aria-current='true'] {
+  width: 32px;
+}
+
+.ui-carousel__dot[aria-current='true']::before {
+  width: 22px;
+  background: var(--ui-action-fg);
+}
+
+.ui-carousel__dot:focus-visible::before {
+  box-shadow: var(--ui-focus-ring);
+}
+
+/* Touch: wider, taller dot targets (the dots stay 8px); a long deck wraps them instead of overflowing. */
+@media (pointer: coarse) {
+  .ui-carousel__dots {
+    flex-wrap: wrap;
+  }
+
+  .ui-carousel__dot {
+    width: 28px;
+    height: 40px;
+  }
+
+  .ui-carousel__dot[aria-current='true'] {
+    width: 36px;
+  }
+}
+
+.ui-carousel__thumbs {
+  display: flex;
+  gap: var(--ui-space-2);
+  padding: 4px;
+  margin: -4px;
+  overflow-x: auto;
+  /* Tabbing scrolls a thumbnail in with room for its ring, which the padding alone does not keep. */
+  scroll-padding-inline: 4px;
+  scrollbar-width: none;
+}
+
+.ui-carousel__thumbs::-webkit-scrollbar {
+  display: none;
+}
+
+/* Thumbnails share the slide's width (up to a cap) instead of huddling at the start; when capped, the
+   strip centres under the slide. Auto margins centre it without hiding the start of an overflowing strip. */
+.ui-carousel__thumb {
+  flex: 1 0 72px;
+  max-inline-size: 120px;
+  height: 56px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-surface-2);
+  cursor: pointer;
+  opacity: 0.55;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  transition:
+    opacity var(--ui-duration-fast) var(--ui-ease),
+    outline-color var(--ui-duration-fast) var(--ui-ease);
+}
+
+.ui-carousel__thumb:first-child {
+  margin-inline-start: auto;
+}
+
+.ui-carousel__thumb:last-child {
+  margin-inline-end: auto;
+}
+
+.ui-carousel__thumb:hover {
+  opacity: 0.85;
+}
+
+.ui-carousel__thumb[aria-current='true'] {
+  opacity: 1;
+  outline-color: var(--ui-action-fg);
+}
+
+.ui-carousel__thumb:focus-visible {
+  opacity: 1;
+  outline-color: var(--ui-focus-color);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-carousel__dot,
+  .ui-carousel__dot::before,
+  .ui-carousel__thumb,
+  .ui-carousel__arrow {
+    transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .ui-carousel__dot::before {
+    background: CanvasText;
+  }
+
+  .ui-carousel__dot[aria-current='true']::before {
+    background: Highlight;
+  }
+
+  .ui-carousel__thumb[aria-current='true'] {
+    outline-color: Highlight;
+  }
+}
+
+/* animation="spring": every slide but the current one shrinks and dims (scale and opacity only); the
+   current dot's pill stretches with a bounce. */
+.ui-carousel[data-motion='spring'] .ui-carousel__slide {
+  opacity: 0.55;
+  scale: 0.88;
+  transition:
+    scale calc(var(--ui-duration-slow) * 1.36) var(--ui-spring-snappy),
+    opacity var(--ui-duration-slow) var(--ui-ease);
+}
+
+.ui-carousel[data-motion='spring'] .ui-carousel__slide[data-active] {
+  opacity: 1;
+  scale: 1;
+}
+
+.ui-carousel[data-motion='spring'] .ui-carousel__dot,
+.ui-carousel[data-motion='spring'] .ui-carousel__dot::before {
+  transition:
+    width calc(var(--ui-duration-slow) * 2.61) var(--ui-spring-bouncy),
+    background-color var(--ui-duration) var(--ui-ease);
+}

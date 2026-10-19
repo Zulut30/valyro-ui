@@ -1,0 +1,12 @@
+/* Repeated classes: the feedback color must win over theme and container button colors. */
+.ui-button.ui-icon-button.ui-ai-copy-button.ui-ai-copy-button[data-state='copied'][data-variant] {
+  --_fg: var(--ui-success-text);
+}
+
+.ui-button.ui-icon-button.ui-ai-copy-button.ui-ai-copy-button[data-state='error'][data-variant] {
+  --_fg: var(--ui-danger-text);
+}
+
+.ui-ai-copy-button[data-state='copied'] .ui-icon {
+  animation: ui-pop-in var(--ui-duration) var(--ui-ease-spring);
+}

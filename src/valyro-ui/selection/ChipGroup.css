@@ -1,0 +1,109 @@
+.ui-chip-group {
+  --ui-chip-group-height: 36px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ui-space-2);
+  min-width: 0;
+}
+
+.ui-chip-group[data-size='sm'] {
+  --ui-chip-group-height: 28px;
+}
+
+.ui-chip-group[data-size='lg'] {
+  --ui-chip-group-height: 44px;
+}
+
+.ui-chip-group__chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ui-space-2);
+  height: var(--ui-chip-group-height);
+  padding-inline: calc(var(--ui-chip-group-height) * 0.32);
+  border: 1px solid transparent;
+  border-radius: var(--ui-chip-group-radius, var(--ui-radius-md));
+  background: var(--ui-surface-2);
+  color: var(--ui-fg-muted);
+  font-size: var(--ui-text-sm);
+  font-weight: var(--ui-weight-medium);
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition:
+    background-color var(--ui-duration-fast) var(--ui-ease),
+    border-color var(--ui-duration-fast) var(--ui-ease),
+    color var(--ui-duration-fast) var(--ui-ease),
+    box-shadow var(--ui-duration-fast) var(--ui-ease);
+}
+
+.ui-chip-group[data-size='lg'] .ui-chip-group__chip {
+  font-size: var(--ui-text-md);
+}
+
+.ui-chip-group[data-variant='outline'] .ui-chip-group__chip {
+  border-color: var(--ui-border);
+  background: transparent;
+}
+
+.ui-chip-group__chip:hover:not([data-disabled]) {
+  background: var(--ui-surface-3);
+  color: var(--ui-fg);
+}
+
+.ui-chip-group__chip[data-checked] {
+  border-color: var(--ui-chip-group-checked-border, var(--ui-accent));
+  background: var(--ui-accent-soft);
+  color: var(--ui-accent-text);
+}
+
+.ui-chip-group__chip[data-checked]:hover:not([data-disabled]) {
+  background: var(--ui-accent-soft);
+  color: var(--ui-accent-text);
+}
+
+/* Pressed: the theme's pressed tint over whatever fill the chip has. (Not --ui-press-transform: it is
+   sized for small controls and would shrink a wide chip too far.) */
+.ui-chip-group__chip:active:not([data-disabled]) {
+  background-image: linear-gradient(var(--ui-active), var(--ui-active));
+}
+
+.ui-chip-group__chip:has(input:focus-visible) {
+  box-shadow: var(--ui-focus-ring);
+}
+
+.ui-chip-group__chip[data-disabled] {
+  cursor: not-allowed;
+  opacity: var(--ui-disabled-opacity, 0.5);
+}
+
+.ui-chip-group__icon {
+  display: inline-flex;
+  flex: none;
+}
+
+.ui-chip-group__icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.ui-chip-group__count {
+  color: var(--ui-fg-subtle);
+  font-size: var(--ui-text-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.ui-chip-group__chip[data-checked] .ui-chip-group__count {
+  color: inherit;
+}
+
+@media (forced-colors: active) {
+  .ui-chip-group__chip {
+    border-color: CanvasText;
+  }
+
+  .ui-chip-group__chip[data-checked] {
+    border-width: 2px;
+    border-color: Highlight;
+  }
+}

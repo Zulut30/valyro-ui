@@ -1,0 +1,240 @@
+.ui-code-block {
+  --_bg: var(--ui-code-block-bg);
+  --_header-bg: var(--ui-code-block-header-bg);
+  --_leading: 1.7;
+
+  /* Syntax palette, from the theme (DiffReview and DiffViewer read these too). */
+  --_tk-keyword: var(--ui-code-block-keyword-fg);
+  --_tk-string: var(--ui-code-block-string-fg);
+  --_tk-number: var(--ui-code-block-number-fg);
+  --_tk-constant: var(--ui-code-block-constant-fg);
+  --_tk-function: var(--ui-code-block-function-fg);
+  --_tk-type: var(--ui-code-block-type-fg);
+  --_tk-tag: var(--ui-code-block-tag-fg);
+  --_tk-attr: var(--ui-code-block-attr-fg);
+  --_tk-property: var(--ui-code-block-property-fg);
+  --_tk-variable: var(--ui-code-block-variable-fg);
+  --_tk-comment: var(--ui-code-block-comment-fg);
+  --_tk-punctuation: var(--ui-code-block-punctuation-fg);
+  --_tk-inserted: var(--ui-code-block-inserted-fg);
+  --_tk-deleted: var(--ui-code-block-deleted-fg);
+  --_tk-keyword-weight: var(--ui-code-block-keyword-weight);
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--ui-glass-border);
+  border-radius: var(--ui-radius-md);
+  background: var(--_bg);
+  corner-shape: var(--ui-surface-corner-shape);
+  color: var(--ui-fg);
+  box-shadow: var(--ui-raised-shadow);
+  -webkit-backdrop-filter: var(--ui-blur);
+  backdrop-filter: var(--ui-blur);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-sm);
+  transition: box-shadow var(--ui-duration-fast) var(--ui-ease);
+}
+
+.ui-code-block:has(.ui-code-block__pre:focus-visible) {
+  box-shadow: var(--ui-highlight), var(--ui-focus-ring);
+}
+
+/* ── Header ── */
+.ui-code-block__header {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ui-space-2);
+  min-height: 40px;
+  padding-block: 0;
+  padding-inline: var(--ui-space-3) var(--ui-space-1);
+  border-bottom: 1px solid var(--ui-section-divider-strong);
+  background: var(--_header-bg);
+}
+
+.ui-code-block__title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ui-space-2);
+  min-width: 0;
+  color: var(--ui-fg-muted);
+  font-size: var(--ui-text-xs);
+}
+
+.ui-code-block__title > .ui-icon {
+  flex-shrink: 0;
+  color: var(--ui-fg-subtle);
+}
+
+.ui-code-block__filename {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  unicode-bidi: plaintext;
+  white-space: nowrap;
+}
+
+.ui-code-block__actions {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 2px;
+}
+
+.ui-code-block__actions .ui-button[data-variant] {
+  --_fg: var(--ui-fg-muted);
+}
+
+/* Without a header the copy button floats over the code and appears on hover. */
+.ui-code-block__actions[data-float] {
+  position: absolute;
+  top: var(--ui-space-2);
+  inset-inline-end: var(--ui-space-2);
+  z-index: 1;
+  border-radius: var(--ui-radius-sm);
+  background: var(--_bg);
+  opacity: 0;
+  -webkit-backdrop-filter: var(--ui-blur);
+  backdrop-filter: var(--ui-blur);
+  transition: opacity var(--ui-duration-fast) var(--ui-ease);
+}
+
+.ui-code-block:hover .ui-code-block__actions[data-float],
+.ui-code-block__actions[data-float]:focus-within,
+.ui-code-block__actions[data-float]:has([data-state='copied'], [data-state='error']) {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .ui-code-block__actions[data-float] {
+    opacity: 1;
+  }
+}
+
+/* ── Code ── */
+.ui-code-block__pre {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding: var(--ui-space-3) 0;
+  overflow: auto;
+  font: inherit;
+  line-height: var(--_leading);
+  tab-size: 2;
+  outline: none;
+  overscroll-behavior: contain;
+}
+
+/* Grid + max-content lets every line stretch to the longest one, so highlights span the scroll width. */
+.ui-code-block__code {
+  display: grid;
+  width: max-content;
+  min-width: 100%;
+  font: inherit;
+}
+
+.ui-code-block[data-wrap] .ui-code-block__code {
+  width: auto;
+}
+
+.ui-code-block__line {
+  display: flex;
+  min-height: calc(var(--_leading) * 1em);
+  padding: 0 var(--ui-space-4);
+  white-space: pre;
+}
+
+.ui-code-block__line-content {
+  flex: 1 0 auto;
+}
+
+.ui-code-block[data-wrap] .ui-code-block__line-content {
+  flex: 1 1 0;
+  min-width: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.ui-code-block__line-number {
+  flex-shrink: 0;
+  width: calc(var(--_digits, 1) * 1ch);
+  margin-right: var(--ui-space-4);
+  color: var(--ui-fg-subtle);
+  text-align: right;
+  user-select: none;
+}
+
+.ui-code-block__line[data-highlighted] {
+  background: color-mix(in srgb, var(--ui-accent) 9%, transparent);
+  box-shadow: inset 2px 0 0 var(--ui-accent);
+}
+
+.ui-code-block__line[data-highlighted] .ui-code-block__line-number {
+  color: var(--ui-accent-text);
+  opacity: 1;
+}
+
+/* ── Tokens ── */
+.ui-code-block__tok[data-token='keyword'] { color: var(--_tk-keyword); font-weight: var(--_tk-keyword-weight); }
+.ui-code-block__tok[data-token='string'] { color: var(--_tk-string); }
+.ui-code-block__tok[data-token='number'] { color: var(--_tk-number); }
+.ui-code-block__tok[data-token='constant'] { color: var(--_tk-constant); }
+.ui-code-block__tok[data-token='function'] { color: var(--_tk-function); }
+.ui-code-block__tok[data-token='type'] { color: var(--_tk-type); }
+.ui-code-block__tok[data-token='tag'] { color: var(--_tk-tag); }
+.ui-code-block__tok[data-token='attr'] { color: var(--_tk-attr); }
+.ui-code-block__tok[data-token='property'] { color: var(--_tk-property); }
+.ui-code-block__tok[data-token='variable'] { color: var(--_tk-variable); }
+.ui-code-block__tok:is([data-token='punctuation'], [data-token='operator']) { color: var(--_tk-punctuation); }
+.ui-code-block__tok[data-token='comment'] { color: var(--_tk-comment); }
+.ui-code-block__tok[data-token='inserted'] { color: var(--_tk-inserted); }
+.ui-code-block__tok[data-token='deleted'] { color: var(--_tk-deleted); }
+
+/* Diff lines get a tinted row, like a GitHub patch view. */
+.ui-code-block__line[data-diff='inserted'] {
+  background: color-mix(in srgb, var(--_tk-inserted) 11%, transparent);
+}
+
+.ui-code-block__line[data-diff='deleted'] {
+  background: color-mix(in srgb, var(--_tk-deleted) 10%, transparent);
+}
+
+@media (forced-colors: active) {
+  /* Marked lines are a tint plus an inset bar; both are dropped by the system palette. */
+  .ui-code-block__line[data-highlighted] {
+    outline: 1px solid Highlight;
+    outline-offset: -1px;
+  }
+
+  .ui-code-block__actions .ui-button[aria-pressed='true'] {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+}
+
+/* writing: a caret follows the text as it is typed out (CodeBlock.tsx moves it). */
+.ui-code-block__caret {
+  display: inline-block;
+  width: 0.55em;
+  height: 1.15em;
+  margin-inline-start: 1px;
+  background: var(--ui-accent);
+  vertical-align: text-bottom;
+  animation: ui-code-block-caret 1s steps(1) infinite;
+}
+
+@keyframes ui-code-block-caret {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* Touch: the header is as tall as the buttons' 44px hit areas, which the block's rounded clip would cut. */
+@media (pointer: coarse) {
+  .ui-code-block__header {
+    min-height: 44px;
+  }
+}

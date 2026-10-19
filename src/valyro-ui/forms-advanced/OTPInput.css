@@ -1,0 +1,92 @@
+.ui-otp-input {
+  --_box-w: var(--ui-otp-input-box-w);
+
+  display: inline-flex;
+  align-items: center;
+  /* Gaps tighten together with the boxes on phone widths. */
+  gap: clamp(4px, 1.6vw, var(--ui-space-2));
+  max-width: 100%;
+  /* Codes are read and typed left to right in every script; arrow keys stay physical. */
+  direction: ltr;
+}
+
+.ui-otp-input[data-invalid] {
+  animation: ui-otp-input-shake var(--ui-duration-slow) var(--ui-ease);
+}
+
+.ui-otp-input__box {
+  /* Boxes shrink on narrow screens instead of overflowing, keeping their proportions. */
+  flex: 0 1 var(--_box-w);
+  width: var(--_box-w);
+  min-width: 28px;
+  height: auto;
+  aspect-ratio: var(--ui-otp-input-box-ratio);
+  padding: 0;
+  border: 1px solid var(--ui-border-field);
+  border-radius: var(--ui-otp-input-box-radius);
+  background: var(--ui-field-bg);
+  box-shadow: var(--ui-field-shadow);
+  -webkit-backdrop-filter: var(--ui-blur);
+  backdrop-filter: var(--ui-blur);
+  color: var(--ui-fg);
+  caret-color: var(--ui-accent);
+  font-family: var(--ui-otp-input-box-font);
+  font-size: var(--ui-otp-input-box-size);
+  font-weight: var(--ui-otp-input-box-weight);
+  text-align: center;
+  outline: none;
+  transition:
+    border-color var(--ui-duration-fast) var(--ui-ease),
+    box-shadow var(--ui-duration-fast) var(--ui-ease),
+    transform var(--ui-duration) var(--ui-ease-spring);
+}
+
+/* The same emphasis as a hovered .ui-field (base.css): darker than the resting border, never lighter. */
+.ui-otp-input__box:hover:not(:disabled) {
+  border-color: var(--ui-field-border-hover, color-mix(in srgb, var(--ui-border-field), var(--ui-fg) 25%));
+}
+
+.ui-otp-input__box[data-filled] {
+  border-color: var(--ui-otp-input-box-border-color-filled);
+}
+
+.ui-otp-input__box:focus {
+  border-color: var(--ui-accent);
+  box-shadow: var(--ui-highlight), var(--ui-focus-ring);
+  transform: var(--ui-otp-input-box-transform-focus);
+}
+
+.ui-otp-input__box:hover:focus {
+  border-color: var(--ui-otp-input-box-border-color-focus-hover);
+}
+
+.ui-otp-input[data-invalid] .ui-otp-input__box {
+  border-color: var(--ui-danger);
+}
+
+.ui-otp-input[data-invalid] .ui-otp-input__box:focus {
+  box-shadow:
+    var(--ui-highlight),
+    0 0 0 var(--ui-otp-input-box-invalid-ring-w) color-mix(in srgb, var(--ui-danger) 30%, transparent);
+}
+
+.ui-otp-input__box:disabled {
+  cursor: not-allowed;
+  opacity: var(--ui-disabled-opacity, 0.55);
+}
+
+.ui-otp-input__separator {
+  flex-shrink: 0;
+  width: 10px;
+  height: 2px;
+  margin: 0 clamp(0px, 0.8vw, var(--ui-space-1));
+  border-radius: var(--ui-radius-full);
+  background: var(--ui-border-strong);
+}
+
+@keyframes ui-otp-input-shake {
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(2px); }
+}

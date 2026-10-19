@@ -1,0 +1,54 @@
+.ui-popover {
+  min-width: 180px;
+  max-width: min(360px, calc(100vw - 16px));
+  padding: var(--ui-popover-content-padding);
+  font-size: var(--ui-text-sm);
+}
+
+/*
+ * Arrow: a rotated square showing only its outer half (clip-path). Its two border
+ * edges continue the panel's 1px ring; --_arrow-at (set by Popover.tsx) points it
+ * at the trigger's center even when the panel is shifted at a viewport edge.
+ */
+.ui-popover__arrow {
+  --_size: 12px;
+  --_rotate: 45deg;
+
+  position: absolute;
+  width: var(--_size);
+  height: var(--_size);
+  border-top: 1px solid var(--ui-border);
+  border-left: 1px solid var(--ui-border);
+  background: inherit;
+  clip-path: polygon(0 0, 100% 0, 0 100%);
+  transform: translate(-50%, -50%) rotate(var(--_rotate));
+  pointer-events: none;
+  /* Popover.tsx skips the arrow where --ui-popover-arrow is 0; this hides one rendered before it read the token. */
+  opacity: var(--ui-popover-arrow);
+}
+
+.ui-popover:is([data-side='top'], [data-side='bottom']) .ui-popover__arrow {
+  left: var(--_arrow-at, 50%);
+}
+
+.ui-popover:is([data-side='left'], [data-side='right']) .ui-popover__arrow {
+  top: var(--_arrow-at, 50%);
+}
+
+/* -1px: centre the square on the 1px ring, not on the padding edge inside the border. */
+.ui-popover[data-side='bottom'] .ui-popover__arrow { top: -1px; }
+
+.ui-popover[data-side='top'] .ui-popover__arrow {
+  --_rotate: 225deg;
+  top: calc(100% + 1px);
+}
+
+.ui-popover[data-side='right'] .ui-popover__arrow {
+  --_rotate: -45deg;
+  left: -1px;
+}
+
+.ui-popover[data-side='left'] .ui-popover__arrow {
+  --_rotate: 135deg;
+  left: calc(100% + 1px);
+}

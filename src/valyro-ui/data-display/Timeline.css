@@ -1,0 +1,177 @@
+.ui-timeline {
+  --_marker: var(--ui-timeline-marker-size);
+  --_dot: var(--ui-timeline-dot-size);
+  /* Space between the connector and a marker: tighter for icon badges, clear of the halo for dots. */
+  --_gap: 4px;
+  --_dot-gap: var(--ui-timeline-dot-gap);
+
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ui-timeline__item {
+  --_c: var(--ui-fg-subtle);
+
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--_marker) minmax(0, 1fr);
+  column-gap: var(--ui-space-3);
+  padding-bottom: var(--ui-space-6);
+}
+
+.ui-timeline__item:last-child {
+  padding-bottom: 0;
+}
+
+.ui-timeline__item[data-status='success'] { --_c: var(--ui-success); }
+.ui-timeline__item[data-status='warning'] { --_c: var(--ui-warning); }
+.ui-timeline__item[data-status='danger'] { --_c: var(--ui-danger); }
+.ui-timeline__item[data-status='accent'] { --_c: var(--ui-accent); }
+
+/* Connector from below this marker down to the next one; dots sit centred in the marker box. */
+.ui-timeline__item:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  top: calc(var(--_marker) + var(--_gap));
+  bottom: var(--_gap);
+  inset-inline-start: calc(var(--_marker) / 2 - var(--ui-timeline-connector-w) / 2);
+  width: var(--ui-timeline-connector-w);
+  border-radius: var(--ui-timeline-connector-radius);
+  background-color: var(--ui-timeline-connector-bg);
+  /* Fades from the status colour; a tint of `none` makes this invalid, which leaves a plain line. */
+  background-image: linear-gradient(var(--_c), color-mix(in srgb, var(--_c) var(--ui-timeline-connector-tint), var(--ui-border-strong)));
+  opacity: var(--ui-timeline-connector-opacity);
+}
+
+.ui-timeline__item[data-status='default']:not(:last-child)::before {
+  background: var(--ui-border-strong);
+}
+
+.ui-timeline__item:not([data-icon], :last-child)::before {
+  top: calc((var(--_marker) + var(--_dot)) / 2 + var(--_dot-gap));
+}
+
+.ui-timeline__item:has(+ .ui-timeline__item:not([data-icon])):not(:last-child)::before {
+  bottom: calc(var(--_dot-gap) - (var(--_marker) - var(--_dot)) / 2);
+}
+
+/* With a current step: the path walked so far is solid in each step's colour, the rest is dashed. */
+.ui-timeline__item:has(~ .ui-timeline__item[data-current])::before {
+  background-image: none;
+  background-color: var(--_c);
+  opacity: 1;
+}
+
+.ui-timeline__item[data-current]:not(:last-child)::before,
+.ui-timeline__item[data-current] ~ .ui-timeline__item:not(:last-child)::before {
+  background: repeating-linear-gradient(to bottom, var(--ui-border-strong) 0 3px, transparent 3px 7px);
+  opacity: 1;
+}
+
+.ui-timeline__marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--_marker);
+  height: var(--_marker);
+}
+
+.ui-timeline__dot {
+  display: block;
+  width: var(--_dot);
+  height: var(--_dot);
+  border-radius: 50%;
+  /* Optional layers: a specular highlight over the colour and a soft glow under the halo; a theme leaves
+     either out with `initial` (these private values are then invalid and the fallbacks apply). */
+  --_fill: var(--ui-timeline-dot-highlight), var(--_c);
+  --_glow: , 0 2px 6px color-mix(in srgb, var(--_c) var(--ui-timeline-dot-glow), transparent);
+  background: var(--_fill, var(--_c));
+  box-shadow: 0 0 0 var(--ui-timeline-dot-halo) color-mix(in srgb, var(--_c) var(--ui-timeline-dot-halo-fill), transparent) var(--_glow, );
+}
+
+.ui-timeline__item[data-status='default']:not([data-icon]) .ui-timeline__dot {
+  border: var(--ui-timeline-dot-default-border);
+  background: var(--ui-timeline-dot-default-bg);
+  box-shadow: var(--ui-timeline-dot-default-shadow);
+}
+
+.ui-timeline__item[data-icon] .ui-timeline__dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--_marker);
+  height: var(--_marker);
+  /* Vercel: a tinted badge with a status-coloured hairline. Glass: a filled status tile with a white glyph.
+     An amount of `none` makes its declaration invalid, so that property keeps its initial value (no border,
+     fill, gradient or shadow); an `initial` glyph colour falls back to the status colour. */
+  border: 1px solid color-mix(in srgb, var(--_c) var(--ui-timeline-icon-border-tint), var(--ui-border));
+  background-color: color-mix(in srgb, var(--_c) var(--ui-timeline-icon-fill), var(--ui-bg));
+  background-image: linear-gradient(160deg, color-mix(in srgb, var(--_c) var(--ui-timeline-icon-gradient), white), var(--_c));
+  box-shadow: var(--ui-timeline-icon-shadow), 0 4px 10px -4px color-mix(in srgb, var(--_c) var(--ui-timeline-icon-glow), transparent);
+  color: var(--ui-timeline-icon-fg, var(--_c));
+}
+
+.ui-timeline__item[data-icon][data-status='default'] .ui-timeline__dot {
+  border-color: var(--ui-timeline-icon-default-border-color);
+  background: var(--ui-bg);
+  box-shadow: var(--ui-raised-shadow);
+  color: var(--ui-fg-muted);
+  -webkit-backdrop-filter: var(--ui-blur);
+  backdrop-filter: var(--ui-blur);
+}
+
+/* The current step's marker is ringed in its colour, clear of the dot by a gap in the page colour. */
+.ui-timeline__item[data-current] .ui-timeline__dot {
+  box-shadow:
+    0 0 0 3px var(--ui-bg),
+    0 0 0 5px color-mix(in srgb, var(--_c) 55%, transparent);
+}
+
+.ui-timeline__dot > svg {
+  width: var(--ui-timeline-icon-size);
+  height: var(--ui-timeline-icon-size);
+}
+
+.ui-timeline__body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding-top: 2px;
+}
+
+.ui-timeline__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2px var(--ui-space-3);
+}
+
+.ui-timeline__title {
+  font-size: var(--ui-text-md);
+  font-weight: var(--ui-weight-label);
+  line-height: var(--ui-timeline-title-leading);
+}
+
+.ui-timeline__timestamp {
+  flex-shrink: 0;
+  color: var(--ui-fg-subtle);
+  font-size: var(--ui-text-xs);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.ui-timeline__description {
+  color: var(--ui-fg-muted);
+  font-size: var(--ui-text-sm);
+  line-height: var(--ui-leading);
+}
+
+.ui-timeline__content {
+  margin-top: var(--ui-space-2);
+  min-width: 0;
+}
