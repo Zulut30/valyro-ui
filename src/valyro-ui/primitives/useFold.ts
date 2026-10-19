@@ -10,6 +10,9 @@ const FOLD_MS = 450;
 
 const FOLD_EASE = 'cubic-bezier(0.4, 0, 0.2, 1)';
 
+/** CSS transitions height to and from `auto` (interpolate-size): the fold runs in CSS (styles/motion.css, data-ui-fold). */
+const cssFolds = typeof CSS !== 'undefined' && CSS.supports?.('interpolate-size', 'allow-keywords') === true;
+
 /** The theme's standard curve for an element (`--ui-ease`), as a Web Animations easing. */
 function themeEase(element: Element) {
   const value = getComputedStyle(element).getPropertyValue('--ui-ease').trim();
@@ -17,20 +20,24 @@ function themeEase(element: Element) {
 }
 
 /**
- * A disclosure's content (a tree branch, a JSON node) that unfolds and folds: height and fade, played
- * with Web Animations from the measured height, so the rows below glide instead of jumping. The group
- * stays mounted until the fold has played; render it while `isMounted`, with `ref`, `data-state={state}`
- * and `inert` when closed. `readyRef` is false during the owner's first commit, so groups open from the
- * start just show. `spring`: unfolds on the smooth spring; otherwise on the theme's curve and duration.
- * Durations follow --ui-duration-slow, so the themes' reduced-motion block (1 ms) makes it instant.
+ * A disclosure's content (a tree branch, a JSON node) that unfolds and folds: height and fade, so the rows
+ * below glide instead of jumping. Where CSS transitions to `auto` (interpolate-size) the browser plays it from
+ * `data-ui-fold={cssFold}` (styles/motion.css), with no JavaScript; elsewhere Web Animations play it from
+ * the measured height. The group stays mounted until the fold has played; render it while `isMounted`, with
+ * `ref`, `data-state={state}`, `data-ui-fold={cssFold}` and `inert` when closed. `readyRef` is false during
+ * the owner's first commit, so groups open from the start just show. `spring`: unfolds on the smooth spring;
+ * otherwise on the theme's curve and duration. Durations follow --ui-duration-slow, so the themes'
+ * reduced-motion block (1 ms) makes it instant.
  */
 export function useFold<T extends HTMLElement>(open: boolean, readyRef: RefObject<boolean>, spring = false) {
   const { isMounted, state } = usePresence(open, FOLD_MS);
   const ref = useRef<T>(null);
+  // Off in the owner's first commit, so a group open from the start has no entrance.
+  const cssFold = cssFolds && readyRef.current ? (spring ? 'spring' : '') : undefined;
 
   useLayoutEffect(() => {
     const group = ref.current;
-    if (!group || !readyRef.current || typeof group.animate !== 'function') return;
+    if (cssFolds || !group || !readyRef.current || typeof group.animate !== 'function') return;
     const height = `${group.scrollHeight}px`;
     // A group reopened mid-fold drops the fold (it fills forwards) before unfolding.
     for (const running of group.getAnimations()) running.cancel();
@@ -55,5 +62,5 @@ export function useFold<T extends HTMLElement>(open: boolean, readyRef: RefObjec
     }
   }, [state, readyRef, spring]);
 
-  return { ref, isMounted, state };
+  return { ref, isMounted, state, cssFold };
 }

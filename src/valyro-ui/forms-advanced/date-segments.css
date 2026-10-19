@@ -1,0 +1,54 @@
+/* Segments of DateField and TimeField (useDateField.ts) inside a .ui-field box: each number is a spinbutton the
+   keyboard edits in place; the separators between them come from the locale. */
+.ui-date-segments {
+  gap: 0;
+  cursor: text;
+  font-variant-numeric: tabular-nums;
+}
+
+.ui-date-segments > .ui-field__icon {
+  margin-inline-end: var(--ui-space-2);
+}
+
+.ui-date-segments__segment {
+  padding-inline: 2px;
+  border-radius: var(--ui-radius-sm);
+  /* Typing replaces the digits; a caret would only suggest editing the text in place. */
+  caret-color: transparent;
+  outline: none;
+  white-space: nowrap;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.ui-date-segments__segment[data-placeholder] {
+  color: var(--ui-fg-subtle);
+}
+
+.ui-date-segments__segment:focus {
+  background: var(--ui-primary);
+  color: var(--ui-primary-fg);
+}
+
+.ui-date-segments__literal {
+  color: var(--ui-fg-subtle);
+  white-space: pre;
+}
+
+.ui-date-segments[data-disabled='true'] {
+  cursor: not-allowed;
+}
+
+/* Touch: iOS Safari zooms the page into editable text under 16px as it takes focus. */
+@media (pointer: coarse) {
+  .ui-date-segments__segment {
+    font-size: max(16px, 1em);
+  }
+}
+
+@media (forced-colors: active) {
+  .ui-date-segments__segment:focus {
+    background: Highlight;
+    color: HighlightText;
+  }
+}

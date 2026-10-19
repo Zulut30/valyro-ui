@@ -1,200 +1,143 @@
 'use client';
 
-import { Fragment, useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
-import { CheckIcon } from '../icons';
+import { useMemo, type ComponentPropsWithRef, type ReactNode } from 'react';
+import { collectionPart } from '../primitives/compound';
+import { withRef } from '../primitives/react-compat';
+import { useLocale } from '../theme/ThemeProvider';
+import { useFormField } from '../forms-advanced/form-field-context';
+import { FormValue, useMissingValue } from '../forms-advanced/form-value';
+import type { SelectItem } from './listbox-items';
+import { ListboxView } from './listbox-view';
+import { optionsFromParts, type OptionEmptyPartProps, type OptionGroupPartProps, type OptionPartProps } from './option-parts';
+import { useListbox } from './useListbox';
 import './Listbox.css';
-import { useLayoutEffect } from '../primitives/react-compat';
 
-export interface SelectOption {
-  value: string;
-  label: string;
-  description?: string;
-  icon?: ReactNode;
-  disabled?: boolean;
-}
+export {
+  isOptionGroup,
+  flattenItems,
+  filterItems,
+  matchesQuery,
+  firstEnabledIndex,
+  optionId,
+  type SelectOption,
+  type SelectOptionGroup,
+  type SelectItem,
+} from './listbox-items';
+export { useFieldLabelIds } from './useListbox';
 
-export interface SelectOptionGroup {
-  label: string;
-  options: SelectOption[];
-}
-
-/** A single option or a labelled group of options. */
-export type SelectItem = SelectOption | SelectOptionGroup;
-
-export function isOptionGroup(item: SelectItem): item is SelectOptionGroup {
-  return 'options' in item;
-}
-
-export function flattenItems(items: SelectItem[]): SelectOption[] {
-  return items.flatMap((item) => (isOptionGroup(item) ? item.options : [item]));
-}
-
-/** Keeps matching options; groups left without options are dropped. */
-export function filterItems(items: SelectItem[], keep: (option: SelectOption) => boolean): SelectItem[] {
-  const out: SelectItem[] = [];
-  for (const item of items) {
-    if (!isOptionGroup(item)) {
-      if (keep(item)) out.push(item);
-      continue;
-    }
-    const options = item.options.filter(keep);
-    if (options.length) out.push({ ...item, options });
-  }
-  return out;
-}
-
-export function matchesQuery(option: SelectOption, query: string) {
-  return option.label.toLowerCase().includes(query.trim().toLowerCase());
-}
-
-/**
- * The ids of a field's `<label for>` elements while its popup is open, so the listbox is named like the field
- * (a listbox without a name fails WCAG 4.1.2). Labels without an id get one derived from `baseId`.
- */
-export function useFieldLabelIds(fieldRef: RefObject<HTMLInputElement | HTMLButtonElement | null>, open: boolean, baseId: string) {
-  const [ids, setIds] = useState<string>();
-  useLayoutEffect(() => {
-    if (!open) return;
-    const labels = fieldRef.current?.labels;
-    const next = labels?.length ? Array.from(labels, (label, i) => label.id || (label.id = `${baseId}-label-${i}`)).join(' ') : undefined;
-    setIds((current) => (current === next ? current : next));
-  }, [open, fieldRef, baseId]);
-  return ids;
-}
-
-export function firstEnabledIndex(options: SelectOption[]) {
-  return options.findIndex((option) => !option.disabled);
-}
-
-export const optionId = (listId: string, index: number) => `${listId}-option-${index}`;
-
-interface ListboxProps {
-  id: string;
-  items: SelectItem[];
-  activeIndex: number;
-  onActiveIndexChange: (index: number) => void;
-  isSelected: (value: string) => boolean;
-  onSelect: (index: number) => void;
-  /** `check` — trailing checkmark (single select); `checkbox` — leading checkbox (multi select). */
-  indicator: 'check' | 'checkbox';
+export interface ListboxProps extends Omit<ComponentPropsWithRef<'div'>, 'defaultValue' | 'onChange' | 'children'> {
+  /** Options, flat or in labelled groups. Or compose them as children: `Listbox.Item`, `Listbox.Group`, `Listbox.Empty`. */
+  options?: SelectItem[];
+  /** The compound form instead of `options`: `Listbox.Item`, `Listbox.Group` and `Listbox.Empty` elements. */
+  children?: ReactNode;
+  /** Several options can be selected: checkboxes, Shift ranges, Ctrl/Cmd+A, Escape to clear. */
   multiple?: boolean;
-  label?: string;
-  labelledBy?: string;
-  /** Shown below the (empty) listbox when there are no options; announced politely when it appears. */
-  emptyState?: ReactNode;
+  /** Selected values (at most one without `multiple`), in the order they were picked. */
+  value?: string[];
+  defaultValue?: string[];
+  onValueChange?: (value: string[]) => void;
+  /**
+   * `toggle` (default): a click, Enter or Space picks or toggles an option, the arrows only move. `replace`: a click
+   * or an arrow selects that option alone, as in a file list; Ctrl/Cmd+click and Ctrl/Cmd+Space add or remove one.
+   */
+  selectionBehavior?: 'toggle' | 'replace';
+  /** Shown instead of the list when there are no options; announced politely. */
+  emptyText?: ReactNode;
+  /** Submits the selected values with the surrounding form, one hidden input each. */
+  name?: string;
+  /** At least one option must be selected: `aria-required`, and the surrounding form does not submit without one. */
+  required?: boolean;
+  /** Every option is disabled and the list leaves the tab order. */
+  disabled?: boolean;
+  /** Error border and `aria-invalid` (an explicit `aria-invalid` wins). */
+  invalid?: boolean;
 }
 
+/** An option of the compound form (`Listbox.Item`); its children are the label. */
+export const ListboxItem = collectionPart<OptionPartProps>('Listbox.Item');
+/** A labelled group of `Listbox.Item`s (`Listbox.Group`). */
+export const ListboxGroup = collectionPart<OptionGroupPartProps>('Listbox.Group');
+/** Shown when there are no options (`Listbox.Empty`). */
+export const ListboxEmpty = collectionPart<OptionEmptyPartProps>('Listbox.Empty');
+
 /**
- * Option list shared by Select, MultiSelect and Combobox. DOM focus stays on
- * the owning trigger/input; the active row is exposed via aria-activedescendant.
+ * A list of options that stays on the page (WAI-ARIA listbox, React Aria's ListBox): one or several selected, the
+ * arrows, Home / End, Page keys and type-ahead move the highlight, and with `multiple` Shift+click and Shift+arrows
+ * select ranges. Props not listed go to the listbox element.
  */
-export function Listbox({
+export const Listbox = withRef(function Listbox({
+  options: optionsProp,
+  children,
+  multiple = false,
+  value: valueProp,
+  defaultValue,
+  onValueChange,
+  selectionBehavior,
+  emptyText,
+  name,
+  required,
+  disabled = false,
+  invalid = false,
   id,
-  items,
-  activeIndex,
-  onActiveIndexChange,
-  isSelected,
-  onSelect,
-  indicator,
-  multiple,
-  label,
-  labelledBy,
-  emptyState,
+  className,
+  ref,
+  'aria-invalid': ariaInvalid,
+  ...rest
 }: ListboxProps) {
-  const listRef = useRef<HTMLDivElement>(null);
-  // Hover already shows the row; scrolling it into view would make the list jump under the pointer.
-  const fromPointer = useRef(false);
-
-  useEffect(() => {
-    if (fromPointer.current) {
-      fromPointer.current = false;
-      return;
-    }
-    const option = listRef.current?.querySelector(`[data-index="${activeIndex}"]`);
-    if (!option) return;
-    option.scrollIntoView({ block: 'nearest' });
-    // Reaching the first row of a group also reveals the group's label above it.
-    const group = option.closest('[role="group"]');
-    if (group?.querySelector('[role="option"]') === option) group.firstElementChild?.scrollIntoView({ block: 'nearest' });
-  }, [activeIndex]);
-
-  let index = -1;
-  const renderOption = (option: SelectOption) => {
-    index += 1;
-    const i = index;
-    const selected = isSelected(option.value);
-    return (
-      <div
-        key={option.value}
-        id={optionId(id, i)}
-        role="option"
-        aria-selected={selected}
-        aria-disabled={option.disabled || undefined}
-        data-index={i}
-        data-highlighted={i === activeIndex}
-        className="ui-menu-item ui-listbox__option"
-        onPointerMove={() => {
-          if (option.disabled || i === activeIndex) return;
-          fromPointer.current = true;
-          onActiveIndexChange(i);
-        }}
-        onClick={() => {
-          if (!option.disabled) onSelect(i);
-        }}
-      >
-        {indicator === 'checkbox' && (
-          <span className="ui-listbox__checkbox" data-checked={selected}>
-            <CheckIcon size={12} strokeWidth={3} />
-          </span>
-        )}
-        {option.icon && <span className="ui-menu-item__icon">{option.icon}</span>}
-        <span className="ui-listbox__text">
-          <span className="ui-menu-item__label">{option.label}</span>
-          {option.description && <span className="ui-listbox__description">{option.description}</span>}
-        </span>
-        {indicator === 'check' && (
-          <span className="ui-listbox__check" data-checked={selected}>
-            <CheckIcon />
-          </span>
-        )}
-      </div>
-    );
-  };
+  const field = useFormField();
+  const parts = useMemo(() => (optionsProp ? undefined : optionsFromParts(children, ListboxItem, ListboxGroup, ListboxEmpty)), [optionsProp, children]);
+  const given = optionsProp ?? parts?.items ?? [];
+  // A disabled list disables every option, so neither a click nor a key picks one.
+  const items = useMemo(
+    () =>
+      disabled
+        ? given.map((item) => ('options' in item ? { ...item, options: item.options.map((o) => ({ ...o, disabled: true })) } : { ...item, disabled: true }))
+        : given,
+    [given, disabled],
+  );
+  // The behaviour is useListbox's (valyro-ui/headless).
+  const listbox = useListbox({
+    items,
+    multiple,
+    value: valueProp,
+    defaultValue,
+    onValueChange,
+    selectionBehavior,
+    locale: useLocale(),
+    id,
+  });
+  const [missing, markMissing] = useMissingValue(listbox.value.length > 0);
+  const isRequired = required ?? field?.required;
 
   return (
     <>
-      <div
-        ref={listRef}
-        id={id}
-        role="listbox"
-        aria-label={label}
-        aria-labelledby={labelledBy}
-        aria-multiselectable={multiple || undefined}
-        className="ui-listbox"
-        data-indicator={indicator}
-      >
-        {items.map((item, itemIndex) => {
-          if (!isOptionGroup(item)) return renderOption(item);
-          const groupLabelId = `${id}-group-${itemIndex}`;
-          return (
-            <Fragment key={groupLabelId}>
-              {itemIndex > 0 && <div role="none" className="ui-menu-separator" />}
-              <div role="group" aria-labelledby={groupLabelId}>
-                <div id={groupLabelId} role="presentation" className="ui-menu-label">
-                  {item.label}
-                </div>
-                {item.options.map(renderOption)}
-              </div>
-            </Fragment>
-          );
-        })}
-      </div>
-      {/* Kept mounted so screen readers announce "No results" / "Loading…" as the list changes. */}
-      {emptyState !== undefined && (
-        <div role="status" className="ui-listbox__empty">
-          {items.length === 0 ? emptyState : null}
-        </div>
-      )}
+      <ListboxView
+        listbox={listbox}
+        indicator={multiple ? 'checkbox' : 'check'}
+        emptyState={emptyText ?? parts?.empty}
+        listboxProps={{
+          // Inside a FormField its label names the list (a `for` pointing at a div names nothing).
+          'aria-labelledby': rest['aria-label'] ? undefined : field?.labelId,
+          'aria-required': isRequired || undefined,
+          'aria-invalid': ariaInvalid ?? (invalid || missing || undefined),
+          'aria-disabled': disabled || undefined,
+          ...rest,
+          tabIndex: disabled ? -1 : rest.tabIndex,
+          ref,
+          className,
+          'data-standalone': '',
+        }}
+      />
+      <FormValue
+        name={name}
+        values={listbox.value}
+        required={isRequired}
+        disabled={disabled}
+        onMissing={(focus) => {
+          markMissing();
+          if (focus) document.getElementById(listbox.id)?.focus();
+        }}
+      />
     </>
   );
-}
+}, { Item: ListboxItem, Group: ListboxGroup, Empty: ListboxEmpty });

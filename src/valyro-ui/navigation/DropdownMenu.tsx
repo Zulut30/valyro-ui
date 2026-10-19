@@ -1,10 +1,12 @@
 'use client';
 
-import { useRef, useState, type ComponentPropsWithRef, type KeyboardEvent, type MouseEvent, type ReactElement, type ReactNode } from 'react';
-import { Slot, useControllableState, type Placement } from '../primitives';
-import { childElements, collectionPart } from '../primitives/compound';
-import { MenuPopup, type MenuActionItem, type MenuCheckboxItem, type MenuHighlight, type MenuItem } from './Menu';
-import { withRef, useId } from '../primitives/react-compat';
+import { type ComponentPropsWithRef, type ReactElement, type ReactNode } from 'react';
+import { Slot, type Placement } from '../primitives';
+import { collectionPart } from '../primitives/compound';
+import { menuFromParts, type MenuParts } from './menu-parts';
+import { MenuPopup, type MenuActionItem, type MenuCheckboxItem, type MenuItem } from './Menu';
+import { useMenu } from './useMenu';
+import { withRef } from '../primitives/react-compat';
 
 /** Native attributes, `style` and `ref` go to the menu surface. */
 export interface DropdownMenuProps extends Omit<ComponentPropsWithRef<'div'>, 'children'> {
@@ -59,25 +61,13 @@ export const DropdownMenuLabel = collectionPart<DropdownMenuLabelProps>('Dropdow
 /** A divider between groups of rows (`DropdownMenu.Separator`). */
 export const DropdownMenuSeparator = collectionPart<Record<never, never>>('DropdownMenu.Separator');
 
-function menuFromParts(children: ReactNode): { trigger?: ReactElement; items: MenuItem[] } {
-  const elements = childElements(children);
-  const trigger = elements.find((child) => child.type === DropdownMenuTrigger) as ReactElement<DropdownMenuTriggerProps> | undefined;
-  const items = elements.flatMap((child): MenuItem[] => {
-    const props = child.props as { children?: ReactNode };
-    if (child.type === DropdownMenuItem) {
-      const { children: label, ...item } = props as DropdownMenuItemProps;
-      return [{ ...item, label }];
-    }
-    if (child.type === DropdownMenuCheckboxItem) {
-      const { children: label, ...item } = props as DropdownMenuCheckboxItemProps;
-      return [{ ...item, type: 'checkbox', label }];
-    }
-    if (child.type === DropdownMenuLabel) return [{ type: 'label', label: (props as DropdownMenuLabelProps).children }];
-    if (child.type === DropdownMenuSeparator) return [{ type: 'separator' }];
-    return [];
-  });
-  return { trigger: trigger?.props.children, items };
-}
+const PARTS: MenuParts = {
+  trigger: DropdownMenuTrigger,
+  item: DropdownMenuItem,
+  checkboxItem: DropdownMenuCheckboxItem,
+  label: DropdownMenuLabel,
+  separator: DropdownMenuSeparator,
+};
 
 export const DropdownMenu = withRef(function DropdownMenu({
   trigger: triggerProp,
@@ -90,55 +80,28 @@ export const DropdownMenu = withRef(function DropdownMenu({
   className,
   ...rest
 }: DropdownMenuProps) {
-  const parts = triggerProp && itemsProp ? undefined : menuFromParts(children);
+  const parts = triggerProp && itemsProp ? undefined : menuFromParts(children, PARTS);
   const trigger = triggerProp ?? parts?.trigger;
   const items = itemsProp ?? parts?.items ?? [];
-  const [open, setOpen] = useControllableState({ value: openProp, defaultValue: defaultOpen, onChange: onOpenChange });
-  const [highlight, setHighlight] = useState<MenuHighlight>('none');
-  const triggerRef = useRef<HTMLElement>(null);
-  const menuId = useId();
-  const triggerId = (trigger?.props as { id?: string } | undefined)?.id ?? `${menuId}-trigger`;
-
-  const show = (initial: MenuHighlight) => {
-    setHighlight(initial);
-    setOpen(true);
-  };
-
-  const close = (returnFocus: boolean) => {
-    setOpen(false);
-    if (returnFocus) triggerRef.current?.focus();
-  };
+  // The behaviour is useMenu's (valyro-ui/headless): the menu button here, the rows in each MenuPopup level.
+  const menu = useMenu({ items, open: openProp, defaultOpen, onOpenChange, floating: false });
+  const triggerId = (trigger?.props as { id?: string } | undefined)?.id ?? `${menu.menuId}-trigger`;
 
   return (
     <>
-      <Slot
-        ref={triggerRef}
-        id={triggerId}
-        aria-haspopup="menu"
-        aria-expanded={open}
-        aria-controls={open ? menuId : undefined}
-        data-state={open ? 'open' : 'closed'}
-        // detail === 0 means Enter/Space activated the button, so start on the first row.
-        onClick={(event: MouseEvent) => (open ? close(false) : show(event.detail === 0 ? 'first' : 'none'))}
-        onKeyDown={(event: KeyboardEvent) => {
-          if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
-          event.preventDefault();
-          show(event.key === 'ArrowDown' ? 'first' : 'last');
-        }}
-      >
-        {trigger}
-      </Slot>
+      <Slot {...menu.getTriggerProps({ id: triggerId })}>{trigger}</Slot>
       <MenuPopup
         {...rest}
-        id={menuId}
-        open={open}
-        anchorRef={triggerRef}
+        id={menu.menuId}
+        open={menu.open}
+        anchorRef={menu.anchorRef}
         placement={placement}
         offset={6}
         items={items}
-        initialHighlight={highlight}
-        onClose={close}
-        aria-labelledby={triggerId}
+        initialHighlight={menu.highlight}
+        onClose={menu.close}
+        // The trigger names the menu unless the caller names it (aria-labelledby would outrank an aria-label).
+        aria-labelledby={rest['aria-labelledby'] ?? (rest['aria-label'] ? undefined : triggerId)}
         className={className}
       />
     </>

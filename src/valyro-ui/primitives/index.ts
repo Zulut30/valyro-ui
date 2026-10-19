@@ -8,6 +8,7 @@ export {
   getDirection,
   inlineArrowStep,
   isComposingKey,
+  isMotionReduced,
   useDirection,
   type Direction,
 } from './utils';
@@ -22,6 +23,7 @@ export {
 } from './useDismissableLayer';
 export { useFocusTrap, getTabbables, type FocusTrapOptions } from './useFocusTrap';
 export { useScrollLock } from './useScrollLock';
+export { ariaHideOutside, useAriaHideOutside } from './ariaHideOutside';
 export {
   useFloating,
   computePosition,
@@ -70,3 +72,6 @@ export {
   type SpringName,
   type SpringValue,
 } from './spring';
+export { announce, clearAnnouncer, destroyAnnouncer, LIVE_ANNOUNCER_ATTRIBUTE, type Assertiveness } from './liveAnnouncer';
+export { useAnnounceCount, type AnnounceCountOptions } from './useAnnounceCount';
+export { useTypeahead, createPrefixMatcher, createContainsMatcher, findTypeaheadIndex, type Typeahead } from './typeahead';

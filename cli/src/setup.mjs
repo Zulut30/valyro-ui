@@ -3,6 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { BUNDLED_THEMES, CORE_THEMES, LIBRARY_PACKAGE, PRO_PACKAGE, THEME_FONTS } from './constants.mjs';
+import { COMPONENT_CSS, collectsComponentCss } from './files.mjs';
 
 /** The npm package with a theme's CSS and fonts: the free core, or ValyroUI Pro for the other themes. */
 const packageFor = (theme) => (CORE_THEMES.includes(theme) ? LIBRARY_PACKAGE : PRO_PACKAGE);
@@ -35,18 +36,28 @@ export function setupPlan(framework, config, projectDir) {
   const provider = `<ThemeProvider theme="${theme}" mode="${mode}">`;
   const attrs = `data-theme="${theme}" data-mode="${mode}"`;
   // styles/index.css imports only the bundled themes; the styles item has the other free ones, `<name>-theme` a Pro one.
-  const cssFiles = ['styles/index.css', ...(BUNDLED_THEMES.includes(theme) ? [] : [`styles/themes/${theme}.css`])];
+  const cssFiles = [
+    'styles/index.css',
+    ...(BUNDLED_THEMES.includes(theme) ? [] : [`styles/themes/${theme}.css`]),
+    ...(collectsComponentCss({ ...config, framework }) ? [COMPONENT_CSS] : []),
+  ];
   const cssImports = cssFiles.map((file, i) => (data?.cssImport ? data.cssImport(base, file, i) : `import '${base}/${file}';`));
   const headLink = data?.headLink ? cssFiles.map((_, i) => data.headLink(i)).join(', ') : null;
   const providerImport = `import { ThemeProvider } from '${base}/theme/ThemeProvider';`;
   const notes = [];
   if (framework === 'unknown') notes.push('Framework not detected: add the CSS import and ThemeProvider to your app entry.');
   if (data?.note) notes.push(data.note({ attrs, provider }));
+  // Rendered on the server too: without a locale, Intl uses the server's there and the browser's here.
+  if (data?.ssr || data?.islands || config.rsc || framework === 'next') {
+    notes.push(
+      'Server rendering: also pass locale to ThemeProvider (e.g. locale="en-US"), or numbers and dates are formatted in the server locale on the server and in the browser locale in the browser, and hydration fails on the text.',
+    );
+  }
   const fonts = THEME_FONTS[theme] ?? [];
   // Registry items are text, so the woff2 files come from the npm package.
   if (fonts.length) {
     notes.push(
-      `The ${theme} theme's fonts are self-hosted in the ${packageFor(theme)} package: install it and import ${fonts.map((id) => `'${packageFor(theme)}/fonts/${id}.css'`).join(', ')} (until then text uses metric-matched system fonts).`,
+      `The ${theme} theme's fonts are self-hosted in the ${packageFor(theme)} package: install it and import ${fonts.map((id) => `'${packageFor(theme)}/fonts/${id}.css'`).join(', ')} (until then text falls back to the system font).`,
     );
   }
 
@@ -92,7 +103,10 @@ export function applySetup(source, plan, config) {
   if (source.includes('/styles/index.css') && (plan.anchor === null || source.includes('ThemeProvider'))) {
     return { error: 'already set up' };
   }
-  let content = source;
+  // A UTF-8 BOM (Windows editors) hides the first import from IMPORT_RE: patch without it, then put it back
+  // at the start, since TypeScript rejects a BOM anywhere else (TS1127).
+  const bom = source.startsWith('﻿') ? '﻿' : '';
+  let content = source.slice(bom.length);
   if (plan.anchor) {
     const matches = [...content.matchAll(plan.anchor)];
     if (matches.length !== 1) return { error: `expected exactly one ${plan.anchor.source} in the file, found ${matches.length}` };
@@ -118,28 +132,50 @@ export function applySetup(source, plan, config) {
   }
   const inserted = insertImports(content, plan.imports, plan.entry ?? '');
   if (inserted === null) return { error: 'could not find where to add imports' };
-  return { content: inserted };
+  return { content: bom + inserted };
 }
 
 const IMPORT_RE = /^import\s[^;]*?['"][^'"\n]+['"];?[ \t]*$|^import\s*['"][^'"\n]+['"];?[ \t]*$/gm;
+const SPECIFIER_RE = /['"]([^'"\n]+)['"];?[ \t]*$/;
+const STYLESHEET_RE = /\.(?:css|scss|sass|less)(?:\?[^'"]*)?$/;
 
-/** Adds import lines after the last top-level import (inside the frontmatter for .astro). */
+/** An import of the app's own code (`./App`, `@/layouts/…`), which can pull in component stylesheets. */
+const importsAppCode = (statement) => {
+  const specifier = SPECIFIER_RE.exec(statement)?.[1] ?? '';
+  return !/^import\s+type\s/.test(statement) && /^(?:\.|\/|@\/|~\/|#)/.test(specifier) && !STYLESHEET_RE.test(specifier);
+};
+
+/**
+ * Adds import lines after the last top-level import (inside the frontmatter for .astro). Stylesheet
+ * imports go before the first import of the app's own code instead: the base styles must load before
+ * the component CSS that `./App` and the like import, or base rules of equal specificity win.
+ */
 export function insertImports(content, lines, file) {
+  const sheets = lines.filter((line) => STYLESHEET_RE.test(SPECIFIER_RE.exec(line)?.[1] ?? ''));
+  const rest = lines.filter((line) => !sheets.includes(line));
+  /** Inserts into `content` whose import statements are `imports`, found from `offset`; null when there are none. */
+  const intoImports = (imports, offset) => {
+    const last = imports.at(-1);
+    if (!last) return null;
+    const app = sheets.length ? imports.find((m) => importsAppCode(m[0])) : undefined;
+    const after = app ? rest : lines;
+    const end = offset + last.index + last[0].length;
+    let out = after.length ? `${content.slice(0, end)}\n${after.join('\n')}${content.slice(end)}` : content;
+    if (app) out = `${out.slice(0, offset + app.index)}${sheets.join('\n')}\n${out.slice(offset + app.index)}`;
+    return out;
+  };
   const block = lines.join('\n');
   if (file.endsWith('.astro')) {
-    const fm = /^---\r?\n([\s\S]*?)\r?\n---/.exec(content);
+    // The body is optional: the minimal template's frontmatter is an empty `---\n---`.
+    const fm = /^---\r?\n(?:([\s\S]*?)\r?\n)?---/.exec(content);
     if (!fm) return `---\n${block}\n---\n${content}`;
     const bodyStart = fm.index + fm[0].indexOf('\n') + 1;
-    const body = fm[1];
-    const last = [...body.matchAll(IMPORT_RE)].at(-1);
-    const at = last ? bodyStart + last.index + last[0].length : bodyStart - 1;
-    return `${content.slice(0, at)}\n${block}${content.slice(at)}`;
+    const patched = intoImports([...(fm[1] ?? '').matchAll(IMPORT_RE)], bodyStart);
+    if (patched !== null) return patched;
+    return `${content.slice(0, bodyStart - 1)}\n${block}${content.slice(bodyStart - 1)}`;
   }
-  const last = [...content.matchAll(IMPORT_RE)].at(-1);
-  if (last) {
-    const at = last.index + last[0].length;
-    return `${content.slice(0, at)}\n${block}${content.slice(at)}`;
-  }
+  const patched = intoImports([...content.matchAll(IMPORT_RE)], 0);
+  if (patched !== null) return patched;
   const directive = /^(['"])use client\1;?[ \t]*\r?\n/.exec(content);
   const at = directive ? directive[0].length : 0;
   return `${content.slice(0, at)}${block}\n${at ? '' : '\n'}${content.slice(at)}`;

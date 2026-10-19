@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
-import { destinationOf, planFiles, transformContent, unifiedDiff } from '../src/files.mjs';
+import { destinationOf, planFiles, transformContent, unifiedDiff, updateComponentCss } from '../src/files.mjs';
 import {
   detectAlias,
   detectFramework,
@@ -9,6 +9,7 @@ import {
   installArgs,
   packageNameOf,
   parseJsonc,
+  tsconfigNotes,
 } from '../src/project.mjs';
 import { createRegistry, resolveItems, searchItems } from '../src/registry.mjs';
 import { BUNDLED_THEMES, CORE_THEMES, THEME_FONTS, THEMES } from '../src/constants.mjs';
@@ -119,6 +120,12 @@ describe('project detection', () => {
     expect(detectPackageManager(writeTree(tempDir(), { 'package.json': { packageManager: 'yarn@4.1.0' } }), {})).toBe('yarn');
     const monorepo = writeTree(tempDir(), { 'package.json': {}, 'pnpm-lock.yaml': '', 'apps/web/package.json': {} });
     expect(detectPackageManager(path.join(monorepo, 'apps/web'), {})).toBe('pnpm');
+    // A template's pnpm-lock.yaml next to the package-lock.json of a later `npm install`: the newest lockfile wins.
+    const both = writeTree(tempDir(), { ...base, 'pnpm-lock.yaml': '', 'package-lock.json': '{}' });
+    fs.utimesSync(path.join(both, 'pnpm-lock.yaml'), new Date(2026, 0, 1), new Date(2026, 0, 1));
+    expect(detectPackageManager(both, {})).toBe('npm');
+    fs.utimesSync(path.join(both, 'pnpm-lock.yaml'), new Date(), new Date(Date.now() + 60_000));
+    expect(detectPackageManager(both, {})).toBe('pnpm');
     const bare = writeTree(tempDir(), base);
     expect(detectPackageManager(bare, { npm_config_user_agent: 'bun/1.2.0 npm/? node/v22' })).toBe('bun');
     expect(installArgs('npm', ['a'], { dev: true })).toEqual(['install', '--save-dev', 'a']);
@@ -134,6 +141,42 @@ describe('project detection', () => {
     expect(detectAlias(rr, 'components/valyro-ui')).toBeNull();
     const baseUrl = writeTree(tempDir(), { 'jsconfig.json': '{ "compilerOptions": { "baseUrl": "src", "paths": { "@ui/*": ["components/*"] } } }' });
     expect(detectAlias(baseUrl, 'src/components/valyro-ui')).toBe('@ui/valyro-ui');
+  });
+
+  it('warns about tsconfig settings the copied sources do not compile under', () => {
+    const dir = 'src/components/valyro-ui';
+    // Tauri, Rsbuild and Parcel templates: lib ES2020.
+    const tauri = writeTree(tempDir(), { 'tsconfig.json': '{ "compilerOptions": { "lib": ["ES2020", "DOM", "DOM.Iterable"] }, "include": ["src"] }' });
+    const [lib] = tsconfigNotes(tauri, dir);
+    expect(lib).toContain('tsconfig.json: "lib" is ["ES2020","DOM","DOM.Iterable"]');
+    expect(lib).toContain('"lib": ["ES2023", "DOM", "DOM.Iterable"]');
+    // Vite: the app config in `references` covers src/, the node config (older lib) does not.
+    const vite = writeTree(tempDir(), {
+      'tsconfig.json': '{ "files": [], "references": [{ "path": "./tsconfig.app.json" }, { "path": "./tsconfig.node.json" }] }',
+      'tsconfig.app.json': '{ "compilerOptions": { "target": "es2023", "lib": ["ES2023", "DOM"] }, "include": ["src"] }',
+      'tsconfig.node.json': '{ "compilerOptions": { "lib": ["ES2020"] }, "include": ["vite.config.ts"] }',
+    });
+    expect(tsconfigNotes(vite, dir)).toEqual([]);
+    // Waku: both strictness flags, target esnext and no lib.
+    const waku = writeTree(tempDir(), {
+      'tsconfig.json': '{ "compilerOptions": { "target": "esnext", "exactOptionalPropertyTypes": true, "noUncheckedIndexedAccess": true } }',
+    });
+    expect(tsconfigNotes(waku, dir)).toEqual([
+      `tsconfig.json: exactOptionalPropertyTypes and noUncheckedIndexedAccess are on; the ValyroUI sources are not written for them, so tsc reports errors in ${dir}. Turn them off, or install the valyro-ui npm package instead of copying the sources.`,
+    ]);
+    // `extends`: a relative file (JSONC) and a package; the child's options win.
+    const extended = writeTree(tempDir(), {
+      'tsconfig.json': '{ "extends": "./tsconfig.base.json", "include": ["src/**/*"] }',
+      'tsconfig.base.json': '{ /* shared */ "compilerOptions": { "target": "ES2022", "noUncheckedIndexedAccess": true, }, }',
+      'tsconfig.web.json': '{ "extends": "@toolkit/tsconfig/tsconfig.web.json", "compilerOptions": { "noUncheckedIndexedAccess": false } }',
+      'node_modules/@toolkit/tsconfig/tsconfig.web.json': '{ "compilerOptions": { "lib": ["ESNext", "DOM"], "noUncheckedIndexedAccess": true } }',
+    });
+    const notes = tsconfigNotes(extended, dir);
+    expect(notes).toHaveLength(2);
+    expect(notes[0]).toContain('tsconfig.json: "target" is "ES2022" with no "lib"');
+    expect(notes[1]).toContain('tsconfig.json: noUncheckedIndexedAccess is on');
+    fs.writeFileSync(path.join(extended, 'tsconfig.json'), '{ "files": [], "references": [{ "path": "./tsconfig.web.json" }] }');
+    expect(tsconfigNotes(extended, dir)).toEqual([]);
   });
 });
 
@@ -153,6 +196,28 @@ describe('files', () => {
     expect(transformContent(code, 'a.tsx', config)).toBe('export const a = 1;\n');
     expect(transformContent(code, 'a.tsx', { ...config, rsc: true })).toBe(code);
     expect(transformContent(code, 'a.css', config)).toBe(code);
+  });
+
+  it('drops component stylesheet imports in the Next.js Pages Router and collects them into components.css', () => {
+    const code = "'use client';\n\nimport { x } from './x';\nimport '../../primitives/motion.css';\nimport \"./Button.css\";\r\nexport const a = x;\n";
+    const pages = { ...config, framework: 'next', installDir: 'components/valyro-ui' };
+    expect(transformContent(code, 'a.tsx', pages)).toBe("import { x } from './x';\nexport const a = x;\n");
+    expect(transformContent(code, 'a.tsx', { ...pages, rsc: true })).toBe(code);
+    expect(transformContent(code, 'a.tsx', { ...config, framework: 'vite' })).toContain("import '../../primitives/motion.css';\nimport \"./Button.css\";");
+
+    const dir = tempDir();
+    const css = (...dests) => dests.map((dest) => ({ dest }));
+    expect(updateComponentCss(css('components/valyro-ui/styles/index.css', 'components/valyro-ui/primitives/motion.css', 'components/valyro-ui/basic/Button.tsx'), pages, dir)).toEqual({
+      dest: 'components/valyro-ui/components.css',
+      created: true,
+    });
+    expect(updateComponentCss(css('components/valyro-ui/basic/Button.css', 'components/valyro-ui/primitives/motion.css'), pages, dir)).toEqual({
+      dest: 'components/valyro-ui/components.css',
+      created: false,
+    });
+    expect(updateComponentCss(css('components/valyro-ui/basic/Button.css'), pages, dir)).toBeNull();
+    const lines = fs.readFileSync(path.join(dir, 'components/valyro-ui/components.css'), 'utf8').split('\n');
+    expect(lines.slice(1)).toEqual(["@import './primitives/motion.css';", "@import './basic/Button.css';", '']);
   });
 
   it('warns when two items ship different content for one file', () => {
@@ -235,6 +300,26 @@ describe('framework setup', () => {
     );
     expect(content).toContain('<html data-theme="vercel" data-mode="dark" lang="en">');
     expect(content).toContain('<body><ThemeProvider theme="vercel" mode="dark">{children}</ThemeProvider></body>');
+    expect(plan.notes.join('\n')).toContain("drop the template's globals.css import");
+  });
+
+  it('patches the Next.js Pages Router _app: components.css after the styles, notes for _document and globals.css', () => {
+    const app = writeTree(tempDir(), { 'pages/_app.tsx': '' });
+    const pages = { ...config, rsc: false, framework: 'next', installDir: 'components/valyro-ui', alias: '@/components/valyro-ui' };
+    const plan = setupPlan('next', pages, app);
+    expect(plan.entry).toBe('pages/_app.tsx');
+    expect(plan.imports).toEqual([
+      "import '@/components/valyro-ui/styles/index.css';",
+      "import '@/components/valyro-ui/components.css';",
+      "import { ThemeProvider } from '@/components/valyro-ui/theme/ThemeProvider';",
+    ]);
+    const notes = plan.notes.join('\n');
+    expect(notes).toContain('data-theme="vercel" data-mode="dark" on <Html> in pages/_document.tsx');
+    expect(notes).toContain("drop the template's globals.css import");
+    const appFile = 'import "@/styles/globals.css";\nimport type { AppProps } from "next/app";\n\nexport default function App({ Component, pageProps }: AppProps) {\n  return <Component {...pageProps} />;\n}\n';
+    expect(applySetup(appFile, plan, pages).content).toContain('return <ThemeProvider theme="vercel" mode="dark"><Component {...pageProps} /></ThemeProvider>;');
+    // App Router and other frameworks import component CSS from the components themselves.
+    expect(setupPlan('vite', { ...config, rsc: false }, tempDir()).imports.join('\n')).not.toContain('components.css');
   });
 
   it('refuses ambiguous anchors instead of guessing', () => {
@@ -247,10 +332,15 @@ describe('framework setup', () => {
     expect(rrPlan.entry).toBe('app/root.tsx');
     const root = "import { Outlet } from 'react-router';\nexport default function App() {\n  return <Outlet />;\n}\n";
     expect(applySetup(root, rrPlan, config).content).toContain('return <ThemeProvider theme="vercel" mode="dark"><Outlet /></ThemeProvider>;');
+    expect(rrPlan.notes.join('\n')).toContain('bg-white dark:bg-gray-950; … }` block from app/app.css');
 
     const astroPlan = setupPlan('astro', config, tempDir());
     expect(insertImports('---\nconst a = 1;\n---\n<html>', ["import 'x.css';"], 'Layout.astro')).toBe("---\nimport 'x.css';\nconst a = 1;\n---\n<html>");
     expect(insertImports('<html></html>', ["import 'x.css';"], 'Layout.astro')).toBe("---\nimport 'x.css';\n---\n<html></html>");
+    // The minimal template's empty frontmatter, as checked out on Windows too.
+    expect(insertImports('---\n---\n\n<html>', ["import 'x.css';"], 'index.astro')).toBe("---\nimport 'x.css';\n---\n\n<html>");
+    expect(insertImports('---\r\n---\r\n<html>', ["import 'x.css';"], 'index.astro')).toBe("---\r\nimport 'x.css';\n---\r\n<html>");
+    expect(setupPlan('astro', config, writeTree(tempDir(), { 'src/pages/index.astro': '' })).entry).toBe('src/pages/index.astro');
     expect(astroPlan.imports).toEqual(["import '../components/valyro-ui/styles/index.css';"]);
   });
 
@@ -258,6 +348,7 @@ describe('framework setup', () => {
     const app = writeTree(tempDir(), { 'src/routes/__root.tsx': '' });
     const plan = setupPlan('tanstack-start', { ...config, rsc: false }, app);
     expect(plan.entry).toBe('src/routes/__root.tsx');
+    expect(plan.notes.join('\n')).toContain("the template's body font-family and main rule");
     // The blank template of @tanstack/cli 0.71 (create --blank).
     const root = [
       "import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'",
@@ -309,6 +400,7 @@ describe('framework setup', () => {
     expect(plan.entry).toBe('src/pages/_layout.tsx');
     expect(plan.attrs).toBe('');
     expect(plan.notes.join('\n')).toContain('src/pages/_root.tsx');
+    expect(plan.notes.join('\n')).toContain("font-['Nunito'] wrapper");
     const layout = "import '../styles.css';\n\nexport default async function RootLayout({ children }) {\n  return <main>{children}</main>;\n}\n";
     const { content } = applySetup(layout, plan, config);
     expect(content).toContain("import '../styles.css';\nimport '../components/valyro-ui/styles/index.css';");
@@ -318,9 +410,9 @@ describe('framework setup', () => {
   it('wraps <App /> in the Rsbuild, Parcel and electron-vite entries and says where the <html> attributes go', () => {
     const entry = "import { createRoot } from 'react-dom/client';\nimport App from './App';\n\nroot.render(\n  <StrictMode>\n    <App />\n  </StrictMode>,\n);\n";
     for (const [framework, file, note] of [
-      ['rsbuild', 'src/index.tsx', 'html.template'],
-      ['parcel', 'src/index.tsx', 'src/index.html'],
-      ['electron-vite', 'src/renderer/src/main.tsx', 'src/renderer/index.html'],
+      ['rsbuild', 'src/index.tsx', "html.template in rsbuild.config.ts) so the first paint is themed, and delete the template's src/App.css"],
+      ['parcel', 'src/index.tsx', "src/index.html, and delete the template's src/App.css"],
+      ['electron-vite', 'src/renderer/src/main.tsx', "src/renderer/index.html, and drop the template's import './assets/main.css'"],
     ]) {
       const plan = setupPlan(framework, { ...config, rsc: false }, writeTree(tempDir(), { [file]: '' }));
       expect(plan.entry, framework).toBe(file);
@@ -341,6 +433,42 @@ describe('framework setup', () => {
     expect(patched).toContain('<ThemeProvider theme="vercel" mode="dark">{app}</ThemeProvider>');
     const v2 = "import { createInertiaApp } from '@inertiajs/react';\n\ncreateInertiaApp({ setup({ el, App, props }) { createRoot(el).render(<App {...props} />); } });\n";
     expect(applySetup(v2, plan, cfg).content).toContain('<ThemeProvider theme="vercel" mode="dark"><App {...props} /></ThemeProvider>');
+  });
+
+  it('puts the stylesheets before the first import of app code, so component CSS loads after the base styles', () => {
+    const css = "import './components/valyro-ui/styles/index.css';";
+    const provider = "import { ThemeProvider } from './components/valyro-ui/theme/ThemeProvider';";
+    // The Vite template entry: App imports the components, whose CSS must come after styles/index.css.
+    const vite = "import { StrictMode } from 'react'\nimport './index.css'\nimport App from './App.tsx'\n\nrender(<App />)\n";
+    expect(insertImports(vite, [css, provider], 'src/main.tsx')).toBe(
+      `import { StrictMode } from 'react'\nimport './index.css'\n${css}\nimport App from './App.tsx'\n${provider}\n\nrender(<App />)\n`,
+    );
+    // Aliases are app code; type-only imports and stylesheets are not. With no app import, everything goes last.
+    const aliased = "import type { Route } from './+types/root';\nimport { x } from 'pkg';\nimport Layout from '@/layouts/app';\n";
+    expect(insertImports(aliased, [css, provider], 'app.tsx')).toBe(
+      `import type { Route } from './+types/root';\nimport { x } from 'pkg';\n${css}\nimport Layout from '@/layouts/app';\n${provider}\n`,
+    );
+    expect(insertImports("import type { A } from './a';\nimport './app.css';\n", [css], 'root.tsx')).toBe(`import type { A } from './a';\nimport './app.css';\n${css}\n`);
+    // Astro frontmatter: before the first component import.
+    expect(insertImports("---\nimport Header from '../components/Header.astro';\n---\n<html>", [css], 'Layout.astro')).toBe(
+      `---\n${css}\nimport Header from '../components/Header.astro';\n---\n<html>`,
+    );
+  });
+
+  it('asks for a locale only where components render on the server', () => {
+    const locale = (framework, rsc = false) => setupPlan(framework, { ...config, rsc }, tempDir()).notes.some((n) => n.includes('pass locale'));
+    expect(['next', 'react-router', 'tanstack-start', 'astro'].map((f) => locale(f))).toEqual([true, true, true, true]);
+    expect(locale('waku', true)).toBe(true);
+    expect(['vite', 'rsbuild', 'parcel', 'electron-vite', 'laravel-inertia'].map((f) => locale(f))).toEqual([false, false, false, false, false]);
+  });
+
+  it('keeps a UTF-8 BOM first: imports go after the existing ones, not before the BOM', () => {
+    const plan = setupPlan('vite', { ...config, rsc: false }, tempDir());
+    const entry = "﻿import { createRoot } from 'react-dom/client';\nimport App from './App';\n\ncreateRoot(root).render(<App />);\n";
+    const { content } = applySetup(entry, plan, config);
+    expect(content.indexOf('﻿')).toBe(0);
+    expect(content.lastIndexOf('﻿')).toBe(0);
+    expect(content).toContain(`﻿import { createRoot } from 'react-dom/client';\n${plan.imports[0]}\nimport App from './App';`);
   });
 
   it('inserts imports after a leading directive when a file has no imports', () => {

@@ -79,6 +79,11 @@
   }
 }
 
+/* The kit's motion switch (styles/motion.css) leaves the sweep running, slowed as under the OS setting. */
+[data-ui-motion='reduce'] .ui-progress__track[data-indeterminate] .ui-progress__fill {
+  animation-duration: 3s;
+}
+
 @media (forced-colors: active) {
   .ui-progress__track {
     border: 1px solid CanvasText;
@@ -95,4 +100,22 @@
   width: 100%;
   transform: translateX(calc((var(--_ratio, 0) - 1) * 100% * var(--_dir, 1)));
   transition: transform calc(var(--ui-duration-slow) * 1.92) var(--ui-spring-smooth);
+}
+
+/* The shown percentage counts along on the same spring with no frame loop: a registered integer transitions
+   and a counter writes it in the locale's digits, between the texts ProgressBar.tsx sets. Without @property
+   the count jumps to the value; a custom formatValue counts in JS. */
+@property --_progress-count {
+  syntax: '<integer>';
+  inherits: false;
+  initial-value: 0;
+}
+
+.ui-progress[data-motion='spring'] .ui-progress__value[data-count] {
+  counter-reset: ui-progress-count var(--_progress-count);
+  transition: --_progress-count calc(var(--ui-duration-slow) * 1.92) var(--ui-spring-smooth);
+}
+
+.ui-progress[data-motion='spring'] .ui-progress__value[data-count]::before {
+  content: var(--_progress-before) counter(ui-progress-count, var(--_progress-digits, decimal)) var(--_progress-after);
 }

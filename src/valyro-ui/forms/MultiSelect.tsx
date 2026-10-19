@@ -1,22 +1,18 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, type ChangeEvent, type ComponentPropsWithRef, type KeyboardEvent, type MouseEvent, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ComponentPropsWithRef, type KeyboardEvent, type ReactNode } from 'react';
 import { ChevronDownIcon, SearchIcon, XIcon } from '../icons';
-import { animateSpring, composeHandlers, cx, Floating, mergeRefs, useControllableState, useListNavigation } from '../primitives';
+import { composeHandlers, cx, Floating, useAnnounceCount } from '../primitives';
+import { collectionPart } from '../primitives/compound';
 import { Button } from '../basic/Button';
-import {
-  filterItems,
-  firstEnabledIndex,
-  flattenItems,
-  Listbox,
-  matchesQuery,
-  optionId,
-  useFieldLabelIds,
-  type SelectItem,
-  type SelectOption,
-} from './Listbox';
+import type { SelectItem } from './listbox-items';
+import { ListboxView } from './listbox-view';
+import { optionsFromParts, type OptionEmptyPartProps, type OptionGroupPartProps, type OptionPartProps } from './option-parts';
+import { useSelect } from './useSelect';
+import { useFormField } from '../forms-advanced/form-field-context';
+import { useLocale } from '../theme/ThemeProvider';
 import './MultiSelect.css';
-import { withRef, useId, useLayoutEffect } from '../primitives/react-compat';
+import { withRef, useLayoutEffect } from '../primitives/react-compat';
 
 export interface MultiSelectLabels {
   /** Button in the popover footer that removes every value. */
@@ -25,12 +21,15 @@ export interface MultiSelectLabels {
   selectedCount: (count: number) => string;
   /** Accessible name of a chip's remove button. */
   removeValue: (label: string) => string;
+  /** With `searchable`, read to screen readers when the list opens or the typing pauses: "5 results available". */
+  resultCount?: (count: number) => string;
 }
 
-export const defaultMultiSelectLabels: MultiSelectLabels = {
+export const defaultMultiSelectLabels: Required<MultiSelectLabels> = {
   clearAll: 'Clear all',
   selectedCount: (count) => `${count} selected`,
   removeValue: (label) => `Remove ${label}`,
+  resultCount: (count) => `${count} ${count === 1 ? 'result' : 'results'} available`,
 };
 
 /**
@@ -53,8 +52,10 @@ export function fittingChips(widths: readonly number[], space: number, gap: numb
 
 export interface MultiSelectProps
   extends Omit<ComponentPropsWithRef<'button'>, 'value' | 'defaultValue' | 'onChange' | 'children' | 'type'> {
-  /** Options to pick from, flat or in labelled groups. */
-  options: SelectItem[];
+  /** Options to pick from, flat or in labelled groups. Or compose them as children: `MultiSelect.Item`, `.Group`, `.Empty`. */
+  options?: SelectItem[];
+  /** The compound form instead of `options`: `MultiSelect.Item`, `MultiSelect.Group` and `MultiSelect.Empty` elements. */
+  children?: ReactNode;
   /** Selected values in the order they were picked. */
   value?: string[];
   defaultValue?: string[];
@@ -77,12 +78,21 @@ export interface MultiSelectProps
    * width holds (measured again when it resizes), so chips are never squeezed into a few letters.
    */
   maxChips?: number | 'auto';
-  /** Shown in the popover when no option matches the filter or `options` is empty. */
+  /** Shown in the popover when no option matches the filter or `options` is empty. Or `MultiSelect.Empty`. */
   emptyText?: ReactNode;
   labels?: Partial<MultiSelectLabels>;
   /** Submits every selected value with the surrounding form (one hidden input per value). */
   name?: string;
 }
+
+const NO_OPTIONS: SelectItem[] = [];
+
+/** An option of the compound form (`MultiSelect.Item`). */
+export const MultiSelectItem = collectionPart<OptionPartProps>('MultiSelect.Item');
+/** A labelled group of `MultiSelect.Item`s (`MultiSelect.Group`). */
+export const MultiSelectGroup = collectionPart<OptionGroupPartProps>('MultiSelect.Group');
+/** The popover content while no option matches (`MultiSelect.Empty`, the `emptyText` prop). */
+export const MultiSelectEmpty = collectionPart<OptionEmptyPartProps>('MultiSelect.Empty');
 
 /**
  * Multi-value select: chips in the field, checkboxes in the list. `className` and `style` go to the
@@ -91,7 +101,8 @@ export interface MultiSelectProps
  * moves into its "Clear all" button.
  */
 export const MultiSelect = withRef(function MultiSelect({
-  options,
+  options: optionsProp,
+  children,
   value: valueProp,
   defaultValue,
   onValueChange,
@@ -104,50 +115,55 @@ export const MultiSelect = withRef(function MultiSelect({
   searchable = false,
   searchPlaceholder = 'Search…',
   maxChips = 2,
-  emptyText = 'No results',
+  emptyText: emptyTextProp,
   labels: labelsProp,
   name,
   disabled,
   className,
   style,
   ref,
-  onClick,
   onKeyDown,
   'aria-invalid': ariaInvalid,
   ...rest
 }: MultiSelectProps) {
-  const [value, setValue] = useControllableState<string[]>({
+  // FormField's `required` only marks its label (aria-hidden); announce it on the control.
+  const field = useFormField();
+  const parts = useMemo(
+    () => (optionsProp ? undefined : optionsFromParts(children, MultiSelectItem, MultiSelectGroup, MultiSelectEmpty)),
+    [optionsProp, children],
+  );
+  const options = optionsProp ?? parts?.items ?? NO_OPTIONS;
+  const emptyText = emptyTextProp ?? parts?.empty ?? 'No results';
+  // The behaviour is useSelect's (valyro-ui/headless); the popover is a Floating, which positions and dismisses it.
+  const select = useSelect({
+    items: options,
+    multiple: true,
     value: valueProp,
-    defaultValue: defaultValue ?? [],
-    onChange: onValueChange,
+    defaultValue,
+    onValueChange,
+    open: openProp,
+    defaultOpen,
+    onOpenChange,
+    searchable,
+    floating: false,
+    // Letters and the search box compare as the locale does: case and accents ignored ("e" finds "é").
+    locale: useLocale(),
   });
-  const [open, setOpen] = useControllableState({ value: openProp, defaultValue: defaultOpen ?? false, onChange: onOpenChange });
-  const [query, setQuery] = useState('');
+  const { open, value, setValue, triggerRef } = select;
   const labels = { ...defaultMultiSelectLabels, ...labelsProp };
   const fieldRef = useRef<HTMLDivElement>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const chipsRef = useRef<HTMLSpanElement>(null);
   const clearAllRef = useRef<HTMLButtonElement>(null);
   // Index of the chip whose remove button should take focus after a keyboard removal.
   const focusChip = useRef<number | null>(null);
-  const listId = useId();
-  const fieldLabelIds = useFieldLabelIds(triggerRef, open, listId);
-
-  const allOptions = useMemo(() => flattenItems(options), [options]);
-  const visibleItems = useMemo(
-    () => (query ? filterItems(options, (option) => matchesQuery(option, query)) : options),
-    [options, query],
-  );
-  const flat = useMemo(() => flattenItems(visibleItems), [visibleItems]);
-  const selectedOptions = value.map(
-    (v): SelectOption => allOptions.find((option) => option.value === v) ?? { value: v, label: v },
-  );
-
-  const toggle = (index: number) => {
-    const picked = flat[index].value;
-    setValue((prev) => (prev.includes(picked) ? prev.filter((v) => v !== picked) : [...prev, picked]));
-  };
+  const selectedOptions = select.selected;
+  // The search box filters the list: how many rows are left is read once the typing pauses.
+  useAnnounceCount(select.listbox.options.filter((option) => !option.disabled).length, {
+    active: open && searchable,
+    message: labels.resultCount,
+    key: select.query,
+  });
 
   const remove = (removed: string) => setValue((prev) => prev.filter((v) => v !== removed));
 
@@ -160,7 +176,8 @@ export const MultiSelect = withRef(function MultiSelect({
     (buttons[Math.min(index, buttons.length - 1)] ?? triggerRef.current)?.focus();
   });
 
-  // A chip for a newly picked option pops in (not the ones there on mount, nor ones re-shown by the "+N" fit).
+  // A chip for a newly picked option pops in (not the ones there on mount, nor ones re-shown by the "+N" fit):
+  // the CSS entrance (data-ui-enter, styles/motion.css) on just that chip, before it is painted.
   const shownValues = useRef<readonly string[] | null>(null);
   useLayoutEffect(() => {
     const previous = shownValues.current;
@@ -169,46 +186,16 @@ export const MultiSelect = withRef(function MultiSelect({
     const added = value.filter((v) => !previous.includes(v));
     if (!added.length) return;
     for (const chip of chipsRef.current?.querySelectorAll<HTMLElement>(':scope > .ui-multi-select__chip') ?? []) {
-      if (added.includes(chip.dataset.value ?? '')) {
-        animateSpring(chip, [{ opacity: 0, transform: 'scale(0.85)' }, { opacity: 1, transform: 'none' }], 'snappy');
-      }
+      if (added.includes(chip.dataset.value ?? '')) chip.setAttribute('data-ui-enter', 'scale');
     }
   }, [value]);
-
-  const nav = useListNavigation({
-    count: flat.length,
-    isDisabled: (i) => !!flat[i].disabled,
-    // With a search box, letters filter the list instead of jumping to a row.
-    getLabel: searchable ? undefined : (i) => flat[i].label,
-    onSelect: toggle,
-    initialIndex: open ? firstEnabledIndex(flat) : -1,
-  });
-
-  const show = () => {
-    nav.setActiveIndex(firstEnabledIndex(flat));
-    setOpen(true);
-  };
-
-  const hide = (restoreFocus: boolean) => {
-    setOpen(false);
-    setQuery('');
-    if (restoreFocus) triggerRef.current?.focus();
-  };
-
-  // The popover is positioned (and made visible) one render after it mounts, so focus waits a frame.
-  useEffect(() => {
-    if (!open || !searchable) return;
-    const frame = requestAnimationFrame(() => searchRef.current?.focus({ preventScroll: true }));
-    return () => cancelAnimationFrame(frame);
-  }, [open, searchable]);
 
   // The popover is portaled to the end of <body>, so Tab would never reach its footer: hand focus to "Clear all" explicitly.
   const focusClearAll = (event: KeyboardEvent) => {
     const button = clearAllRef.current;
-    if (event.key !== 'Tab' || event.shiftKey || !button) return false;
+    if (event.key !== 'Tab' || event.shiftKey || !button) return;
     event.preventDefault();
     button.focus();
-    return true;
   };
 
   const handleClearAllKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
@@ -218,57 +205,23 @@ export const MultiSelect = withRef(function MultiSelect({
       (searchable ? searchRef : triggerRef).current?.focus();
     } else {
       // Back on the trigger, the browser's own Tab continues to whatever follows the field.
-      hide(true);
+      select.close(true);
     }
   };
 
+  // Runs before useSelect's keys; a key handled here calls preventDefault, so the hook skips it.
   const handleTriggerKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
-    if (!open) {
-      if (event.key === 'ArrowDown' || event.key === 'ArrowUp' || event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault();
-        show();
-      } else if (event.key === 'Backspace' && value.length > 0) {
-        event.preventDefault();
-        remove(value[value.length - 1]);
-      }
-      return;
+    if (open) focusClearAll(event);
+    else if (event.key === 'Backspace' && value.length > 0) {
+      event.preventDefault();
+      remove(value[value.length - 1]);
     }
-    if (focusClearAll(event)) return;
-    if (event.key === 'Tab') {
-      hide(false);
-      return;
-    }
-    nav.onKeyDown(event);
-  };
-
-  const handleTriggerClick = (event: MouseEvent<HTMLButtonElement>) => {
-    // Keyboard-generated clicks (detail 0, e.g. Space keyup) are already handled in onKeyDown.
-    if (event.detail === 0) return;
-    // Safari does not focus buttons on click; keyboard navigation needs focus on the trigger.
-    event.currentTarget.focus();
-    if (open) hide(false);
-    else show();
-  };
-
-  const handleSearchChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const next = event.target.value;
-    setQuery(next);
-    nav.setActiveIndex(firstEnabledIndex(flattenItems(filterItems(options, (option) => matchesQuery(option, next)))));
   };
 
   const handleSearchKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     // IME composition (Japanese, Chinese, Korean): Enter and Escape confirm or cancel the conversion, not the field.
-    // keyCode 229: Safari reports the composition's last keydown with isComposing false.
     if (event.nativeEvent.isComposing || event.keyCode === 229) return;
-    if (focusClearAll(event)) return;
-    if (event.key === 'Tab') {
-      // Hand focus back to the trigger so Tab continues from there, not from the portal at the end of <body>.
-      hide(true);
-      return;
-    }
-    // Space, Home and End edit the search text.
-    if (event.key === ' ' || event.key === 'Home' || event.key === 'End') return;
-    nav.onKeyDown(event);
+    focusClearAll(event);
   };
 
   /*
@@ -307,7 +260,6 @@ export const MultiSelect = withRef(function MultiSelect({
   const chipLimit = autoChips ? (fitCount ?? selectedOptions.length) : maxChips;
   const visibleChips = selectedOptions.slice(0, chipLimit);
   const overflow = selectedOptions.length - visibleChips.length;
-  const activeId = open && nav.activeIndex >= 0 ? optionId(listId, nav.activeIndex) : undefined;
 
   return (
     <>
@@ -326,19 +278,15 @@ export const MultiSelect = withRef(function MultiSelect({
       >
         {/* Covers the whole field so any click outside a chip's remove button toggles the list. */}
         <button
-          type="button"
-          role="combobox"
-          aria-haspopup="listbox"
-          aria-expanded={open}
-          aria-controls={open ? listId : undefined}
-          aria-activedescendant={searchable ? undefined : activeId}
-          aria-invalid={ariaInvalid ?? (invalid || undefined)}
-          {...rest}
-          ref={mergeRefs(triggerRef, ref)}
-          disabled={disabled}
-          className="ui-multi-select__trigger"
-          onClick={composeHandlers(onClick, handleTriggerClick)}
-          onKeyDown={composeHandlers(onKeyDown, handleTriggerKeyDown)}
+          {...select.getTriggerProps({
+            'aria-invalid': ariaInvalid ?? (invalid || undefined),
+            'aria-required': field?.required || undefined,
+            ...rest,
+            ref,
+            disabled,
+            className: 'ui-multi-select__trigger',
+            onKeyDown: composeHandlers(onKeyDown, handleTriggerKeyDown),
+          })}
         >
           <span className="ui-sr-only">
             {selectedOptions.length ? selectedOptions.map((option) => option.label).join(', ') : placeholder}
@@ -406,46 +354,27 @@ export const MultiSelect = withRef(function MultiSelect({
         placement="bottom-start"
         offset={6}
         matchAnchorWidth
-        onDismiss={(reason) => hide(reason === 'escape')}
-        className="ui-listbox__popover ui-multi-select__popover"
-        // Keeps focus on the trigger / search box while clicking rows and buttons.
-        onMouseDown={(event) => {
-          if (event.target !== searchRef.current) event.preventDefault();
-        }}
+        onDismiss={(reason) => select.close(reason === 'escape')}
+        {...select.getPopupProps({ className: 'ui-listbox__popover ui-multi-select__popover' })}
       >
         {searchable && (
           <div className="ui-multi-select__search">
             <SearchIcon className="ui-multi-select__search-icon" />
             <input
-              ref={searchRef}
-              type="text"
-              role="combobox"
-              aria-label={searchPlaceholder}
-              aria-expanded={open}
-              aria-controls={listId}
-              aria-autocomplete="list"
-              aria-activedescendant={activeId}
-              autoComplete="off"
-              spellCheck={false}
-              className="ui-multi-select__search-input"
-              placeholder={searchPlaceholder}
-              value={query}
-              onChange={handleSearchChange}
-              onKeyDown={handleSearchKeyDown}
+              {...select.getSearchProps({
+                ref: searchRef,
+                'aria-label': searchPlaceholder,
+                className: 'ui-multi-select__search-input',
+                placeholder: searchPlaceholder,
+                onKeyDown: handleSearchKeyDown,
+              })}
             />
           </div>
         )}
-        <Listbox
-          id={listId}
-          items={visibleItems}
-          activeIndex={nav.activeIndex}
-          onActiveIndexChange={nav.setActiveIndex}
-          isSelected={(v) => value.includes(v)}
-          onSelect={toggle}
+        <ListboxView
+          listbox={select.listbox}
           indicator="checkbox"
-          multiple
-          label={rest['aria-label']}
-          labelledBy={rest['aria-labelledby'] ?? (rest['aria-label'] ? undefined : fieldLabelIds)}
+          listboxProps={{ 'aria-label': rest['aria-label'], 'aria-labelledby': rest['aria-labelledby'] }}
           emptyState={emptyText}
         />
         {value.length > 0 && (
@@ -468,4 +397,4 @@ export const MultiSelect = withRef(function MultiSelect({
       </Floating>
     </>
   );
-});
+}, { Item: MultiSelectItem, Group: MultiSelectGroup, Empty: MultiSelectEmpty });

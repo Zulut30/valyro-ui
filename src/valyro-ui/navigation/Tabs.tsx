@@ -1,13 +1,17 @@
 'use client';
 
-import { useEffect, useRef, type ComponentPropsWithRef, type KeyboardEvent, type ReactNode } from 'react';
-import { animateSpring, cx, getDirection, useControllableState } from '../primitives';
+import { useEffect, useRef, type ComponentPropsWithRef, type ReactNode } from 'react';
+import { animateSpring, cx } from '../primitives';
 import { collectionPart, partsOf } from '../primitives/compound';
 import { Badge } from '../basic/Badge';
-import { revealInList, rovingTarget, useOverflowScroll, useSlidingIndicator } from './internal';
+import { revealInList, useOverflowScroll, useSlidingIndicator } from './internal';
+import { useTabs } from './useTabs';
 import '../primitives/motion.css';
 import './Tabs.css';
-import { withRef, useId, useLayoutEffect } from '../primitives/react-compat';
+import { withRef, useLayoutEffect } from '../primitives/react-compat';
+
+/** CSS transitions height to and from `auto` (interpolate-size): a spring tab switch eases the panel area in CSS. */
+const cssHeights = typeof CSS !== 'undefined' && CSS.supports?.('interpolate-size', 'allow-keywords') === true;
 
 export interface TabItem {
   value: string;
@@ -37,6 +41,13 @@ export interface TabsProps extends Omit<ComponentPropsWithRef<'div'>, 'defaultVa
    * came from and the panel area eases to the new height. `default`: the theme's indicator, instant panels.
    */
   animation?: 'default' | 'spring';
+  /**
+   * `automatic` (default): moving focus with the arrow keys selects the tab. `manual`: the arrows only move
+   * focus and Enter or Space selects, for panels that are slow to render or load (WAI-ARIA APG, React Aria).
+   */
+  keyboardActivation?: 'automatic' | 'manual';
+  /** `vertical`: the tabs stack in a column beside the panel and move with ArrowUp / ArrowDown. */
+  orientation?: 'horizontal' | 'vertical';
 }
 
 export interface TabsListProps {
@@ -83,18 +94,24 @@ export const Tabs = withRef(function Tabs({
   variant = 'underline',
   label,
   animation = 'default',
+  keyboardActivation = 'automatic',
+  orientation = 'horizontal',
   className,
   ...rest
 }: TabsProps) {
   const parts = itemsProp ? undefined : tabsFromParts(children);
   const items = itemsProp ?? parts?.items ?? [];
   const listLabel = label ?? parts?.label;
-  const [current, setCurrent] = useControllableState({
+  // The behaviour is useTabs's (valyro-ui/headless): selection, ids, the roving tab stop and the keys.
+  const tabs = useTabs({
+    tabs: items.map((item) => ({ value: item.value, disabled: item.disabled, panel: item.content !== undefined })),
     value,
-    defaultValue: defaultValue ?? items.find((item) => !item.disabled)?.value ?? '',
-    onChange: onValueChange,
+    defaultValue,
+    onValueChange,
+    orientation,
+    activation: keyboardActivation,
   });
-  const baseId = useId();
+  const current = tabs.value;
   const listRef = useRef<HTMLDivElement>(null);
   const indicator = useSlidingIndicator(listRef, current);
   // Scrolls only while the tabs are too wide, so a row that fits never clips focus rings or touch targets.
@@ -107,9 +124,9 @@ export const Tabs = withRef(function Tabs({
     if (list && tab) revealInList(list, tab);
   }, [current]);
 
-  const isDisabled = (index: number) => !!items[index]?.disabled;
   const selectedIndex = items.findIndex((item) => item.value === current);
   const spring = animation === 'spring';
+  const vertical = orientation === 'vertical';
   const panelsRef = useRef<HTMLDivElement>(null);
   const shown = useRef({ index: selectedIndex, height: 0 });
 
@@ -125,69 +142,70 @@ export const Tabs = withRef(function Tabs({
     return () => observer.disconnect();
   }, [spring]);
 
-  // Spring: the new panel slides in from the side of the previous tab while the area eases to its height.
+  // Spring: the new panel slides in from the side of the previous tab — CSS keyframes that start as it is shown,
+  // data-from on the area names the side (Tabs.css) — while the area eases to its height. The height changes
+  // from auto to auto, which no CSS transition starts by itself: where CSS transitions to auto (interpolate-size)
+  // the area is held at the height on screen for one style pass and let go, and a CSS transition carries it to
+  // the new auto height (data-animating); elsewhere a Web Animation runs between the measured heights.
   useLayoutEffect(() => {
     const panels = panelsRef.current;
     const previous = shown.current;
+    const switched = spring && panels && previous.index >= 0 && previous.index !== selectedIndex && selectedIndex >= 0;
+    if (switched) panels.setAttribute('data-from', selectedIndex > previous.index ? 'end' : 'start');
+    // A switch mid-way through the last one starts from the height on screen, before that transition stops.
+    const moving = switched && cssHeights && panels.getAnimations().some((running) => (running as CSSTransition).transitionProperty === 'height');
+    const from = moving ? panels.offsetHeight : previous.height;
+    if (switched && cssHeights) panels.removeAttribute('data-animating');
     shown.current = { index: selectedIndex, height: panels?.offsetHeight ?? 0 };
-    if (!spring || !panels || previous.index < 0 || previous.index === selectedIndex || selectedIndex < 0) return;
-    const panel = document.getElementById(panelId(selectedIndex));
-    if (!panel) return;
-    const forward = selectedIndex > previous.index ? 1 : -1;
-    const side = forward * (getDirection(panels) === 'rtl' ? -1 : 1);
-    animateSpring(panel, { transform: [`translateX(${side * 24}px)`, 'none'], opacity: [0, 1] }, 'snappy');
+    if (!switched) return;
     const height = panels.offsetHeight;
-    if (previous.height && previous.height !== height) {
+    if (!from || from === height) return;
+    if (cssHeights) {
+      panels.style.height = `${from}px`;
+      void panels.offsetHeight;
+      panels.style.removeProperty('height');
       panels.setAttribute('data-animating', '');
-      const growth = animateSpring(panels, { height: [`${previous.height}px`, `${height}px`] }, 'smooth');
-      const done = () => panels.removeAttribute('data-animating');
-      if (growth) growth.onfinish = growth.oncancel = done;
-      else done();
+      return;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- panel ids are stable for the component's life
+    panels.setAttribute('data-animating', '');
+    const growth = animateSpring(panels, { height: [`${from}px`, `${height}px`] }, 'smooth');
+    const done = () => panels.removeAttribute('data-animating');
+    if (growth) growth.onfinish = growth.oncancel = done;
+    else done();
   }, [selectedIndex, spring]);
-  // Keep the list reachable by Tab even when the value matches no tab.
-  const focusableIndex = selectedIndex >= 0 ? selectedIndex : items.findIndex((item) => !item.disabled);
-  const tabId = (index: number) => `${baseId}-tab-${index}`;
-  const panelId = (index: number) => `${baseId}-panel-${index}`;
 
-  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    const from = items.findIndex((item) => item.value === (event.target as HTMLElement).dataset.value);
-    if (from < 0) return;
-    const next = rovingTarget(event.key, items.length, from, isDisabled, 'horizontal', getDirection(event.currentTarget));
-    if (next === null) return;
-    event.preventDefault();
-    // Automatic activation: focusing a tab selects it.
-    document.getElementById(tabId(next))?.focus();
-    setCurrent(items[next].value);
-  };
-
+  // The CSS height transition is over: the area stops clipping.
+  useEffect(() => {
+    const panels = panelsRef.current;
+    if (!spring || !panels || !cssHeights) return;
+    const done = (event: TransitionEvent) => {
+      if (event.target === panels && event.propertyName === 'height') panels.removeAttribute('data-animating');
+    };
+    panels.addEventListener('transitionend', done);
+    panels.addEventListener('transitioncancel', done);
+    return () => {
+      panels.removeEventListener('transitionend', done);
+      panels.removeEventListener('transitioncancel', done);
+    };
+  }, [spring]);
   return (
-    <div {...rest} className={cx('ui-tabs', className)} data-variant={variant} data-motion={spring ? 'spring' : undefined}>
-      <div
-        ref={listRef}
-        role="tablist"
-        aria-label={listLabel}
-        aria-orientation="horizontal"
-        className="ui-tabs__list"
-        onKeyDown={onKeyDown}
-      >
+    <div
+      {...rest}
+      className={cx('ui-tabs', className)}
+      data-variant={variant}
+      data-orientation={vertical ? 'vertical' : undefined}
+      data-motion={spring ? 'spring' : undefined}
+    >
+      <div {...tabs.getListProps({ ref: listRef, 'aria-label': listLabel, className: 'ui-tabs__list' })}>
         {items.map((item, index) => {
           const selected = index === selectedIndex;
           return (
             <button
               key={item.value}
-              type="button"
-              role="tab"
-              id={tabId(index)}
-              aria-selected={selected}
-              aria-controls={item.content !== undefined ? panelId(index) : undefined}
-              tabIndex={index === focusableIndex ? 0 : -1}
-              disabled={item.disabled}
-              data-value={item.value}
-              data-active={selected || undefined}
-              className="ui-tabs__tab"
-              onClick={() => setCurrent(item.value)}
+              {...tabs.getTabProps(
+                { value: item.value, disabled: item.disabled, panel: item.content !== undefined },
+                { 'data-active': selected || undefined, className: 'ui-tabs__tab' },
+              )}
             >
               {item.icon && <span className="ui-tabs__icon">{item.icon}</span>}
               <span className="ui-tabs__label">{item.label}</span>
@@ -203,7 +221,11 @@ export const Tabs = withRef(function Tabs({
           <span
             className="ui-tabs__indicator"
             aria-hidden="true"
-            style={{ width: indicator.width, transform: `translateX(${indicator.left}px)`, transition: indicator.instant ? 'none' : undefined }}
+            style={
+              vertical
+                ? { height: indicator.height, transform: `translateY(${indicator.top}px)`, transition: indicator.instant ? 'none' : undefined }
+                : { width: indicator.width, transform: `translateX(${indicator.left}px)`, transition: indicator.instant ? 'none' : undefined }
+            }
           />
         )}
       </div>
@@ -219,17 +241,9 @@ export const Tabs = withRef(function Tabs({
 
   function renderPanels() {
     return items.map(
-      (item, index) =>
+      (item) =>
         item.content !== undefined && (
-          <div
-            key={item.value}
-            role="tabpanel"
-            id={panelId(index)}
-            aria-labelledby={tabId(index)}
-            hidden={index !== selectedIndex}
-            tabIndex={0}
-            className="ui-tabs__panel"
-          >
+          <div key={item.value} {...tabs.getPanelProps(item.value, { className: 'ui-tabs__panel' })}>
             {item.content}
           </div>
         ),

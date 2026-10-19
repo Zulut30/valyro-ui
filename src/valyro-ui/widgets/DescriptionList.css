@@ -34,7 +34,7 @@
 .ui-description-list__item {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--ui-space-1);
   min-width: 0;
 }
 

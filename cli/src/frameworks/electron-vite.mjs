@@ -8,6 +8,7 @@ export default {
     entries: ['src/renderer/src/main.tsx', 'src/renderer/src/main.jsx'],
     anchor: /<App\s*\/>/g,
     wrapped: '<App />',
-    note: ({ attrs }) => `electron-vite: put ${attrs} on <html> in src/renderer/index.html.`,
+    note: ({ attrs }) =>
+      `electron-vite: put ${attrs} on <html> in src/renderer/index.html, and drop the template's import './assets/main.css' from main.tsx: it paints <body> (background image, colors) over the theme.`,
   },
 };

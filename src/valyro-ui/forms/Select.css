@@ -41,6 +41,68 @@
   height: var(--ui-icon-lg);
 }
 
+/* Native mode: the <select> covers the whole field (the hit area too), its text where the custom value sits;
+   the selected option's icon and the chevron are drawn over it. */
+.ui-select[data-native] {
+  --_pad: var(--ui-space-3);
+
+  position: relative;
+  justify-content: space-between;
+}
+
+.ui-select[data-native][data-size='sm'] {
+  --_pad: var(--ui-space-2);
+}
+
+.ui-select[data-native][data-size='lg'] {
+  --_pad: var(--ui-space-4);
+}
+
+.ui-select[data-native] :is(.ui-select__icon, .ui-select__chevron) {
+  position: relative;
+  pointer-events: none;
+}
+
+.ui-select[data-native] .ui-select__chevron {
+  margin-inline-start: auto;
+}
+
+.ui-select__native {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  margin: 0;
+  padding-block: 0;
+  padding-inline: var(--_pad) calc(var(--_pad) + 1em + var(--ui-space-2));
+  border: 0;
+  border-radius: inherit;
+  outline: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-overflow: ellipsis;
+  cursor: inherit;
+  appearance: none;
+}
+
+.ui-select[data-icon] .ui-select__native {
+  padding-inline-start: calc(var(--_pad) + 1em + var(--ui-space-2));
+}
+
+.ui-select[data-native][data-placeholder] .ui-select__native {
+  color: var(--ui-fg-subtle);
+}
+
+/* The browser's list paints options with the select's colours: give them the page's, not a transparent field. */
+.ui-select__native :is(option, optgroup) {
+  background-color: var(--ui-bg);
+  color: var(--ui-fg);
+}
+
+.ui-select__native:disabled {
+  cursor: not-allowed;
+}
+
 /* Touch: a hit area of at least 44px tall (WCAG 2.5.5) without changing the drawn size. */
 @media (pointer: coarse) {
   .ui-select {
@@ -54,5 +116,14 @@
     inset-inline: 0;
     height: max(100%, 44px);
     translate: 0 -50%;
+  }
+
+  /* The native select is what takes the tap, so it spans the hit area; 16px text keeps iOS from zooming in. */
+  .ui-select__native {
+    inset-block: auto;
+    top: 50%;
+    height: max(100%, 44px);
+    translate: 0 -50%;
+    font-size: max(16px, 1em);
   }
 }

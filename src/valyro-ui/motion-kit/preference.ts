@@ -8,23 +8,18 @@
  */
 import { useEffect, useState, type RefObject } from 'react';
 import { useSyncExternalStore } from '../primitives/react-compat';
+import { isMotionReduced } from '../primitives/utils';
+
+// In primitives, so the free core components ask the same question without importing this Pro module.
+export { isMotionReduced };
 
 /** The attribute that reduces motion for an element and everything inside it. */
 export const MOTION_ATTRIBUTE = 'data-ui-motion';
 
 const QUERY = '(prefers-reduced-motion: reduce)';
-const REDUCE_SELECTOR = `[${MOTION_ATTRIBUTE}="reduce"]`;
 
 /** `reduce` — no motion on the page (or inside `target`); `user` — follow the OS setting. */
 export type MotionPreference = 'reduce' | 'user';
-
-/** Whether motion is reduced for `element`: the OS setting, the attribute on <html>, or on an ancestor. */
-export function isMotionReduced(element?: Element | null): boolean {
-  if (typeof window === 'undefined') return false;
-  if (window.matchMedia?.(QUERY).matches) return true;
-  if (document.documentElement.getAttribute(MOTION_ATTRIBUTE) === 'reduce') return true;
-  return !!element?.closest(REDUCE_SELECTOR);
-}
 
 /** Turns motion off for the page (or for `target` and everything inside it), or back to the OS setting. */
 export function setMotionPreference(preference: MotionPreference, target?: Element) {

@@ -1,8 +1,10 @@
 'use client';
 
-import { type ComponentPropsWithRef, type CSSProperties, type ReactNode } from 'react';
+import { useRef, type ComponentPropsWithRef, type CSSProperties, type ReactNode } from 'react';
 import { cx, useControllableState } from '../primitives';
 import '../primitives/motion.css';
+import { useFormField } from '../forms-advanced/form-field-context';
+import { useFormReset } from './form-reset';
 import './Switch.css';
 import { withRef, useId } from '../primitives/react-compat';
 
@@ -59,14 +61,21 @@ export const Switch = withRef(function Switch({
 }: SwitchProps) {
   const [checked, setChecked] = useControllableState({ value: checkedProp, defaultValue: defaultChecked, onChange: onCheckedChange });
   const descriptionId = useId();
+  // FormField's `required` only marks its label (aria-hidden); announce it on the control.
+  const field = useFormField();
+  const rootRef = useRef<HTMLLabelElement>(null);
+  // A form reset brings the uncontrolled value back to its default (forms/form-reset.ts).
+  useFormReset(rootRef, () => setChecked(defaultChecked), checkedProp === undefined);
 
   return (
     <label
+      ref={rootRef}
       className={cx('ui-switch', className)}
       style={pressedWidth != null ? ({ '--_pressed-w': `${pressedWidth}px`, ...style } as CSSProperties) : style}
       data-size={size}
       data-checked={checked || undefined}
       data-disabled={disabled || undefined}
+      data-invalid={invalid || undefined}
       data-motion={animation === 'spring' ? 'spring' : undefined}
       data-pressed-width={pressedWidth != null || undefined}
     >
@@ -74,6 +83,7 @@ export const Switch = withRef(function Switch({
         <input
           aria-describedby={cx(describedBy, description != null && descriptionId) || undefined}
           aria-invalid={invalid || undefined}
+          aria-required={field?.required || undefined}
           {...rest}
           type="checkbox"
           role="switch"

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, type ComponentPropsWithRef, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ComponentPropsWithRef, type ReactNode } from 'react';
 import { cx, DISMISS_IGNORE_ATTRIBUTE, mergeRefs, Portal, usePresence, useScrollLock } from '../primitives';
 import { ProgressBar } from '../basic/ProgressBar';
 import { Spinner } from '../basic/Spinner';
@@ -37,6 +37,17 @@ export const LoadingOverlay = withRef(function LoadingOverlay({
   const { isMounted, state } = usePresence(visible, 200);
   const overlayRef = useRef<HTMLDivElement>(null);
   const statusId = useId();
+  // A live region that appears together with its text is not announced (NVDA, JAWS): it mounts empty
+  // and gets the text a moment later; later message changes go straight in.
+  const [announce, setAnnounce] = useState(false);
+  useEffect(() => {
+    if (!visible) {
+      setAnnounce(false);
+      return;
+    }
+    const timer = window.setTimeout(() => setAnnounce(true), 100);
+    return () => window.clearTimeout(timer);
+  }, [visible]);
 
   // A fullscreen overlay blocks the page, so the page should not scroll underneath it either.
   useScrollLock(visible && fullscreen);
@@ -91,9 +102,13 @@ export const LoadingOverlay = withRef(function LoadingOverlay({
     >
       <div className="ui-loading-overlay__panel">
         <Spinner size={fullscreen ? 28 : 22} label={null} />
-        {/* Only the message is live; progress ticks would be re-announced on every update. */}
-        <div id={statusId} role="status" className={message ? 'ui-loading-overlay__message' : 'ui-sr-only'}>
+        {/* The text, also naming the progress bar; the live region below reads it out. */}
+        <div id={statusId} aria-hidden="true" className={message ? 'ui-loading-overlay__message' : 'ui-sr-only'}>
           {message || label}
+        </div>
+        {/* Only the message is live; progress ticks would be re-announced on every update. */}
+        <div role="status" className="ui-sr-only">
+          {announce ? message || label : null}
         </div>
         {progress !== undefined && (
           <ProgressBar

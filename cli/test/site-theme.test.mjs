@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { afterAll, describe, expect, it, vi } from 'vitest';
 import { renderCliTheme, SOURCE, TARGET } from '../../scripts/build-cli-theme.mjs';
 import { componentTokens, parseStyleTokens, tuneComponents } from '../src/component-tokens.mjs';
-import { createThemeCSS } from '../src/generated/create-theme-css.mjs';
+import { createThemeCSS, toOklchString } from '../src/generated/create-theme-css.mjs';
 import { createMcpHandler } from '../src/mcp.mjs';
 import { createRegistry } from '../src/registry.mjs';
 import { buildSiteTheme, characterHints, contrastChecks, extractDesign, fetchSiteCss, fixContrast, formatSiteTheme, parseCssColor } from '../src/site-theme.mjs';
@@ -75,7 +75,7 @@ describe('buildSiteTheme', () => {
     expect(result.options).toMatchObject({ accent: '#0ea5e9', radius: 1.5, density: 'compact' });
     expect(result.options.gray.hue).toBeGreaterThan(250);
     expect(result.css).toContain("[data-theme='vercel'] {");
-    expect(result.css).toContain('--ui-accent: #0ea5e9;');
+    expect(result.css).toContain(`--ui-accent: ${toOklchString('#0ea5e9')};`);
     expect(result.css).toContain('--ui-radius-md: 12px;');
     expect(result.changes.join('\n')).toContain('density compact (controls 32px high, button { height })');
   });
@@ -224,7 +224,7 @@ describe('MCP theme tools', () => {
     const ok = await call(h, 'create_site_theme', { css: ':root { --primary: #16a34a; --radius: 4px }', components: ['button'] });
     expect(ok.isError).toBe(false);
     expect(ok.content[0].text).toContain('Read: "css" (');
-    expect(ok.content[0].text).toContain('--ui-accent: #16a34a;');
+    expect(ok.content[0].text).toContain(`--ui-accent: ${toOklchString('#16a34a')};`);
     expect((await call(h, 'create_site_theme', {})).isError).toBe(true);
     expect((await call(h, 'create_site_theme', { accent: '#16a34a', components: ['nope'] })).content[0].text).toContain('Unknown component(s): nope');
   });

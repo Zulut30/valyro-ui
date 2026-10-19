@@ -188,8 +188,7 @@
 }
 
 /* animation="spring": the check draws on a critically damped curve (an overshoot would open a gap in
-   the dashed stroke) and the mixed dash grows out of the centre with a bounce. The box bounce is a Web
-   Animation started on toggle (Checkbox.tsx). */
+   the dashed stroke) and the mixed dash grows out of the centre with a bounce. */
 .ui-checkbox[data-motion='spring'][data-state='checked'] .ui-checkbox__check {
   transition: stroke-dashoffset calc(var(--ui-duration-slow) * 1.92) var(--ui-spring-smooth);
 }
@@ -203,5 +202,32 @@
 @keyframes ui-checkbox-dash {
   from {
     transform: scaleX(0);
+  }
+}
+
+/* The box bounces when the user toggles it, with no JavaScript: :checked switches the animation's name, which
+   restarts it. It plays its length only under the pointer or keyboard focus, so the first render and a value
+   set from elsewhere finish at once, unseen. */
+.ui-checkbox[data-motion='spring'] .ui-checkbox__input + .ui-checkbox__box {
+  animation: ui-checkbox-bounce-off 0s var(--ui-spring-bouncy);
+}
+
+.ui-checkbox[data-motion='spring'] .ui-checkbox__input:checked + .ui-checkbox__box {
+  animation-name: ui-checkbox-bounce-on;
+}
+
+.ui-checkbox[data-motion='spring']:is(:hover, :has(.ui-checkbox__input:focus-visible)) .ui-checkbox__box {
+  animation-duration: calc(var(--ui-duration-slow) * 2.61);
+}
+
+@keyframes ui-checkbox-bounce-on {
+  from {
+    scale: 0.78;
+  }
+}
+
+@keyframes ui-checkbox-bounce-off {
+  from {
+    scale: 0.9;
   }
 }

@@ -141,6 +141,13 @@
   }
 }
 
+/* Touch: the preset chips are tapped; 40px tall like the kit's other touch targets. */
+@media (max-width: 799px) and (pointer: coarse) {
+  .ui-date-range-picker__preset {
+    height: 40px;
+  }
+}
+
 @media (forced-colors: active) {
   .ui-date-range-picker__presets .ui-date-range-picker__preset[aria-pressed='true'],
   .ui-date-range-picker__presets .ui-date-range-picker__preset[aria-pressed='true']:hover:not(:disabled) {

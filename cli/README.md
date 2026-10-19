@@ -8,7 +8,7 @@ npx valyro-cli add button dialog data-table
 npx valyro-cli list                      # or: search <query>, diff <name>
 ```
 
-`init` detects Next.js, Vite, React Router, Astro, TanStack Start, Waku, Rsbuild, Parcel, electron-vite and Laravel + Inertia, the package manager and the tsconfig path alias. In Vue, Nuxt, Svelte(Kit), Angular and Solid(Start) projects it changes nothing and prints how to use the kit's CSS instead (the components are React). Files go to `src/components/valyro-ui/` (`app/…` for React Router, `components/…` for Next.js without `src/`). `add` skips identical files, asks before replacing modified ones (`--overwrite` / `--yes` for scripts) and installs missing npm packages (`--skip-install` to only print the command). `--registry <url|dir>` uses another registry, e.g. a local `public/r`.
+`init` detects Next.js, Vite, React Router, Astro, TanStack Start, Waku, Rsbuild, Parcel, electron-vite and Laravel + Inertia, the package manager and the tsconfig path alias. In Vue, Nuxt, Svelte(Kit), Angular and Solid(Start) projects it changes nothing and prints how to use the kit's CSS instead (the components are React). Files go to `src/components/valyro-ui/` (`app/…` for React Router, `components/…` for Next.js without `src/`). The Next.js Pages Router takes global CSS only from `pages/_app`, so there the components' stylesheet imports go into `components.css` in that folder, which `init --patch` imports in `_app`. `add` skips identical files, asks before replacing modified ones (`--overwrite` / `--yes` for scripts) and installs missing npm packages (`--skip-install` to only print the command). `--registry <url|dir>` uses another registry, e.g. a local `public/r`.
 
 The registry is shadcn-compatible, so this also works without `init`:
 
@@ -18,7 +18,7 @@ npx shadcn@latest add https://valyro.xyz/r/button.json
 
 ## ValyroUI Pro
 
-`list` and `search` mark Pro components and themes with `[Pro]`; the public registry has only their description, not the source. With a licence ([pricing](https://valyro.xyz/#/pricing)):
+`list` and `search` mark Pro components and themes with `[Pro]`; the public registry has only their description, not the source. With a licence ([pricing](https://valyro.xyz/pricing/)):
 
 ```sh
 npx valyro-cli login              # shows a one-time code and opens valyro.xyz to approve it
@@ -28,7 +28,7 @@ npx valyro-cli init --theme linear
 npx valyro-cli logout             # revokes the token and deletes it
 ```
 
-The token is stored in `~/.config/valyro/auth.json` (readable by you only) and sent only to `https://valyro.xyz/api`. Tokens are listed and revoked on the [account page](https://valyro.xyz/#/account). In CI create a token there and use `valyro login --token <token>` or the `VALYRO_TOKEN` environment variable.
+The token is stored in `~/.config/valyro/auth.json` (readable by you only) and sent only to `https://valyro.xyz/api`. Tokens are listed and revoked on the [account page](https://valyro.xyz/account/). In CI create a token there and use `valyro login --token <token>` or the `VALYRO_TOKEN` environment variable.
 
 ## MCP server
 

@@ -2,6 +2,7 @@
 
 import type { ComponentPropsWithRef, ReactNode } from 'react';
 import { cx } from '../primitives';
+import { childElements, collectionPart } from '../primitives/compound';
 import { AlertCircleIcon, AlertTriangleIcon, CheckCircleIcon, InfoIcon, XIcon } from '../icons';
 import { IconButton } from '../basic/IconButton';
 import './Alert.css';
@@ -34,19 +35,41 @@ const ICONS: Record<AlertVariant, ReactNode> = {
   neutral: <InfoIcon />,
 };
 
+export interface AlertPartProps {
+  children?: ReactNode;
+}
+
+/** The bold first line (`Alert.Title`, the `title` prop). */
+export const AlertTitle = collectionPart<AlertPartProps>('Alert.Title');
+/** The body text (`Alert.Description`, the `description` prop). */
+export const AlertDescription = collectionPart<AlertPartProps>('Alert.Description');
+/** Buttons or links at the end (`Alert.Action`, the `action` prop). */
+export const AlertAction = collectionPart<AlertPartProps>('Alert.Action');
+
+const PARTS: unknown[] = [AlertTitle, AlertDescription, AlertAction];
+
 /** Inline message. Warning and danger are announced immediately (`role="alert"`), others politely. */
 export const Alert = withRef(function Alert({
   variant = 'info',
-  title,
-  description,
+  title: titleProp,
+  description: descriptionProp,
   icon,
-  action,
+  action: actionProp,
   onDismiss,
   dismissLabel = 'Dismiss',
   className,
-  children,
+  children: childrenProp,
   ...rest
 }: AlertProps) {
+  // The compound form: Title, Description and Action parts among the children stand for the props.
+  const elements = childElements(childrenProp);
+  const compound = elements.some((child) => PARTS.includes(child.type));
+  const part = (type: unknown) => (compound ? (elements.find((child) => child.type === type)?.props as AlertPartProps | undefined)?.children : undefined);
+  const title = titleProp ?? part(AlertTitle);
+  const description = descriptionProp ?? part(AlertDescription);
+  const action = actionProp ?? part(AlertAction);
+  // The parts themselves render nothing, so the children stay as they are.
+  const children = childrenProp;
   const urgent = variant === 'warning' || variant === 'danger';
   const glyph = icon === undefined ? ICONS[variant] : icon;
 
@@ -68,4 +91,4 @@ export const Alert = withRef(function Alert({
       )}
     </div>
   );
-});
+}, { Title: AlertTitle, Description: AlertDescription, Action: AlertAction });

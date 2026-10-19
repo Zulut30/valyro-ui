@@ -31,6 +31,11 @@ export interface PositionInput {
   padding: number;
   /** Right-to-left layout: start/end along a top or bottom side mean the right/left edge. */
   rtl?: boolean;
+  /**
+   * When neither the preferred side nor its opposite fits, try a perpendicular side. Default true; false keeps the
+   * preferred axis and takes its roomier side (a select's list stays under or over its field and scrolls).
+   */
+  crossAxis?: boolean;
 }
 
 export interface PositionResult {
@@ -74,6 +79,7 @@ export function computePosition({
   offset,
   padding,
   rtl = false,
+  crossAxis = true,
 }: PositionInput): PositionResult {
   const [preferred, logicalAlign] = parsePlacement(placement);
 
@@ -91,7 +97,7 @@ export function computePosition({
     const [p1, p2] = PERPENDICULAR[side];
     const roomier = space[p1] >= space[p2] ? p1 : p2;
     if (fits(OPPOSITE[side])) side = OPPOSITE[side];
-    else if (fits(roomier)) side = roomier;
+    else if (crossAxis && fits(roomier)) side = roomier;
     else if (space[OPPOSITE[side]] > space[side]) side = OPPOSITE[side];
   }
 
@@ -158,6 +164,8 @@ export interface UseFloatingOptions {
   padding?: number;
   /** Floating element is at least as wide as the anchor (selects, comboboxes). */
   matchAnchorWidth?: boolean;
+  /** Move to a perpendicular side when neither side of the placement's axis fits (computePosition). Default: not with `matchAnchorWidth`. */
+  crossAxis?: boolean;
 }
 
 /** Positions `floatingRef` (position: fixed) next to `anchorRef` and keeps it there on scroll/resize. */
@@ -169,6 +177,7 @@ export function useFloating({
   offset = 8,
   padding = 8,
   matchAnchorWidth = false,
+  crossAxis = !matchAnchorWidth,
 }: UseFloatingOptions) {
   const [position, setPosition] = useState<
     (PositionResult & { anchorWidth: number; floatingWidth: number; floatingHeight: number }) | null
@@ -190,6 +199,7 @@ export function useFloating({
       rtl: getDirection(floating) === 'rtl',
       offset,
       padding,
+      crossAxis,
     });
     setPosition((prev) =>
       prev &&
@@ -207,7 +217,7 @@ export function useFloating({
         ? prev
         : { ...next, anchorWidth: a.width, floatingWidth: size.width, floatingHeight: size.height },
     );
-  }, [anchorRef, floatingRef, placement, offset, padding, matchAnchorWidth]);
+  }, [anchorRef, floatingRef, placement, offset, padding, matchAnchorWidth, crossAxis]);
 
   useLayoutEffect(() => {
     if (!open) return;

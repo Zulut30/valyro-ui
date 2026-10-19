@@ -8,10 +8,12 @@ import {
   mergeRefs,
   useControllableState,
   useDismissableLayer,
+  useAriaHideOutside,
   useFocusTrap,
   useLatest,
   usePresence,
 } from '../primitives';
+import { collectionPart, hasPart, partsOf } from '../primitives/compound';
 import { IconButton, type IconButtonProps } from '../basic/IconButton';
 import './AppShell.css';
 import { withRef, useId, useLayoutEffect, inertAttr } from '../primitives/react-compat';
@@ -68,7 +70,10 @@ export interface AppShellProps extends Omit<ComponentPropsWithRef<'div'>, 'child
   header?: Slot;
   /** Optional panel after the main area (details, inspector, settings). */
   aside?: Slot;
-  /** Main content; it scrolls on its own. */
+  /**
+   * Main content; it scrolls on its own. Or the compound form: `AppShell.Header`, `.Sidebar`, `.Main`, `.Aside` and
+   * `.Footer`, each holding what the prop of that name holds.
+   */
   children?: Slot;
   /** Bar under the main area that stays put while it scrolls, e.g. a chat composer or bulk actions. */
   footer?: Slot;
@@ -116,12 +121,30 @@ const render = (slot: Slot, state: AppShellState) => (typeof slot === 'function'
 /** Stays on screen while the slide-out animation plays (Glass --ui-duration-slow is 380ms). */
 const EXIT_MS = 400;
 
+export interface AppShellPartProps {
+  /** What the slot of the same name holds: content, or a function of the shell state. */
+  children?: Slot;
+}
+
+/** The top bar of the compound form (`AppShell.Header`, the `header` prop). */
+export const AppShellHeader = collectionPart<AppShellPartProps>('AppShell.Header');
+/** The navigation column (`AppShell.Sidebar`, the `sidebar` prop). */
+export const AppShellSidebar = collectionPart<AppShellPartProps>('AppShell.Sidebar');
+/** The main content (`AppShell.Main`, the children). */
+export const AppShellMain = collectionPart<AppShellPartProps>('AppShell.Main');
+/** The panel after the main area (`AppShell.Aside`, the `aside` prop). */
+export const AppShellAside = collectionPart<AppShellPartProps>('AppShell.Aside');
+/** The bar under the main area (`AppShell.Footer`, the `footer` prop). */
+export const AppShellFooter = collectionPart<AppShellPartProps>('AppShell.Footer');
+
+const SHELL_PARTS = [AppShellHeader, AppShellSidebar, AppShellMain, AppShellAside, AppShellFooter];
+
 export const AppShell = withRef(function AppShell({
-  sidebar,
-  header,
-  aside,
-  children,
-  footer,
+  sidebar: sidebarProp,
+  header: headerProp,
+  aside: asideProp,
+  children: childrenProp,
+  footer: footerProp,
   sidebarCollapsed: collapsedProp,
   defaultSidebarCollapsed = false,
   onSidebarCollapsedChange,
@@ -136,6 +159,14 @@ export const AppShell = withRef(function AppShell({
   ref,
   ...rest
 }: AppShellProps) {
+  // The compound form: each part holds the slot of its name.
+  const compound = typeof childrenProp !== 'function' && hasPart(childrenProp, SHELL_PARTS);
+  const part = (type: unknown): Slot => (compound ? partsOf<AppShellPartProps>(childrenProp, type)[0]?.props.children : undefined);
+  const sidebar = sidebarProp ?? part(AppShellSidebar);
+  const header = headerProp ?? part(AppShellHeader);
+  const aside = asideProp ?? part(AppShellAside);
+  const footer = footerProp ?? part(AppShellFooter);
+  const children = compound ? part(AppShellMain) : childrenProp;
   const labels = { ...defaultAppShellLabels, ...labelsProp };
   const baseId = useId();
   const mainId = mainIdProp ?? `${baseId}-main`;
@@ -252,7 +283,8 @@ export const AppShell = withRef(function AppShell({
   }, [mobile, collapsed, drawerOpen, asideFloating, asideSheetOpen, asideInline, hasAside, setCollapsed, setAsideInline, openDrawer, sidebarId, asideId, mainId]);
 
   // Mobile drawer: modal. Focus moves in and is trapped; Escape or a press on the scrim closes it.
-  useFocusTrap(drawerRef, drawerActive);
+  useAriaHideOutside([drawerRef], drawerActive);
+  useFocusTrap(drawerRef, drawerActive, { contain: true });
   useDismissableLayer({ enabled: drawerActive, refs: [drawerRef], onDismiss: () => setDrawerOpen(false) });
 
   // Floating aside: non-modal. Escape or a press outside closes it; toggles pointing at it count as inside.
@@ -353,7 +385,7 @@ export const AppShell = withRef(function AppShell({
       </div>
     </ShellContext.Provider>
   );
-});
+}, { Header: AppShellHeader, Sidebar: AppShellSidebar, Main: AppShellMain, Aside: AppShellAside, Footer: AppShellFooter });
 
 /** Header button for the sidebar: collapses it to a rail on desktop, opens the drawer on mobile. */
 export const AppShellSidebarToggle = withRef(function AppShellSidebarToggle({ icon, label, onClick, ...rest }: AppShellSidebarToggleProps) {

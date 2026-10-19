@@ -1,12 +1,18 @@
 'use client';
 
-import { useMemo, useRef, type ComponentPropsWithRef, type KeyboardEvent, type MouseEvent, type ReactElement, type ReactNode } from 'react';
+import { Fragment, useMemo, type ComponentPropsWithRef, type ReactNode } from 'react';
 import { ChevronDownIcon } from '../icons';
-import { composeHandlers, cx, Floating, mergeRefs, useControllableState, useListNavigation } from '../primitives';
-import { childElements, collectionPart, partsOf } from '../primitives/compound';
-import { firstEnabledIndex, flattenItems, Listbox, optionId, useFieldLabelIds, type SelectItem, type SelectOption } from './Listbox';
+import { cx, Floating } from '../primitives';
+import { collectionPart } from '../primitives/compound';
+import { isOptionGroup, type SelectItem, type SelectOption } from './listbox-items';
+import { ListboxView } from './listbox-view';
+import { optionsFromParts } from './option-parts';
+import { useSelect } from './useSelect';
+import { useFormField } from '../forms-advanced/form-field-context';
+import { FormValue, useMissingValue } from '../forms-advanced/form-value';
+import { useLocale } from '../theme/ThemeProvider';
 import './Select.css';
-import { withRef, useId } from '../primitives/react-compat';
+import { withRef } from '../primitives/react-compat';
 
 export interface SelectProps
   extends Omit<ComponentPropsWithRef<'button'>, 'value' | 'defaultValue' | 'onChange' | 'children' | 'type'> {
@@ -29,8 +35,18 @@ export interface SelectProps
   size?: 'sm' | 'md' | 'lg';
   /** Error border and aria-invalid on the trigger (an explicit `aria-invalid` wins). */
   invalid?: boolean;
-  /** Submits the value with the surrounding form through a hidden input. */
+  /** Submits the value with the surrounding form (a hidden input, or the native select's own value). */
   name?: string;
+  /**
+   * Renders a native `<select>` in the same field look: the phone's own wheel or sheet, the browser's form
+   * validation (`required`) and autofill (`autoComplete`). `ref` and the other props then go to the `<select>`;
+   * option icons and descriptions are not shown in its list.
+   */
+  native?: boolean;
+  /** A value is required: `aria-required`, and the surrounding form does not submit without one. */
+  required?: boolean;
+  /** Autofill hint of the native select, e.g. `country` (with `native`). */
+  autoComplete?: string;
 }
 
 export interface SelectItemPartProps extends Omit<SelectOption, 'label'> {
@@ -50,16 +66,6 @@ export const SelectItemPart = collectionPart<SelectItemPartProps>('Select.Item')
 /** A labelled group of `Select.Item`s (`Select.Group`). */
 export const SelectGroupPart = collectionPart<SelectGroupPartProps>('Select.Group');
 
-function selectOptionsFromParts(children: ReactNode): SelectItem[] {
-  const option = ({ props: { children: label, ...rest } }: ReactElement<SelectItemPartProps>): SelectOption => ({ ...rest, label });
-  return childElements(children).flatMap((child): SelectItem[] => {
-    if (child.type === SelectItemPart) return [option(child as ReactElement<SelectItemPartProps>)];
-    if (child.type !== SelectGroupPart) return [];
-    const { label, children: groupChildren } = (child as ReactElement<SelectGroupPartProps>).props;
-    return [{ label, options: partsOf<SelectItemPartProps>(groupChildren, SelectItemPart).map(option) }];
-  });
-}
-
 /** Select-only combobox: a field-styled trigger that opens a listbox. Props not listed go to the trigger button. */
 export const Select = withRef(function Select({
   options: optionsProp,
@@ -75,122 +81,134 @@ export const Select = withRef(function Select({
   size = 'md',
   invalid = false,
   name,
+  native = false,
+  required,
+  autoComplete,
   disabled,
   className,
+  style,
   ref,
-  onClick,
-  onKeyDown,
   'aria-invalid': ariaInvalid,
   ...rest
 }: SelectProps) {
-  const options = useMemo(() => optionsProp ?? selectOptionsFromParts(children), [optionsProp, children]);
-  const [value, setValue] = useControllableState({ value: valueProp, defaultValue: defaultValue ?? '', onChange: onValueChange });
-  const [open, setOpen] = useControllableState({ value: openProp, defaultValue: defaultOpen ?? false, onChange: onOpenChange });
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const listId = useId();
-
-  const flat = useMemo(() => flattenItems(options), [options]);
-  const selectedIndex = flat.findIndex((option) => option.value === value);
-  const selected = flat[selectedIndex];
-  const startIndex = selectedIndex >= 0 ? selectedIndex : firstEnabledIndex(flat);
-
-  const choose = (index: number) => {
-    setValue(flat[index].value);
-    setOpen(false);
-    triggerRef.current?.focus();
-  };
-
-  const nav = useListNavigation({
-    count: flat.length,
-    isDisabled: (i) => !!flat[i].disabled,
-    getLabel: (i) => flat[i].label,
-    onSelect: choose,
-    initialIndex: open ? startIndex : -1,
+  // FormField's `required` only marks its label (aria-hidden); announce it on the control.
+  const field = useFormField();
+  const options = useMemo(() => optionsProp ?? optionsFromParts(children, SelectItemPart, SelectGroupPart).items, [optionsProp, children]);
+  // The behaviour is useSelect's (valyro-ui/headless); the popup is a Floating, which positions and dismisses it.
+  const select = useSelect({
+    items: options,
+    value: valueProp,
+    defaultValue,
+    onValueChange,
+    open: openProp,
+    defaultOpen,
+    onOpenChange,
+    floating: false,
+    locale: useLocale(),
+    native,
   });
+  const { open } = select;
+  const selected = select.selected[0];
+  // After `required` blocked a submit, the field shows as invalid until a value is picked.
+  const [missing, markMissing] = useMissingValue(!!selected);
+  const invalidAttr = ariaInvalid ?? (invalid || missing || undefined);
 
-  const show = () => {
-    nav.setActiveIndex(startIndex);
-    setOpen(true);
-  };
-
-  const handleKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
-    if (!open) {
-      if (event.key === 'ArrowDown' || event.key === 'ArrowUp' || event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault();
-        show();
-      } else if (event.key.length === 1 && !event.metaKey && !event.ctrlKey && !event.altKey) {
-        // Type-ahead on a closed select opens it on the first match.
-        setOpen(true);
-        nav.onKeyDown(event);
-      }
-      return;
-    }
-    if (event.key === 'Tab') {
-      setOpen(false);
-      return;
-    }
-    nav.onKeyDown(event);
-  };
-
-  const fieldLabelIds = useFieldLabelIds(triggerRef, open, listId);
-
-  const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
-    // Keyboard-generated clicks (detail 0, e.g. Space keyup) are already handled in onKeyDown.
-    if (event.detail === 0) return;
-    // Safari does not focus buttons on click; keyboard navigation needs focus on the trigger.
-    event.currentTarget.focus();
-    if (open) setOpen(false);
-    else show();
-  };
+  if (native) {
+    // The field look sits on a wrapper; the select fills it, the icon and chevron are drawn over it.
+    const renderOption = (option: SelectOption) => (
+      <option key={option.value} value={option.value} disabled={option.disabled}>
+        {option.label}
+      </option>
+    );
+    return (
+      <span
+        className={cx('ui-field', 'ui-select', className)}
+        style={style}
+        data-native=""
+        data-size={size}
+        data-invalid={invalid || undefined}
+        data-disabled={disabled || undefined}
+        data-placeholder={selected ? undefined : ''}
+        data-icon={selected?.icon ? '' : undefined}
+      >
+        {selected?.icon && <span className="ui-field__icon ui-select__icon">{selected.icon}</span>}
+        <select
+          aria-invalid={invalidAttr}
+          aria-required={(!required && field?.required) || undefined}
+          {...select.getNativeSelectProps({
+            ...rest,
+            ref,
+            name,
+            required,
+            autoComplete,
+            disabled,
+            className: 'ui-select__native',
+          })}
+        >
+          {/* Shown in the field while nothing is selected, not in the list: it cannot be picked back, `required` holds. */}
+          <option value="" disabled hidden>
+            {placeholder}
+          </option>
+          {options.map((item, index) =>
+            isOptionGroup(item) ? (
+              <optgroup key={`group-${index}`} label={item.label}>
+                {item.options.map(renderOption)}
+              </optgroup>
+            ) : (
+              <Fragment key={item.value}>{renderOption(item)}</Fragment>
+            ),
+          )}
+        </select>
+        <ChevronDownIcon className="ui-select__chevron" />
+      </span>
+    );
+  }
 
   return (
     <>
       <button
-        type="button"
-        role="combobox"
-        aria-haspopup="listbox"
-        aria-expanded={open}
-        aria-controls={open ? listId : undefined}
-        aria-activedescendant={open && nav.activeIndex >= 0 ? optionId(listId, nav.activeIndex) : undefined}
-        aria-invalid={ariaInvalid ?? (invalid || undefined)}
-        {...rest}
-        ref={mergeRefs(triggerRef, ref)}
-        disabled={disabled}
-        className={cx('ui-field', 'ui-select', className)}
-        data-size={size}
-        data-invalid={invalid || undefined}
-        data-disabled={disabled || undefined}
-        data-open={open || undefined}
-        data-placeholder={selected ? undefined : ''}
-        onClick={composeHandlers(onClick, handleClick)}
-        onKeyDown={composeHandlers(onKeyDown, handleKeyDown)}
+        {...select.getTriggerProps({
+          'aria-invalid': invalidAttr,
+          'aria-required': (required ?? field?.required) || undefined,
+          ...rest,
+          ref,
+          disabled,
+          style,
+          className: cx('ui-field', 'ui-select', className),
+          'data-size': size,
+          'data-invalid': invalid || missing || undefined,
+          'data-disabled': disabled || undefined,
+          'data-open': open || undefined,
+          'data-placeholder': selected ? undefined : '',
+        })}
       >
         {selected?.icon && <span className="ui-field__icon ui-select__icon">{selected.icon}</span>}
         <span className="ui-select__value">{selected ? selected.label : placeholder}</span>
         <ChevronDownIcon className="ui-select__chevron" />
       </button>
-      {name && <input type="hidden" name={name} value={value} disabled={disabled} />}
+      {name && <input type="hidden" name={name} value={select.value} disabled={disabled} form={rest.form} />}
+      <FormValue
+        values={[select.value]}
+        required={required}
+        disabled={disabled}
+        onMissing={(focus) => {
+          markMissing();
+          if (focus) select.triggerRef.current?.focus();
+        }}
+      />
       <Floating
         open={open && !disabled}
-        anchorRef={triggerRef}
+        anchorRef={select.triggerRef}
         placement="bottom-start"
         offset={6}
         matchAnchorWidth
-        onDismiss={() => setOpen(false)}
-        className="ui-listbox__popover"
-        // Keeps focus on the trigger while clicking rows.
-        onMouseDown={(event) => event.preventDefault()}
+        onDismiss={(reason) => select.close(reason === 'escape')}
+        {...select.getPopupProps({ className: 'ui-listbox__popover' })}
       >
-        <Listbox
-          id={listId}
-          items={options}
-          activeIndex={nav.activeIndex}
-          onActiveIndexChange={nav.setActiveIndex}
-          isSelected={(v) => v === value}
-          onSelect={choose}
+        <ListboxView
+          listbox={select.listbox}
           indicator="check"
-          label={rest['aria-label']}
-          labelledBy={rest['aria-labelledby'] ?? (rest['aria-label'] ? undefined : fieldLabelIds)}
+          listboxProps={{ 'aria-label': rest['aria-label'], 'aria-labelledby': rest['aria-labelledby'] }}
           emptyState={emptyText}
         />
       </Floating>

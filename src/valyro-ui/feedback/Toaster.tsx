@@ -208,10 +208,13 @@ interface Drag {
   axis: 'x' | 'y' | null;
 }
 
+/** The browser starts transitions from @starting-style, so a toast enters from its first style. */
+const startingStyle = typeof window !== 'undefined' && 'CSSStartingStyleRule' in window;
+
 function ToastItem({ toast, index, offset, zIndex, hidden, paused, height, edge, closeLabel, onHeight }: ToastItemProps) {
   const itemRef = useRef<HTMLLIElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
-  const [mounted, setMounted] = useState(false);
+  const [mounted, setMounted] = useState(startingStyle);
   const [swipe, setSwipe] = useState({ x: 0, y: 0 });
   const [swipedOut, setSwipedOut] = useState(false);
   const [dragging, setDragging] = useState(false);
@@ -220,8 +223,10 @@ function ToastItem({ toast, index, offset, zIndex, hidden, paused, height, edge,
   const version = useRef(toast.version);
   const { id, dismissed, duration } = toast;
 
-  // Enter transition: render once at the start position, then move into the stack.
+  // Enter transition: @starting-style plays it from the first style (Toast.css). Without it, render once at
+  // the start position, then move into the stack.
   useEffect(() => {
+    if (startingStyle) return;
     const frame = requestAnimationFrame(() => setMounted(true));
     return () => cancelAnimationFrame(frame);
   }, []);

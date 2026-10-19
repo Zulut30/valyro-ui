@@ -3,6 +3,7 @@
 import { useRef, useState, type ComponentPropsWithRef, type ReactNode, type RefObject } from 'react';
 import { ChevronRightIcon, MoreHorizontalIcon } from '../icons';
 import { cx, mergeRefs } from '../primitives';
+import { collectionPart, partsOf } from '../primitives/compound';
 import { Tooltip } from '../basic/Tooltip';
 import { DropdownMenu } from './DropdownMenu';
 import { useOverflowScroll } from './internal';
@@ -17,8 +18,10 @@ export interface BreadcrumbItem {
 }
 
 export interface BreadcrumbsProps extends Omit<ComponentPropsWithRef<'nav'>, 'children'> {
-  /** Path from the root; the last item is the current page. */
-  items: BreadcrumbItem[];
+  /** Path from the root; the last item is the current page. Or compose it as children: `Breadcrumbs.Item`. */
+  items?: BreadcrumbItem[];
+  /** The compound form instead of `items`: `Breadcrumbs.Item` elements, root first. */
+  children?: ReactNode;
   /** Content between items, hidden from assistive tech. */
   separator?: ReactNode;
   /** Collapse the middle into an ellipsis menu when there are more items (minimum 2). */
@@ -27,10 +30,19 @@ export interface BreadcrumbsProps extends Omit<ComponentPropsWithRef<'nav'>, 'ch
   ellipsisLabel?: (hiddenCount: number) => string;
 }
 
+export interface BreadcrumbsItemProps extends Omit<BreadcrumbItem, 'label'> {
+  /** The crumb's label. */
+  children: string;
+}
+
+/** A crumb of the compound form (`Breadcrumbs.Item`): the props of a BreadcrumbItem, with the label as children. */
+export const BreadcrumbsItem = collectionPart<BreadcrumbsItemProps>('Breadcrumbs.Item');
+
 const defaultEllipsisLabel = (count: number) => `Show ${count} hidden ${count === 1 ? 'level' : 'levels'}`;
 
 export const Breadcrumbs = withRef(function Breadcrumbs({
-  items,
+  items: itemsProp,
+  children,
   separator = <ChevronRightIcon size={14} />,
   maxItems,
   ellipsisLabel = defaultEllipsisLabel,
@@ -39,6 +51,8 @@ export const Breadcrumbs = withRef(function Breadcrumbs({
   'aria-label': ariaLabel,
   ...rest
 }: BreadcrumbsProps) {
+  const items =
+    itemsProp ?? partsOf<BreadcrumbsItemProps>(children, BreadcrumbsItem).map(({ props: { children: label, ...item } }) => ({ ...item, label }));
   const navRef = useRef<HTMLElement>(null);
   const listRef = useRef<HTMLOListElement>(null);
   // Crumbs shown before any folding for width; folding keeps at least the root and the current page.
@@ -99,7 +113,7 @@ export const Breadcrumbs = withRef(function Breadcrumbs({
       </ol>
     </nav>
   );
-});
+}, { Item: BreadcrumbsItem });
 
 /** The path's natural width: first to last crumb, plus whatever the current page's ellipsis hides. */
 function pathWidth(list: HTMLElement) {

@@ -16,6 +16,11 @@ export interface FormFieldContextValue {
   describedBy?: string;
   invalid: boolean;
   required: boolean;
+  /**
+   * Present while `required`: a hidden element with the word "required", for controls whose role has no
+   * `aria-required` (a picker's button, a slider, a group). They add it to their `aria-describedby`.
+   */
+  requiredId?: string;
 }
 
 export const FormFieldContext = createContext<FormFieldContextValue | null>(null);

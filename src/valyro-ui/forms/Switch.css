@@ -107,6 +107,12 @@
   box-shadow: var(--ui-switch-track-shadow-checked);
 }
 
+/* Error state (`invalid`, e.g. from a FormField): a red edge on the track, on or off, as on checkboxes
+   and radios. After the checked rule, which sets its own shadow. */
+.ui-switch[data-invalid] .ui-switch__track {
+  box-shadow: inset 0 0 0 var(--ui-border-width, 1px) var(--ui-danger);
+}
+
 .ui-switch__input:focus-visible ~ .ui-switch__track {
   box-shadow: var(--ui-focus-ring);
 }

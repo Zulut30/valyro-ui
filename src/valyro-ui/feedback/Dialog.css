@@ -157,15 +157,16 @@
 /*
  * Phones: dialogs become bottom sheets (edge to edge in Vercel, a floating inset
  * card in Glass) with full-width actions in thumb reach. Small Glass dialogs stay
- * centered iOS alerts.
+ * centered iOS alerts. The layer reads the size from its dialog's data-size (the ui-dialog-layer--{size}
+ * class stays in the markup as an alias).
  */
 @media (max-width: 480px) {
-  .ui-dialog-layer.ui-modal-layer:not(.ui-dialog-layer--sm) {
+  .ui-dialog-layer.ui-modal-layer:not(:has(> .ui-dialog:where([data-size='sm']))) {
     align-items: flex-end;
     padding: var(--ui-dialog-sheet-layer-padding);
   }
 
-  .ui-dialog-layer.ui-modal-layer.ui-dialog-layer--sm {
+  .ui-dialog-layer.ui-modal-layer:has(> .ui-dialog:where([data-size='sm'])) {
     align-items: var(--ui-dialog-layer-align-sm-compact);
     padding: var(--ui-dialog-layer-padding-sm-compact);
   }
@@ -175,27 +176,33 @@
     border-radius: var(--ui-dialog-radius-compact);
   }
 
-  .ui-dialog-layer.ui-modal-layer:not(.ui-dialog-layer--sm) > .ui-dialog {
+  .ui-dialog-layer.ui-modal-layer:not(:has(> .ui-dialog:where([data-size='sm']))) > .ui-dialog {
     width: 100%;
+  }
+
+  /* Without a footer the body is the sheet's bottom edge, so it keeps clear of the home indicator as the
+     footer does (max(), not a sum: a theme whose layer already pads the safe area adds little). */
+  .ui-dialog-layer.ui-modal-layer:not(:has(> .ui-dialog:where([data-size='sm']))) > .ui-dialog > .ui-dialog__body:last-child {
+    padding-bottom: max(var(--_pad), env(safe-area-inset-bottom));
   }
 
   .ui-dialog[data-size='sm'] {
     --_w: var(--ui-dialog-w-sm-compact);
   }
 
-  .ui-dialog-layer.ui-modal-layer:not(.ui-dialog-layer--sm) > .ui-dialog[data-state='open'] {
+  .ui-dialog-layer.ui-modal-layer:not(:has(> .ui-dialog:where([data-size='sm']))) > .ui-dialog[data-state='open'] {
     animation: ui-modal-from-bottom var(--ui-duration-slow) var(--ui-ease);
   }
 
-  .ui-dialog-layer.ui-modal-layer:not(.ui-dialog-layer--sm) > .ui-dialog[data-state='closed'] {
+  .ui-dialog-layer.ui-modal-layer:not(:has(> .ui-dialog:where([data-size='sm']))) > .ui-dialog[data-state='closed'] {
     animation: ui-modal-to-bottom var(--ui-duration) var(--ui-ease) forwards;
   }
 
-  .ui-dialog-layer.ui-modal-layer.ui-dialog-layer--sm > .ui-dialog[data-state='open'] {
+  .ui-dialog-layer.ui-modal-layer:has(> .ui-dialog:where([data-size='sm'])) > .ui-dialog[data-state='open'] {
     animation: var(--ui-dialog-enter-sm-compact);
   }
 
-  .ui-dialog-layer.ui-modal-layer.ui-dialog-layer--sm > .ui-dialog[data-state='closed'] {
+  .ui-dialog-layer.ui-modal-layer:has(> .ui-dialog:where([data-size='sm'])) > .ui-dialog[data-state='closed'] {
     animation: var(--ui-dialog-exit-sm-compact);
   }
 

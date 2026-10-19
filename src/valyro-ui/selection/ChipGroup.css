@@ -107,3 +107,16 @@
     border-color: Highlight;
   }
 }
+
+/* `label`: the group's visible name, on its own row above the chips. */
+.ui-chip-group__legend {
+  flex-basis: 100%;
+  color: var(--ui-form-field-label-fg, var(--ui-fg));
+  font-size: var(--ui-text-sm);
+  font-weight: var(--ui-weight-label, var(--ui-weight-medium));
+}
+
+/* Error state (`invalid`, e.g. from a FormField): a danger edge on the chips. */
+.ui-chip-group[data-invalid] .ui-chip-group__chip {
+  border-color: var(--ui-danger);
+}

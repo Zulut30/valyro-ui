@@ -41,6 +41,12 @@ export interface ThemeCSSOptions {
    * The Theme Builder reads them from the theme's stylesheet as the browser computes it.
    */
   defaults?: ThemeDefaults;
+  /**
+   * Colour syntax of the generated values: `oklch` (default, like the theme files) or `hex` (`#rrggbb`, `rgba()`
+   * below full opacity) for tools that need sRGB literals. Both decode to the same 8-bit colours. `tokens`
+   * overrides are written as given.
+   */
+  format?: 'oklch' | 'hex';
 }
 
 export interface ThemeTokens {
@@ -77,7 +83,8 @@ export interface ThemeDefaults {
   glass?: { blur: number; saturation: number; opacity: Record<Mode, number> };
 }
 
-// ── Theme defaults (mirrors styles/themes/*.css; createThemeCSS.test.ts keeps them in sync) ──
+// ── Theme defaults (mirrors styles/themes/*.css, as sRGB: the files write the same colours as oklch();
+// createThemeCSS.test.ts keeps them in sync) ──
 
 const SPACING: Record<string, number> = { 1: 4, 2: 8, 3: 12, 4: 16, 5: 20, 6: 24, 8: 32, 10: 40, 12: 48, 16: 64 };
 const CONTROLS = { 'control-h-sm': 32, 'control-h-md': 40, 'control-h-lg': 48, 'menu-item-h': 36 };
@@ -129,7 +136,7 @@ export const THEME_DEFAULTS: Record<'vercel' | 'glass', ThemeDefaults> & Partial
         'primary-hover': '#383838',
         'tooltip-fg': '#ededed',
         'chart-grid': a('0, 0, 0', 0.06),
-        'chart-axis': '#757575',
+        'chart-axis': '#6a6a6a',
       },
       shadows: {
         'shadow-sm': '0 1px 2px rgba(0, 0, 0, 0.04)',
@@ -216,7 +223,7 @@ export const THEME_DEFAULTS: Record<'vercel' | 'glass', ThemeDefaults> & Partial
         divider: a('60, 60, 67', 0.14),
         'tooltip-fg': '#1d1d1f',
         'chart-grid': a('60, 60, 67', 0.1),
-        'chart-axis': a('60, 60, 67', 0.72),
+        'chart-axis': a('60, 60, 67', 0.78),
       },
       shadows: {
         'shadow-sm': '0 1px 2px rgba(20, 30, 60, 0.06), 0 2px 6px -2px rgba(20, 30, 60, 0.08)',
@@ -236,14 +243,14 @@ export const THEME_DEFAULTS: Record<'vercel' | 'glass', ThemeDefaults> & Partial
       neutrals: {
         'glass-tint': 'rgb(38, 38, 44)',
         fg: '#f5f5f7',
-        'fg-muted': a('235, 235, 245', 0.8),
-        'fg-subtle': a('235, 235, 245', 0.7),
+        'fg-muted': a('235, 235, 245', 0.86),
+        'fg-subtle': a('235, 235, 245', 0.8),
         'fg-faint': a('235, 235, 245', 0.45),
         'fg-disabled': a('235, 235, 245', 0.28),
         'surface-3': a('120, 120, 128', 0.32),
         'tooltip-bg': a('50, 50, 56', 0.8),
         'tooltip-fg': '#f5f5f7',
-        'chart-axis': a('235, 235, 245', 0.56),
+        'chart-axis': a('235, 235, 245', 0.8),
       },
       shadows: {
         'shadow-sm': '0 1px 2px rgba(0, 0, 0, 0.3), 0 2px 6px -2px rgba(0, 0, 0, 0.3)',
@@ -271,13 +278,16 @@ interface RGBA {
 
 const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v));
 
-/** Parses `#rgb`, `#rrggbb`, `#rrggbbaa`, `rgb()` and `rgba()` (comma or space syntax). */
+/**
+ * Parses `#rgb`, `#rgba`, `#rrggbb`, `#rrggbbaa`, `rgb()` and `rgba()` (comma or space syntax), and `oklch()` / `oklab()`
+ * (the theme files' syntax: lightness as % or 0–1; out-of-gamut colours are clipped to sRGB).
+ */
 export function parseColor(input: string): RGBA | null {
   const s = input.trim().toLowerCase();
-  const hex = /^#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/.exec(s);
+  const hex = /^#([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/.exec(s);
   if (hex) {
     let h = hex[1];
-    if (h.length === 3) h = [...h].map((c) => c + c).join('');
+    if (h.length <= 4) h = [...h].map((c) => c + c).join('');
     const n = (i: number) => parseInt(h.slice(i, i + 2), 16);
     return { r: n(0), g: n(2), b: n(4), a: h.length === 8 ? Math.round((n(6) / 255) * 1000) / 1000 : 1 };
   }
@@ -286,12 +296,23 @@ export function parseColor(input: string): RGBA | null {
     const alpha = fn[4] === undefined ? 1 : Number(fn[4]) / (fn[5] ? 100 : 1);
     return { r: clamp(Number(fn[1]), 0, 255), g: clamp(Number(fn[2]), 0, 255), b: clamp(Number(fn[3]), 0, 255), a: clamp(alpha, 0, 1) };
   }
+  const ok = /^(oklch|oklab)\(\s*([\d.]+%?|none)\s+(-?[\d.]+%?|none)\s+(-?[\d.]+(?:deg|%)?|none)\s*(?:\/\s*([\d.]+)(%?))?\s*\)$/.exec(s);
+  if (ok) {
+    const value = (token: string, percent: number) => (token === 'none' ? 0 : token.endsWith('%') ? (parseFloat(token) / 100) * percent : parseFloat(token));
+    const L = value(ok[2], 1);
+    let C = value(ok[3], 0.4);
+    let H = value(ok[4], 1);
+    if (ok[1] === 'oklab') [C, H] = [Math.hypot(C, value(ok[4], 0.4)), (Math.atan2(value(ok[4], 0.4), C) * 180) / Math.PI];
+    const [r, g, b] = oklchToLinear(clamp(L, 0, 1), C, H).map((v) => clamp(fromLinear(clamp(v, 0, 1)), 0, 255));
+    const alpha = ok[5] === undefined ? 1 : Number(ok[5]) / (ok[6] ? 100 : 1);
+    return { r, g, b, a: clamp(alpha, 0, 1) };
+  }
   return null;
 }
 
 function mustParse(input: string): RGBA {
   const color = parseColor(input);
-  if (!color) throw new Error(`createThemeCSS: unsupported colour "${input}" (use #rrggbb or rgb()/rgba())`);
+  if (!color) throw new Error(`createThemeCSS: unsupported colour "${input}" (use #rrggbb, rgb()/rgba() or oklch())`);
   return color;
 }
 
@@ -404,6 +425,41 @@ export function colorToOklch(color: string): OklchColor | null {
 export function oklchToColor(l: number, c: number, h: number, alpha = 1): string {
   return formatColor(fromOklch(clamp(l, 0, 1), Math.max(0, c), ((h % 360) + 360) % 360, clamp(alpha, 0, 1)));
 }
+
+/** Decimals of L (in %), C and H tried in turn by toOklchString; most colours need only the first. */
+const OKLCH_STEPS = [
+  [2, 4, 2],
+  [3, 5, 2],
+  [3, 5, 3],
+  [4, 6, 3],
+  [4, 6, 4],
+] as const;
+const fixed = (v: number, digits: number) => Number(v.toFixed(digits)) || 0;
+
+/**
+ * A colour as `oklch(L% C H)` (`/ alpha` below full opacity) with the fewest decimals that decode back to the
+ * same 8-bit sRGB (within 0.02 of a level), the syntax of the theme files; the input unchanged when it is not a
+ * colour parseColor reads.
+ */
+export function toOklchString(color: string): string {
+  const rgba = parseColor(color);
+  if (!rgba) return color;
+  const [L, C, H] = toOklch(rgba);
+  const grey = Math.abs(rgba.r - rgba.g) < 1e-6 && Math.abs(rgba.g - rgba.b) < 1e-6;
+  let out: [number, number, number] = [0, 0, 0];
+  for (const [dl, dc, dh] of OKLCH_STEPS) {
+    const c = grey ? 0 : fixed(C, dc);
+    out = [fixed(L * 100, dl), c, c === 0 ? 0 : fixed(H, dh)];
+    const back = oklchToLinear(out[0] / 100, out[1], out[2]).map(fromLinear);
+    if (back.every((v, i) => Math.abs(v - [rgba.r, rgba.g, rgba.b][i]) <= 0.02)) break;
+  }
+  const alpha = rgba.a < 1 ? ` / ${round3(rgba.a)}` : '';
+  return `oklch(${out[0]}% ${out[1]} ${out[2]}${alpha})`;
+}
+
+const COLOR_LITERAL = /#[0-9a-f]{3,8}\b|rgba?\([^()]*\)/gi;
+/** Every hex and rgb()/rgba() literal of a token value (a colour, a shadow list) as oklch(). */
+const valueToOklch = (value: string) => value.replace(COLOR_LITERAL, toOklchString);
 
 // ── Token generators ──
 
@@ -520,7 +576,8 @@ function scaleShadow(shadow: string, k: number): string {
   return shadow
     .split(/,(?![^(]*\))/)
     .map((layer) => {
-      const trimmed = layer.trim();
+      // oklch() layers (defaults read from the theme files) scale as rgba(); the output format applies later.
+      const trimmed = layer.trim().replace(/ok(?:lch|lab)\([^()]*\)/g, (color) => formatColor(mustParse(color)));
       if (/^0 0 0 1px /.test(trimmed)) return trimmed;
       return trimmed.replace(/rgba\(([^)]+),\s*([\d.]+)\)/, (_, rgb: string, alpha: string) => `rgba(${rgb}, ${round3(clamp(Number(alpha) * k, 0, 1))})`);
     })
@@ -604,6 +661,9 @@ export function createThemeTokens(options: ThemeCSSOptions): ThemeTokens {
         target[name] = scaleBorder(current, name === 'border-field' ? Math.max(k, 1) : k, ground);
       }
     }
+    if ((options.format ?? 'oklch') === 'oklch') {
+      for (const [name, value] of Object.entries(target)) target[name] = valueToOklch(value);
+    }
     for (const [name, value] of Object.entries(options.tokens?.[mode] ?? {})) {
       if (!SAFE_NAME.test(name) || UNSAFE_VALUE.test(value)) throw new Error(`createThemeCSS: invalid token override "${name}: ${value}"`);
       target[name] = value;
@@ -621,9 +681,10 @@ function block(selector: string, tokens: ColorMap) {
  * CSS overrides for one base theme, light and dark. Load it after the kit's stylesheet:
  *
  *   createThemeCSS({ theme: 'glass', accent: '#ff2d55', radius: 1.25 })
- *   // [data-theme='glass'] { --ui-radius-…; --ui-accent: #ff2d55; … }
+ *   // [data-theme='glass'] { --ui-radius-…; --ui-accent: oklch(…); … }
  *   // [data-theme='glass'][data-mode='dark'] { … }
  *
+ * Colours come out as oklch(), like the theme files; `format: 'hex'` writes #rrggbb / rgba() instead.
  * Returns an empty string when the options match the theme defaults.
  */
 export function createThemeCSS(options: ThemeCSSOptions): string {

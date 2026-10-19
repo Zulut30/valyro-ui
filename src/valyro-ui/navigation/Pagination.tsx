@@ -1,71 +1,19 @@
 'use client';
 
-import { useMemo, useRef, type ComponentPropsWithRef, type KeyboardEvent, type ReactNode } from 'react';
+import { useMemo, useRef, type ComponentPropsWithRef, type ReactNode } from 'react';
 import { ChevronLeftIcon, ChevronRightIcon, MoreHorizontalIcon } from '../icons';
-import { clamp, cx, getDirection, inlineArrowStep, useControllableState } from '../primitives';
+import { cx } from '../primitives';
 import { useLocale } from '../theme/ThemeProvider';
 import { useSlidingIndicator } from './internal';
+import { usePagination } from './usePagination';
 import './Pagination.css';
-import { withRef, useLayoutEffect } from '../primitives/react-compat';
+import { withRef } from '../primitives/react-compat';
 
-export type PaginationRangeItem = number | 'start-ellipsis' | 'end-ellipsis';
-
-export interface PaginationRangeOptions {
-  page: number;
-  pageCount: number;
-  /** Pages shown on each side of the current page. */
-  siblings?: number;
-  /** Pages always shown at the start and at the end. */
-  boundaries?: number;
-}
-
-const range = (from: number, to: number) =>
-  from > to ? [] : Array.from({ length: to - from + 1 }, (_, i) => from + i);
-
-/**
- * Page numbers and ellipses to render. Once collapsing starts the result has a
- * constant length (2·boundaries + 2·siblings + 3), so the control never jumps
- * in width while paging; an ellipsis that would hide a single page shows the
- * page instead.
- */
-export function getPaginationRange({
-  page,
-  pageCount,
-  siblings: siblingsOption = 1,
-  boundaries: boundariesOption = 1,
-}: PaginationRangeOptions): PaginationRangeItem[] {
-  const siblings = Math.max(0, Math.floor(siblingsOption) || 0);
-  const boundaries = Math.max(0, Math.floor(boundariesOption) || 0);
-  const count = Math.max(0, Math.floor(pageCount));
-  const current = clamp(Math.round(page), 1, Math.max(count, 1));
-
-  const startPages = range(1, Math.min(boundaries, count));
-  const endPages = range(Math.max(count - boundaries + 1, boundaries + 1), count);
-
-  const siblingsStart = Math.max(
-    Math.min(current - siblings, count - boundaries - siblings * 2 - 1),
-    boundaries + 2,
-  );
-  const siblingsEnd = Math.min(
-    Math.max(current + siblings, boundaries + siblings * 2 + 2),
-    count - boundaries - 1,
-  );
-
-  const startGap: PaginationRangeItem[] =
-    siblingsStart > boundaries + 2
-      ? ['start-ellipsis']
-      : boundaries + 1 < count - boundaries
-        ? [boundaries + 1]
-        : [];
-  const endGap: PaginationRangeItem[] =
-    siblingsEnd < count - boundaries - 1
-      ? ['end-ellipsis']
-      : count - boundaries > boundaries
-        ? [count - boundaries]
-        : [];
-
-  return [...startPages, ...startGap, ...range(siblingsStart, siblingsEnd), ...endGap, ...endPages];
-}
+export {
+  getPaginationRange,
+  type PaginationRangeItem,
+  type PaginationRangeOptions,
+} from './usePagination';
 
 export interface PaginationLabels {
   previous: string;
@@ -126,41 +74,10 @@ export const Pagination = withRef(function Pagination({
   'aria-label': ariaLabel,
   ...rest
 }: PaginationProps) {
-  const [rawPage, setPage] = useControllableState({ value, defaultValue, onChange: onValueChange });
-  const count = Number.isFinite(pageCount) ? Math.max(1, Math.floor(pageCount)) : 1;
-  const page = clamp(Math.round(rawPage) || 1, 1, count);
-  const go = (next: number) => setPage(clamp(next, 1, count));
+  // The behaviour is usePagination's (valyro-ui/headless): the range, the steps, the arrow keys, focus kept in place.
+  const pagination = usePagination({ pageCount, value, defaultValue, onValueChange, siblings, boundaries });
+  const { page, pageCount: count } = pagination;
   const listRef = useRef<HTMLUListElement>(null);
-  // Set when the focused previous/next button is about to become disabled (first or last page).
-  const refocus = useRef(false);
-
-  // A disabled button drops focus to <body>; keep it in the control on the current page (or the other arrow).
-  useLayoutEffect(() => {
-    if (!refocus.current) return;
-    refocus.current = false;
-    const list = listRef.current;
-    const target =
-      list?.querySelector<HTMLElement>('[aria-current="page"]') ??
-      list?.querySelector<HTMLElement>('[data-kind="step"]:not(:disabled)');
-    target?.focus();
-  });
-
-  const step = (delta: 1 | -1) => (event: { currentTarget: HTMLElement }) => {
-    const next = clamp(page + delta, 1, count);
-    if ((next === 1 || next === count) && document.activeElement === event.currentTarget) refocus.current = true;
-    go(next);
-  };
-
-  // Arrow keys move focus between the buttons (mirrored in RTL); Enter / Space activate as usual.
-  const onKeyDown = (event: KeyboardEvent<HTMLUListElement>) => {
-    const delta = inlineArrowStep(event.key, getDirection(event.currentTarget));
-    if (delta === 0) return;
-    const buttons = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>('button:not(:disabled)'));
-    const next = buttons[buttons.indexOf(event.target as HTMLButtonElement) + delta];
-    if (!next) return;
-    event.preventDefault();
-    next.focus();
-  };
   const labels = { ...defaultPaginationLabels, ...labelOverrides };
   const resolvedLocale = useLocale(locale);
   const numberFormat = useMemo(() => new Intl.NumberFormat(resolvedLocale), [resolvedLocale]);
@@ -179,7 +96,7 @@ export const Pagination = withRef(function Pagination({
       data-size={size}
       data-motion={animation === 'spring' ? 'spring' : undefined}
     >
-      <ul ref={listRef} className="ui-pagination__list" data-cursor={cursor ? '' : undefined} onKeyDown={onKeyDown}>
+      <ul {...pagination.getListProps({ ref: listRef, className: 'ui-pagination__list', 'data-cursor': cursor ? '' : undefined })}>
         {cursor && (
           <li
             className="ui-pagination__cursor"
@@ -193,14 +110,7 @@ export const Pagination = withRef(function Pagination({
           />
         )}
         <li>
-          <button
-            type="button"
-            className="ui-pagination__item"
-            data-kind="step"
-            aria-label={labels.previous}
-            disabled={page <= 1}
-            onClick={step(-1)}
-          >
+          <button {...pagination.getPreviousProps({ className: 'ui-pagination__item', 'aria-label': labels.previous })}>
             <ChevronLeftIcon />
           </button>
         </li>
@@ -209,16 +119,10 @@ export const Pagination = withRef(function Pagination({
             {labels.status(format(page), format(count))}
           </li>
         ) : (
-          getPaginationRange({ page, pageCount: count, siblings, boundaries }).map((item) =>
+          pagination.range.map((item) =>
             typeof item === 'number' ? (
               <li key={item}>
-                <button
-                  type="button"
-                  className="ui-pagination__item"
-                  aria-label={labels.page(format(item))}
-                  aria-current={item === page ? 'page' : undefined}
-                  onClick={() => go(item)}
-                >
+                <button {...pagination.getPageProps(item, { className: 'ui-pagination__item', 'aria-label': labels.page(format(item)) })}>
                   {format(item)}
                 </button>
               </li>
@@ -230,14 +134,7 @@ export const Pagination = withRef(function Pagination({
           )
         )}
         <li>
-          <button
-            type="button"
-            className="ui-pagination__item"
-            data-kind="step"
-            aria-label={labels.next}
-            disabled={page >= count}
-            onClick={step(1)}
-          >
+          <button {...pagination.getNextProps({ className: 'ui-pagination__item', 'aria-label': labels.next })}>
             <ChevronRightIcon />
           </button>
         </li>

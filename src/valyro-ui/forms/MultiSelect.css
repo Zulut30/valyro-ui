@@ -84,6 +84,13 @@
   white-space: nowrap;
 }
 
+/* A newly picked option's chip pops in (MultiSelect.tsx sets data-ui-enter="scale", styles/motion.css): from
+   85% of its size, for the snappy spring's settle time at the theme's tempo. */
+.ui-multi-select__chip[data-ui-enter] {
+  --ui-motion-scale: 0.85;
+  --ui-motion-enter: calc(var(--ui-duration-slow) * 1.36);
+}
+
 /* maxChips="auto": chips keep their whole width (the ones that don't fit move into "+N"); only a first chip
    too wide for the field on its own is truncated. */
 .ui-multi-select[data-max-chips='auto'] .ui-multi-select__chip {
@@ -255,6 +262,14 @@
     width: 28px;
     height: 44px;
     translate: -50% -50%;
+  }
+
+  /* The chip row clips sideways only, so the hit area above keeps its full 44px height. */
+  @supports (overflow: clip) {
+    .ui-multi-select__values {
+      overflow: visible;
+      overflow-x: clip;
+    }
   }
 }
 

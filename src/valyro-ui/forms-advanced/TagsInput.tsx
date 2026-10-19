@@ -12,8 +12,10 @@ import {
   useListNavigation,
 } from '../primitives';
 import type { FieldSize } from './PickerTrigger';
+import { useFormField } from './form-field-context';
 import { FormValue, useMissingValue } from './form-value';
 import { PASTE_SEPARATORS, pasteTags } from './tags';
+import { useFormReset } from '../forms/form-reset';
 import './TagsInput.css';
 import { withRef, useId } from '../primitives/react-compat';
 
@@ -81,8 +83,19 @@ export const TagsInput = withRef(function TagsInput({
   const [text, setText] = useState('');
   const [rejected, setRejected] = useState(false);
   const [open, setOpen] = useState(false);
+  // FormField's `required` only marks its label (aria-hidden); announce it on the input.
+  const field = useFormField();
   const rootRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  // A form reset brings the uncontrolled value back to its default (forms/form-reset.ts).
+  useFormReset(
+    rootRef,
+    () => {
+      setTags(defaultValue);
+      setText('');
+    },
+    value === undefined,
+  );
   const listId = useId();
   const labels = { ...DEFAULT_TAGS_INPUT_LABELS, ...labelsProp };
   const [missing, markMissing] = useMissingValue(tags.length > 0);
@@ -139,7 +152,8 @@ export const TagsInput = withRef(function TagsInput({
         addTags([highlighted ?? text]);
         return;
       case 'Backspace':
-        if (text === '' && tags.length > 0) {
+        // Not read-only (the remove buttons are hidden then too); a full list still loses its last tag.
+        if (text === '' && tags.length > 0 && !readOnly) {
           event.preventDefault();
           removeAt(tags.length - 1);
         }
@@ -202,7 +216,7 @@ export const TagsInput = withRef(function TagsInput({
         {...rest}
         // A rejected tag marks the input invalid even when a FormField passes aria-invalid={undefined}.
         aria-invalid={rest['aria-invalid'] || showInvalid || undefined}
-        aria-required={required || undefined}
+        aria-required={(required ?? field?.required) || undefined}
         ref={mergeRefs(inputRef, ref)}
         className="ui-field__input ui-tags-input__input"
         value={text}

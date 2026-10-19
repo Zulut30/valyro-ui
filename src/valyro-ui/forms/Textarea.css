@@ -7,6 +7,21 @@
   cursor: text;
 }
 
+/* Sizes: base.css sizes the text of .ui-field[data-size]; the padding sits on the textarea instead
+   (two classes, so base.css's field padding loses whatever order the stylesheets load in). */
+.ui-field.ui-textarea[data-size] {
+  min-height: 0;
+  padding: 0;
+}
+
+.ui-textarea[data-size='sm'] .ui-textarea__input {
+  padding: 6px var(--ui-space-2);
+}
+
+.ui-textarea[data-size='lg'] .ui-textarea__input {
+  padding: var(--ui-space-3) var(--ui-space-4);
+}
+
 .ui-textarea[data-disabled] {
   cursor: not-allowed;
 }
@@ -85,3 +100,11 @@
   color: var(--ui-danger-text);
 }
 
+
+/* Touch: iOS Safari zooms the page into a field whose text is under 16px. base.css says so for every field,
+   but `font: inherit` above comes later and would win. */
+@media (pointer: coarse) {
+  .ui-textarea__input {
+    font-size: max(16px, 1em);
+  }
+}

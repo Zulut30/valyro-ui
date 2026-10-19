@@ -1,4 +1,4 @@
-import { clamp } from '../primitives';
+import { clamp } from '../primitives/utils';
 
 /** Pure number math for NumberInput: parsing, formatting, clamping and stepping. */
 

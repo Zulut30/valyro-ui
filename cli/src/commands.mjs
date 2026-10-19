@@ -16,7 +16,7 @@ import {
   SITE_URL,
   THEMES,
 } from './constants.mjs';
-import { destinationOf, planFiles, transformContent, unifiedDiff, writeFiles } from './files.mjs';
+import { collectsComponentCss, destinationOf, planFiles, transformContent, unifiedDiff, updateComponentCss, writeFiles } from './files.mjs';
 import {
   declaredPackages,
   detectAlias,
@@ -28,6 +28,7 @@ import {
   packageNameOf,
   readConfig,
   readPackageJson,
+  tsconfigNotes,
   writeConfig,
 } from './project.mjs';
 import { CliError, createRegistry, dependencyName, resolveItems, searchItems } from './registry.mjs';
@@ -86,6 +87,8 @@ async function installItems(refs, { config, projectDir, registry, opts, io }) {
   ]) {
     for (const dest of list) io.out(`  ${label} ${dest}`);
   }
+  const componentCss = collectsComponentCss(config) && updateComponentCss(plan, config, projectDir);
+  if (componentCss) io.out(`  ${componentCss.created ? 'created' : 'updated'} ${componentCss.dest}`);
   if (result.identical.length) io.out(`  ${result.identical.length} file(s) already up to date`);
   if (result.kept.length) {
     io.err(`Kept ${result.kept.length} locally modified file(s) (re-run with --overwrite to replace):`);
@@ -198,6 +201,7 @@ export async function init(opts, io) {
   await installItems([...BASE_ITEMS, ...(isProTheme(theme) ? [`${theme}-theme`] : [])], { config, projectDir, registry: source, opts, io });
 
   const plan = setupPlan(framework.name, config, projectDir);
+  plan.notes.push(...tsconfigNotes(projectDir, installDir));
   if (opts.patch && plan.entry && fs.existsSync(path.join(projectDir, plan.entry))) {
     const file = path.join(projectDir, plan.entry);
     const patched = applySetup(fs.readFileSync(file, 'utf8'), plan, config);

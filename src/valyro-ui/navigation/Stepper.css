@@ -82,6 +82,13 @@ button.ui-stepper__trigger:active .ui-stepper__indicator {
   backdrop-filter: var(--ui-blur);
 }
 
+/* A step completed after mount pops its check in (data-ui-enter="pop", styles/motion.css) from 40% of its
+   size, for the bouncy spring's settle time at the theme's tempo. */
+.ui-stepper__indicator > [data-ui-enter] {
+  --ui-motion-scale: 0.44;
+  --ui-motion-enter: calc(var(--ui-duration-slow) * 2.61);
+}
+
 .ui-stepper__text {
   display: flex;
   flex-direction: column;

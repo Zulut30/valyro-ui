@@ -174,8 +174,20 @@ html[data-ui-sorting] * {
 
 @media (pointer: coarse) {
   .ui-sortable__handle:not([data-decorative]) {
+    position: relative;
     width: 32px;
     height: 36px;
+  }
+
+  /* The kit's 44px tap size around the grip, as on buttons (basic/Button.css). */
+  .ui-sortable__handle:not([data-decorative])::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 44px;
+    height: 44px;
+    translate: -50% -50%;
   }
 }
 

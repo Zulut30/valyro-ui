@@ -5,6 +5,7 @@ import { SearchIcon } from '../icons';
 import { composeHandlers, cx, mergeRefs, useEventCallback } from '../primitives';
 import { Spinner } from '../basic/Spinner';
 import { TextInput, type TextInputProps } from './TextInput';
+import { useFormReset } from './form-reset';
 import './SearchInput.css';
 import { withRef, useSyncExternalStore } from '../primitives/react-compat';
 
@@ -90,6 +91,8 @@ export const SearchInput = withRef(function SearchInput({
   }
 
   const inputRef = useRef<HTMLInputElement>(null);
+  // A form reset brings the uncontrolled value back to its default (forms/form-reset.ts).
+  useFormReset(inputRef, () => setText(defaultValue ?? ''), valueProp === undefined);
   const timer = useRef<number>(undefined);
   const pending = useRef<string | null>(null);
   const lastReported = useRef<string | null>(null);
@@ -163,7 +166,7 @@ export const SearchInput = withRef(function SearchInput({
     if (event.key === 'Enter') {
       if (pending.current !== null) report(pending.current, true);
       onSearch?.(text);
-    } else if (event.key === 'Escape' && text !== '') {
+    } else if (event.key === 'Escape' && text !== '' && !rest.readOnly && !rest.disabled) {
       // Handled here so an enclosing dialog or popover does not also close.
       event.preventDefault();
       setText('');

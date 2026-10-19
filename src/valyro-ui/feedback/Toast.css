@@ -122,10 +122,18 @@
   pointer-events: none;
 }
 
-/* Enter from (and exit to) the screen edge */
+/* Enter from (and exit to) the screen edge: from the first style where @starting-style works (Toaster.tsx
+   then renders data-mounted at once), else from a first frame without data-mounted. */
 .ui-toaster .ui-toast:not([data-mounted]) {
   --_y: calc(var(--_dir) * -100%);
   opacity: 0;
+}
+
+@starting-style {
+  .ui-toaster .ui-toast[data-mounted] {
+    --_y: calc(var(--_dir) * -100%);
+    opacity: 0;
+  }
 }
 
 .ui-toaster .ui-toast[data-removed] {
@@ -260,6 +268,19 @@
 @media (hover: none) {
   .ui-toast__close {
     opacity: 1;
+  }
+}
+
+/* Touch: the 20px badge takes taps 40px wide (the kit's minimum; 44 would reach far into the title). */
+@media (pointer: coarse) {
+  .ui-toast__close::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 40px;
+    height: 40px;
+    translate: -50% -50%;
   }
 }
 

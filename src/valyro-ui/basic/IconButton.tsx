@@ -1,7 +1,7 @@
 'use client';
 
 import { useContext, type MouseEvent, type ReactNode } from 'react';
-import { animateSpring, composeHandlers, cx, themeSlowMs } from '../primitives';
+import { composeHandlers, cx, isMotionReduced } from '../primitives';
 import { Button, type ButtonProps } from './Button';
 import './IconButton.css';
 import { TooltipTriggerContext } from './Tooltip';
@@ -23,12 +23,14 @@ export interface IconButtonProps extends Omit<ButtonProps, 'leftIcon' | 'rightIc
 
 const PARTICLES = 8;
 
-/** Sends a ring of particles out of `button` and pops its icon; the particles remove themselves. */
+/**
+ * Sends a ring of particles out of `button` and pops its icon — CSS animations (IconButton.css): the pop restarts
+ * on every click under a new name (data-burst a / b), each particle flies to its own --_dx / --_dy and removes
+ * itself when it lands.
+ */
 function burstFrom(button: HTMLElement) {
-  if (typeof button.animate !== 'function' || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
-  const icon = button.querySelector('.ui-button__icon');
-  if (icon) animateSpring(icon, { transform: ['scale(0.6)', 'none'] }, 'bouncy');
-  const duration = (620 * themeSlowMs(button)) / 340;
+  if (isMotionReduced(button)) return;
+  button.setAttribute('data-burst', button.getAttribute('data-burst') === 'a' ? 'b' : 'a');
   const reach = button.offsetWidth * 0.8;
   for (let i = 0; i < PARTICLES; i++) {
     const angle = ((i + Math.random() * 0.4) / PARTICLES) * Math.PI * 2;
@@ -36,22 +38,16 @@ function burstFrom(button: HTMLElement) {
     const particle = document.createElement('span');
     particle.className = 'ui-icon-button__particle';
     particle.setAttribute('aria-hidden', 'true');
+    particle.style.setProperty('--_dx', `${(Math.cos(angle) * distance).toFixed(1)}px`);
+    particle.style.setProperty('--_dy', `${(Math.sin(angle) * distance).toFixed(1)}px`);
+    const remove = () => particle.remove();
+    particle.addEventListener('animationend', remove);
+    particle.addEventListener('animationcancel', remove);
     button.append(particle);
-    const flight = particle.animate(
-      [
-        { transform: 'translate(-50%, -50%) scale(1)', opacity: 1 },
-        {
-          transform: `translate(calc(-50% + ${Math.cos(angle) * distance}px), calc(-50% + ${Math.sin(angle) * distance}px)) scale(0)`,
-          opacity: 0,
-        },
-      ],
-      { duration, easing: 'cubic-bezier(0.2, 0.7, 0.3, 1)' },
-    );
-    flight.onfinish = flight.oncancel = () => particle.remove();
   }
 }
 
-export const IconButton = withRef(function IconButton({ icon, label, round, burst = false, variant = 'ghost', className, title, onClick, ...rest }: IconButtonProps) {
+export const IconButton = withRef(function IconButton({ icon, label, round, pill, burst = false, variant = 'ghost', className, title, onClick, ...rest }: IconButtonProps) {
   // A surrounding <Tooltip> already shows the label; a native title would double it.
   const inTooltip = useContext(TooltipTriggerContext);
   return (
@@ -61,7 +57,8 @@ export const IconButton = withRef(function IconButton({ icon, label, round, burs
       aria-label={label}
       title={title ?? (inTooltip ? undefined : label)}
       data-icon-only=""
-      pill={round}
+      // `pill` (inherited from Button) means the same as `round` here.
+      pill={round ?? pill}
       className={cx('ui-icon-button', className)}
       leftIcon={icon}
       onClick={burst ? composeHandlers(onClick, (event: MouseEvent<HTMLButtonElement>) => burstFrom(event.currentTarget)) : onClick}

@@ -3,6 +3,8 @@
 import { createContext, useContext, type ComponentPropsWithRef, type Context, type ReactElement, type UIEvent } from 'react';
 import { composeHandlers, cx, Slot } from '../primitives';
 import { withRef } from '../primitives/react-compat';
+import { withUserProps, type UserProps } from '../primitives/prop-getters';
+import type { DialogState } from './useDialog';
 
 /** What the parts of a Dialog or Drawer read from it. */
 export interface OverlayContextValue {
@@ -12,6 +14,11 @@ export interface OverlayContextValue {
   descriptionId: string;
   /** Called on body scroll (the dialog shades its header once the body scrolls). */
   onBodyScroll?: (scrolled: boolean) => void;
+  /** The overlay's useDialog: the parts render with its getters. */
+  dialog: DialogState;
+  /** Extra props of the Header and Body parts (BottomSheet: the drag handlers, the scrolling body's ref). */
+  headerProps?: UserProps;
+  bodyProps?: UserProps;
 }
 
 export interface OverlayTriggerProps {
@@ -40,17 +47,15 @@ function useOverlay(context: Context<OverlayContextValue | null>, part: string) 
  * The parts that Dialog and Drawer share in their compound form, with the block's class names
  * (`ui-dialog__title`, `ui-drawer__title`…). Each component adds its own `Content`.
  */
-export function createOverlayParts(name: 'Dialog' | 'Drawer') {
-  const block = `ui-${name.toLowerCase()}`;
+export function createOverlayParts(name: 'Dialog' | 'Drawer' | 'BottomSheet') {
+  const block = `ui-${name.replace(/(?!^)[A-Z]/g, (letter) => `-${letter}`).toLowerCase()}`;
   const Context = createContext<OverlayContextValue | null>(null);
 
   /** Opens the overlay: its child gets the click handler and the dialog-button ARIA. */
   const Trigger = withRef(function Trigger({ children, ...rest }: OverlayTriggerProps) {
     const overlay = useOverlay(Context, `${name}.Trigger`);
     return (
-      <Slot {...rest} aria-haspopup="dialog" aria-expanded={overlay.open} onClick={() => overlay.setOpen(true)}>
-        {children}
-      </Slot>
+      <Slot {...overlay.dialog.getTriggerProps(rest)}>{children}</Slot>
     );
   });
 
@@ -58,26 +63,25 @@ export function createOverlayParts(name: 'Dialog' | 'Drawer') {
   const Close = withRef(function Close({ children, ...rest }: OverlayCloseProps) {
     const overlay = useOverlay(Context, `${name}.Close`);
     return (
-      <Slot {...rest} onClick={() => overlay.setOpen(false)}>
-        {children}
-      </Slot>
+      <Slot {...overlay.dialog.getCloseProps(rest)}>{children}</Slot>
     );
   });
 
   const Header = withRef(function Header({ className, ...rest }: OverlayHeaderProps) {
-    return <div {...rest} className={cx(`${block}__header`, className)} />;
+    const overlay = useContext(Context);
+    return <div {...withUserProps(overlay?.headerProps ?? {}, { ...rest, className: cx(`${block}__header`, className) })} />;
   });
 
   /** The heading; it names the overlay. */
   const Title = withRef(function Title({ className, ...rest }: OverlayTitleProps) {
     const overlay = useOverlay(Context, `${name}.Title`);
-    return <h2 id={overlay.titleId} {...rest} className={cx(`${block}__title`, className)} />;
+    return <h2 {...overlay.dialog.getTitleProps({ ...rest, className: cx(`${block}__title`, className) })} />;
   });
 
   /** Supporting text under the title; it describes the overlay. */
   const Description = withRef(function Description({ className, ...rest }: OverlayDescriptionProps) {
     const overlay = useOverlay(Context, `${name}.Description`);
-    return <div id={overlay.descriptionId} {...rest} className={cx(`${block}__description`, className)} />;
+    return <div {...overlay.dialog.getDescriptionProps({ ...rest, className: cx(`${block}__description`, className) })} />;
   });
 
   /** The content between the header and the footer; it scrolls when it overflows. */
@@ -85,8 +89,7 @@ export function createOverlayParts(name: 'Dialog' | 'Drawer') {
     const overlay = useContext(Context);
     return (
       <div
-        {...rest}
-        className={cx(`${block}__body`, className)}
+        {...withUserProps(overlay?.bodyProps ?? {}, { ...rest, className: cx(`${block}__body`, className) })}
         onScroll={composeHandlers(onScroll, (event: UIEvent<HTMLDivElement>) => overlay?.onBodyScroll?.(event.currentTarget.scrollTop > 0))}
       />
     );

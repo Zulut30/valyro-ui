@@ -1,0 +1,103 @@
+/* Move buttons on a lifted drag-and-drop item (drag-moves.tsx), pinned to its inline-end top corner so a scrolling
+   list never clips them. */
+.ui-drag-moves {
+  position: absolute;
+  z-index: 3;
+  inset-block-start: var(--ui-space-1);
+  inset-inline-end: var(--ui-space-1);
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  border: var(--ui-border-width, 1px) solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-surface);
+  box-shadow: var(--ui-shadow-popover);
+  color: var(--ui-fg);
+  cursor: default;
+}
+
+.ui-drag-moves__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--ui-radius-sm);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  outline: none;
+}
+
+.ui-drag-moves__button:hover:not([aria-disabled]) {
+  background: var(--ui-hover);
+}
+
+.ui-drag-moves__button:focus-visible {
+  box-shadow: var(--ui-focus-ring);
+}
+
+.ui-drag-moves__button[aria-disabled] {
+  color: var(--ui-fg-disabled);
+  cursor: not-allowed;
+}
+
+.ui-drag-moves__button[data-icon='drop'] {
+  color: var(--ui-primary);
+}
+
+/* Start / end follow the reading direction. */
+.ui-drag-moves__button:is([data-icon='start'], [data-icon='end']):dir(rtl) svg {
+  scale: -1 1;
+}
+
+/* Touch: 44px targets (WCAG 2.5.5). */
+@media (pointer: coarse) {
+  .ui-drag-moves__button {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+/* Hidden until focused (a screen reader's cursor can still reach and press it), then shown like a skip link. */
+.ui-drag-moves__start {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.ui-drag-moves__start:focus {
+  z-index: 3;
+  inset-block-start: var(--ui-space-1);
+  inset-inline-start: var(--ui-space-1);
+  width: auto;
+  height: auto;
+  padding: var(--ui-space-1) var(--ui-space-2);
+  margin: 0;
+  overflow: visible;
+  clip: auto;
+  border-radius: var(--ui-radius-sm);
+  background: var(--ui-primary);
+  color: var(--ui-primary-fg);
+  font-size: var(--ui-text-sm);
+  box-shadow: var(--ui-focus-ring);
+  outline: none;
+}
+
+@media (forced-colors: active) {
+  .ui-drag-moves {
+    border-color: CanvasText;
+  }
+
+  .ui-drag-moves__button[aria-disabled] {
+    color: GrayText;
+  }
+}

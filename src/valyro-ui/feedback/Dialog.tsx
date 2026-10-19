@@ -1,7 +1,7 @@
 'use client';
 
-import { createContext, useContext, useMemo, useState, type ComponentPropsWithRef, type ReactNode, type UIEvent } from 'react';
-import { cx, mergeRefs, ModalLayer, useControllableState, type ModalLayerProps } from '../primitives';
+import { createContext, useContext, useState, type ComponentPropsWithRef, type ReactNode, type UIEvent } from 'react';
+import { cx, mergeRefs, ModalLayer, type ModalLayerProps } from '../primitives';
 import { findPart, hasPart } from '../primitives/compound';
 import { XIcon } from '../icons';
 import { IconButton } from '../basic/IconButton';
@@ -14,8 +14,9 @@ import {
   type OverlayTitleProps,
   type OverlayTriggerProps,
 } from './overlay-parts';
+import { useDialog } from './useDialog';
 import './Dialog.css';
-import { withRef, useId } from '../primitives/react-compat';
+import { withRef } from '../primitives/react-compat';
 
 export type DialogSize = 'sm' | 'md' | 'lg' | 'full';
 
@@ -94,11 +95,13 @@ export const DialogContent = withRef(function DialogContent({ className, childre
   const description = findPart<DialogDescriptionProps>(children, DialogDescription);
   return (
     <ModalLayer
-      aria-labelledby={title ? (title.props.id ?? overlay.titleId) : undefined}
-      aria-describedby={description ? (description.props.id ?? overlay.descriptionId) : undefined}
-      {...rest}
-      {...props}
-      ref={mergeRefs(rest.ref, ref)}
+      {...overlay.dialog.getDialogProps({
+        'aria-labelledby': title ? (title.props.id ?? overlay.titleId) : undefined,
+        'aria-describedby': description ? (description.props.id ?? overlay.descriptionId) : undefined,
+        ...rest,
+        ...props,
+        ref: mergeRefs(rest.ref, ref),
+      })}
       open={overlay.open}
       onClose={() => overlay.setOpen(false)}
       placement="center"
@@ -129,15 +132,15 @@ export const Dialog = withRef(function Dialog({
   children,
   ...rest
 }: DialogProps) {
-  const [open, setOpen] = useControllableState({ value: openProp, defaultValue: defaultOpen, onChange: onOpenChange });
+  // The behaviour is useDialog's (valyro-ui/headless); ModalLayer is the layer (focus trap, scroll lock, Escape).
+  const dialog = useDialog({ open: openProp, defaultOpen, onOpenChange, layer: false });
+  const { open, setOpen, titleId, descriptionId } = dialog;
   const [scrolled, setScrolled] = useState(false);
-  const titleId = useId();
-  const descriptionId = useId();
 
   // The body remounts on every opening, so its scroll state must start over too.
   if (!open && scrolled) setScrolled(false);
 
-  const overlay = useMemo(() => ({ open, setOpen, titleId, descriptionId, onBodyScroll: setScrolled }), [open, setOpen, titleId, descriptionId]);
+  const overlay = { open, setOpen, titleId, descriptionId, onBodyScroll: setScrolled, dialog };
   if (hasPart(children, [DialogTrigger, DialogContent])) {
     const surface: DialogSurface = { size, showClose, closeLabel, className, layerClassName, rest, scrolled };
     return (
@@ -150,9 +153,11 @@ export const Dialog = withRef(function Dialog({
   return (
     <parts.Context.Provider value={overlay}>
       <ModalLayer
-        aria-labelledby={title ? titleId : undefined}
-        aria-describedby={description ? descriptionId : undefined}
-        {...rest}
+        {...dialog.getDialogProps({
+          'aria-labelledby': title ? titleId : undefined,
+          'aria-describedby': description ? descriptionId : undefined,
+          ...rest,
+        })}
         open={open}
         onClose={() => setOpen(false)}
         placement="center"
@@ -164,16 +169,8 @@ export const Dialog = withRef(function Dialog({
       >
         {(title || description) && (
           <div className="ui-dialog__header">
-            {title && (
-              <h2 id={titleId} className="ui-dialog__title">
-                {title}
-              </h2>
-            )}
-            {description && (
-              <div id={descriptionId} className="ui-dialog__description">
-                {description}
-              </div>
-            )}
+            {title && <h2 {...dialog.getTitleProps({ className: 'ui-dialog__title' })}>{title}</h2>}
+            {description && <div {...dialog.getDescriptionProps({ className: 'ui-dialog__description' })}>{description}</div>}
           </div>
         )}
         {children != null && children !== false && (

@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, type ComponentPropsWithRef, type ReactNode, type RefObject } from 'react';
+import { useAriaHideOutside } from './ariaHideOutside';
 import { Portal, usePortalContainer } from './Portal';
 import { useDismissableLayer } from './useDismissableLayer';
 import { useFocusTrap } from './useFocusTrap';
@@ -32,6 +33,11 @@ export interface ModalLayerProps extends Omit<ComponentPropsWithRef<'div'>, 'chi
   closeOnOverlayClick?: boolean;
   closeOnEscape?: boolean;
   initialFocusRef?: RefObject<HTMLElement | null>;
+  /**
+   * Where focus goes on close when the element that opened the modal is no longer on the page (a deleted row's
+   * menu). Without it, focus moves to the first Tab stop near where that element was.
+   */
+  returnFocusRef?: RefObject<HTMLElement | null>;
   /** Class for the full-screen layer (positioning wrapper). */
   layerClassName?: string;
   /**
@@ -56,6 +62,7 @@ export const ModalLayer = withRef(function ModalLayer({
   closeOnOverlayClick = true,
   closeOnEscape = true,
   initialFocusRef,
+  returnFocusRef,
   layerClassName,
   animation = 'default',
   from = 'top',
@@ -67,11 +74,16 @@ export const ModalLayer = withRef(function ModalLayer({
   // Longer than the slowest exit animation (Glass --ui-duration is 240ms), so it is never cut off.
   const { isMounted, state } = usePresence(open, 300);
   const panelRef = useRef<HTMLDivElement>(null);
+  const layerRef = useRef<HTMLDivElement>(null);
   const container = usePortalContainer();
+  // `container` too: inside a ThemeScope that is still mounting, the panel appears one commit later.
+  const shown = open && isMounted && !!container;
 
   useScrollLock(open);
-  // `container` too: inside a ThemeScope that is still mounting, the panel appears one commit later.
-  useFocusTrap(panelRef, open && isMounted && !!container, { initialFocusRef });
+  // The page behind is hidden from screen readers too: `aria-modal` alone does not stop every virtual cursor.
+  // Declared before the trap, so on close the page is exposed again before focus returns to it.
+  useAriaHideOutside([layerRef], shown);
+  useFocusTrap(panelRef, shown, { initialFocusRef, returnFocusRef, contain: true });
   useDismissableLayer({
     enabled: open,
     refs: [panelRef],
@@ -88,6 +100,7 @@ export const ModalLayer = withRef(function ModalLayer({
   return (
     <Portal>
       <div
+        ref={layerRef}
         className={cx('ui-modal-layer', layerClassName)}
         data-ui-portal=""
         data-state={state}

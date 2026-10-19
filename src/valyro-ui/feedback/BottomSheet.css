@@ -74,6 +74,13 @@
   touch-action: none;
 }
 
+/* Touch: the strip is dragged and tapped (it toggles the height), so it is 40px tall. */
+@media (pointer: coarse) {
+  .ui-bottom-sheet__handle {
+    height: 40px;
+  }
+}
+
 /* The Drawer's handle tokens, so a bottom drawer and a sheet show the same pill in every theme. */
 .ui-bottom-sheet__handle::before {
   content: '';

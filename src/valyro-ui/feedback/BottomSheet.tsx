@@ -1,6 +1,17 @@
 'use client';
 
-import { useEffect, useRef, useState, type ComponentPropsWithRef, type KeyboardEvent, type PointerEvent, type ReactNode, type RefObject } from 'react';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  type ComponentPropsWithRef,
+  type KeyboardEvent,
+  type PointerEvent,
+  type ReactNode,
+  type RefObject,
+} from 'react';
 import {
   createVelocityTracker,
   cx,
@@ -9,14 +20,26 @@ import {
   useControllableState,
   useDismissableLayer,
   useEventCallback,
+  useAriaHideOutside,
   useFocusTrap,
   useLatest,
   usePresence,
   useScrollLock,
 } from '../primitives';
+import { findPart, hasPart } from '../primitives/compound';
 import { backdropOpacity, releaseSnapIndex, resolveSnapPoints, rubberband, type SnapPoint } from './bottom-sheet';
+import {
+  createOverlayParts,
+  type OverlayBodyProps,
+  type OverlayCloseProps,
+  type OverlayDescriptionProps,
+  type OverlayHeaderProps,
+  type OverlayTitleProps,
+  type OverlayTriggerProps,
+} from './overlay-parts';
+import { useDialog } from './useDialog';
 import './BottomSheet.css';
-import { withRef, useId, useLayoutEffect } from '../primitives/react-compat';
+import { withRef, useLayoutEffect } from '../primitives/react-compat';
 
 export interface BottomSheetLabels {
   /** Accessible name of the drag handle (a separator that resizes the sheet). */
@@ -67,16 +90,59 @@ export interface BottomSheetProps extends Omit<ComponentPropsWithRef<'div'>, 'ti
   /** Element focused when a modal sheet opens (default: the sheet itself). */
   initialFocusRef?: RefObject<HTMLElement | null>;
   labels?: Partial<BottomSheetLabels>;
-  /** Sheet body; it scrolls only at the highest snap point, otherwise dragging it moves the sheet. */
+  /**
+   * Sheet body; it scrolls only at the highest snap point, otherwise dragging it moves the sheet. In the compound
+   * form, a `BottomSheet.Trigger` and a `BottomSheet.Content` (with `.Header`, `.Title`, `.Description`, `.Body`, `.Close`).
+   */
   children?: ReactNode;
 }
+
+const parts = createOverlayParts('BottomSheet');
+
+export type BottomSheetTriggerProps = OverlayTriggerProps;
+export type BottomSheetCloseProps = OverlayCloseProps;
+export type BottomSheetHeaderProps = OverlayHeaderProps;
+export type BottomSheetTitleProps = OverlayTitleProps;
+export type BottomSheetDescriptionProps = OverlayDescriptionProps;
+export type BottomSheetBodyProps = OverlayBodyProps;
+export interface BottomSheetContentProps {
+  /** The parts inside the sheet: `BottomSheet.Header` (it drags the sheet, like the handle) and `BottomSheet.Body`. */
+  children?: ReactNode;
+}
+
+/** Opens the sheet (`BottomSheet.Trigger`): its single child gets the click handler. */
+export const BottomSheetTrigger = parts.Trigger;
+/** Closes the sheet (`BottomSheet.Close`). */
+export const BottomSheetClose = parts.Close;
+/** The draggable title area (`BottomSheet.Header`). */
+export const BottomSheetHeader = parts.Header;
+/** The heading (`BottomSheet.Title`); it names the sheet. */
+export const BottomSheetTitle = parts.Title;
+/** Supporting text (`BottomSheet.Description`); it describes the sheet. */
+export const BottomSheetDescription = parts.Description;
+/** The content (`BottomSheet.Body`); it scrolls at the highest snap point. */
+export const BottomSheetBody = parts.Body;
+
+/** Renders the sheet around the compound content; whether a title and a description are among it. */
+type SheetRenderer = (content: ReactNode, named: { title: boolean; description: boolean }) => ReactNode;
+const SheetContext = createContext<SheetRenderer | null>(null);
+
+/** The sheet of the compound form (`BottomSheet.Content`): handle, layer and panel around the parts. */
+export const BottomSheetContent = withRef(function BottomSheetContent({ children }: BottomSheetContentProps) {
+  const render = useContext(SheetContext);
+  if (!render) throw new Error('BottomSheet.Content must be inside its BottomSheet');
+  return render(children, {
+    title: !!findPart(children, BottomSheetTitle),
+    description: !!findPart(children, BottomSheetDescription),
+  });
+});
 
 // Longer than the slide-out (--ui-duration-slow ≤ 380ms), so it is never cut off.
 const EXIT_MS = 420;
 // How far the sheet can be pulled past its highest / lowest stop before it resists completely.
 const OVERSHOOT = 64;
 // Drags that start on these keep their native behaviour (text selection, sliders).
-const NO_DRAG = 'input, textarea, select, [contenteditable="true"], [role="slider"], [data-sheet-no-drag]';
+const NO_DRAG = 'input, textarea, select, [contenteditable="true"], [role="slider"], [data-ui-slider], [data-sheet-no-drag]';
 
 type DragMode = 'pending' | 'sheet' | 'scroll';
 
@@ -110,13 +176,13 @@ export const BottomSheet = withRef(function BottomSheet({
   ...rest
 }: BottomSheetProps) {
   const labels = { ...defaultBottomSheetLabels, ...labelsProp };
-  const [open, setOpen] = useControllableState({ value: openProp, defaultValue: defaultOpen, onChange: onOpenChange });
+  // Open state, ids and the trigger / close / title ARIA are useDialog's (valyro-ui/headless); the layer is the sheet's own.
+  const dialog = useDialog({ open: openProp, defaultOpen, onOpenChange, modal, layer: false });
+  const { open, setOpen, titleId, descriptionId } = dialog;
   const openLatest = useLatest(open);
   const [snapState, setSnap] = useControllableState({ value: snapProp, defaultValue: defaultSnap, onChange: onSnapChange });
   const { isMounted, state } = usePresence(open, EXIT_MS);
   const [available, setAvailable] = useState(0);
-  const titleId = useId();
-  const descriptionId = useId();
   const layerRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
@@ -196,7 +262,9 @@ export const BottomSheet = withRef(function BottomSheet({
   };
 
   useScrollLock(open && modal && !container);
-  useFocusTrap(panelRef, open && modal && isMounted && heights.length > 0, { initialFocusRef: focusRef });
+  // A page-level modal sheet hides the page behind from screen readers too (aria-modal alone is not enough).
+  useAriaHideOutside([layerRef], open && modal && isMounted && !container);
+  useFocusTrap(panelRef, open && modal && isMounted && heights.length > 0, { initialFocusRef: focusRef, contain: true });
   useDismissableLayer({
     enabled: open && modal,
     refs: [panelRef],
@@ -330,68 +398,93 @@ export const BottomSheet = withRef(function BottomSheet({
     else settle(0);
   };
 
-  if (!isMounted) return null;
   const valueNow = available > 0 ? Math.round(((heights[snap] ?? 0) / available) * 100) : 0;
+  const overlay = {
+    open,
+    setOpen,
+    titleId,
+    descriptionId,
+    dialog,
+    headerProps: pointerHandlers,
+    bodyProps: { ref: bodyRef, 'data-scrollable': atTop || undefined },
+  };
 
-  return (
-    <Portal container={container}>
-      <div
-        ref={layerRef}
-        className="ui-bottom-sheet-layer"
-        data-ui-portal=""
-        data-state={state}
-        data-modal={modal || undefined}
-        data-contained={container ? '' : undefined}
-      >
-        {modal && <div className="ui-bottom-sheet__backdrop" aria-hidden="true" />}
+  const renderSheet: SheetRenderer = (content, named) =>
+    isMounted ? (
+      <Portal container={container}>
         <div
-          role="dialog"
-          aria-modal={modal || undefined}
-          aria-labelledby={title ? titleId : undefined}
-          aria-describedby={description ? descriptionId : undefined}
-          tabIndex={-1}
-          {...rest}
-          ref={mergeRefs(panelRef, ref)}
-          className={cx('ui-bottom-sheet', className)}
+          ref={layerRef}
+          className="ui-bottom-sheet-layer"
+          data-ui-portal=""
           data-state={state}
           data-modal={modal || undefined}
-          style={{ ...style, visibility: heights.length ? undefined : 'hidden' }}
-          onKeyDown={onPanelKeyDown}
+          data-contained={container ? '' : undefined}
         >
-          {showHandle && (
-            <div
-              className="ui-bottom-sheet__handle"
-              role="separator"
-              aria-orientation="horizontal"
-              aria-label={labels.handle}
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuenow={valueNow}
-              aria-valuetext={labels.snapPosition(snap, snapPoints.length)}
-              tabIndex={0}
-              onKeyDown={onHandleKeyDown}
-              {...pointerHandlers}
-            />
-          )}
-          {(title || description) && (
-            <div className="ui-bottom-sheet__header" {...pointerHandlers}>
-              {title && (
-                <h2 id={titleId} className="ui-bottom-sheet__title">
-                  {title}
-                </h2>
-              )}
-              {description && (
-                <div id={descriptionId} className="ui-bottom-sheet__description">
-                  {description}
-                </div>
-              )}
-            </div>
-          )}
-          <div ref={bodyRef} className="ui-bottom-sheet__body" data-scrollable={atTop || undefined}>
-            {children}
+          {modal && <div className="ui-bottom-sheet__backdrop" aria-hidden="true" />}
+          <div
+            {...dialog.getDialogProps({
+              'aria-labelledby': named.title ? titleId : undefined,
+              'aria-describedby': named.description ? descriptionId : undefined,
+              ...rest,
+              ref: mergeRefs(panelRef, ref),
+            })}
+            className={cx('ui-bottom-sheet', className)}
+            data-state={state}
+            data-modal={modal || undefined}
+            style={{ ...style, visibility: heights.length ? undefined : 'hidden' }}
+            onKeyDown={onPanelKeyDown}
+          >
+            {showHandle && (
+              <div
+                className="ui-bottom-sheet__handle"
+                role="separator"
+                aria-orientation="horizontal"
+                aria-label={labels.handle}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={valueNow}
+                aria-valuetext={labels.snapPosition(snap, snapPoints.length)}
+                tabIndex={0}
+                onKeyDown={onHandleKeyDown}
+                {...pointerHandlers}
+              />
+            )}
+            {content}
           </div>
         </div>
-      </div>
-    </Portal>
+      </Portal>
+    ) : null;
+
+  if (hasPart(children, [BottomSheetTrigger, BottomSheetContent])) {
+    return (
+      <parts.Context.Provider value={overlay}>
+        <SheetContext.Provider value={renderSheet}>{children}</SheetContext.Provider>
+      </parts.Context.Provider>
+    );
+  }
+
+  return (
+    <parts.Context.Provider value={overlay}>
+      {renderSheet(
+        <>
+          {(title || description) && (
+            <BottomSheetHeader>
+              {title && <BottomSheetTitle>{title}</BottomSheetTitle>}
+              {description && <BottomSheetDescription>{description}</BottomSheetDescription>}
+            </BottomSheetHeader>
+          )}
+          <BottomSheetBody>{children}</BottomSheetBody>
+        </>,
+        { title: !!title, description: !!description },
+      )}
+    </parts.Context.Provider>
   );
+}, {
+  Trigger: BottomSheetTrigger,
+  Content: BottomSheetContent,
+  Header: BottomSheetHeader,
+  Title: BottomSheetTitle,
+  Description: BottomSheetDescription,
+  Body: BottomSheetBody,
+  Close: BottomSheetClose,
 });

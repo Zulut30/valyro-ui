@@ -26,7 +26,7 @@
   --_tag-font: var(--ui-text-xs);
   --_field-h: var(--ui-control-h-sm);
 
-  gap: 4px;
+  gap: var(--ui-space-1);
   padding: max(2px, calc((var(--_field-h) - var(--_tag-h)) / 2 - var(--ui-border-width, 1px)));
 }
 
@@ -115,7 +115,8 @@
 }
 
 .ui-tags-input__listbox {
-  max-height: 240px;
+  /* No taller than the room useFloating reports on its side: the list stays under the field and scrolls. */
+  max-height: min(240px, var(--ui-available-height, 240px));
   padding: var(--ui-popover-padding);
   overflow-y: auto;
 }

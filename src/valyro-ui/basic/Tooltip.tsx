@@ -1,20 +1,11 @@
 'use client';
 
-import { cloneElement, createContext, useEffect, useRef, useState, type ComponentPropsWithRef, type FocusEvent, type PointerEvent, type ReactElement, type ReactNode, type Ref } from 'react';
-import {
-  composeHandlers,
-  cx,
-  Floating,
-  mergeRefs,
-  Slot,
-  useControllableState,
-  useDismissableLayer,
-  useEventCallback,
-  type Placement,
-} from '../primitives';
+import { cloneElement, createContext, type ComponentPropsWithRef, type ReactElement, type ReactNode, type Ref } from 'react';
+import { composeHandlers, cx, Floating, mergeRefs, Slot, type Placement } from '../primitives';
+import { useTooltip } from './useTooltip';
 import './Tooltip.css';
 import { collectionPart, partsOf, propsOf } from '../primitives/compound';
-import { getElementRef, withRef, useId } from '../primitives/react-compat';
+import { getElementRef, withRef } from '../primitives/react-compat';
 
 /** Native attributes, `style` and `ref` go to the tooltip surface. */
 export interface TooltipProps extends Omit<ComponentPropsWithRef<'div'>, 'content' | 'children'> {
@@ -63,25 +54,6 @@ export const TooltipContent = collectionPart<TooltipContentProps>('Tooltip.Conte
 /** True inside a Tooltip trigger, so IconButton can drop its native title (it would show twice). */
 export const TooltipTriggerContext = createContext(false);
 
-// After one tooltip closes, the next opens without delay for a moment, so scanning a toolbar feels instant.
-const WARM_MS = 500;
-let lastClosedAt = -Infinity;
-// Leaving the trigger waits this long before hiding, so the pointer can cross onto the tooltip (WCAG 1.4.13).
-const HIDE_GRACE_MS = 120;
-// Only one tooltip shows at a time: opening one closes another still in its grace period.
-// `instant`: the next tooltip glides in from this one, so it vanishes at once instead of fading.
-let closeActive: ((instant?: boolean) => void) | null = null;
-// Trigger of the tooltip shown last: a spring tooltip opening while warm glides in from there.
-let lastAnchor: DOMRect | null = null;
-
-/** Offset from the trigger shown last to `rect` (centre to centre), or null when there is nothing to glide from. */
-function glideFrom(rect: DOMRect): { x: number; y: number } | null {
-  if (!lastAnchor) return null;
-  const x = lastAnchor.left + lastAnchor.width / 2 - (rect.left + rect.width / 2);
-  const y = lastAnchor.top + lastAnchor.height / 2 - (rect.top + rect.height / 2);
-  return x || y ? { x, y } : null;
-}
-
 export const Tooltip = withRef(function Tooltip({
   content: contentProp,
   children: childrenProp,
@@ -105,89 +77,43 @@ export const Tooltip = withRef(function Tooltip({
   const children = (triggerPart ? triggerPart.props.children : childrenProp) as ReactElement;
   const content = contentProp ?? contentPart?.props.children;
   const surfaceProps = propsOf(contentPart);
-  const [open, setOpen] = useControllableState({ value: openProp, defaultValue: defaultOpen, onChange: onOpenChange });
-  const triggerRef = useRef<HTMLElement>(null);
-  const timer = useRef<number>(undefined);
-  const id = useId();
-  const [glide, setGlide] = useState<{ x: number; y: number } | null>(null);
-  const [instantExit, setInstantExit] = useState(false);
   const hasContent = content != null && content !== false && content !== '';
-  const visible = open && !disabled && hasContent;
   const offset = arrow ? 10 : 6;
-
-  useEffect(() => () => window.clearTimeout(timer.current), []);
-
-  const show = (immediate = false) => {
-    if (disabled || !hasContent) return;
-    window.clearTimeout(timer.current);
-    const warm = closeActive !== null || performance.now() - lastClosedAt < WARM_MS;
-    const rect = triggerRef.current?.getBoundingClientRect();
-    setGlide(animation === 'spring' && warm && rect ? glideFrom(rect) : null);
-    setInstantExit(false);
-    if (immediate || delay <= 0 || warm) setOpen(true);
-    else timer.current = window.setTimeout(() => setOpen(true), delay);
-  };
-  const hide = useEventCallback((instant?: boolean) => {
-    window.clearTimeout(timer.current);
-    if (visible) lastClosedAt = performance.now();
-    setInstantExit(instant === true);
-    setOpen(false);
+  // The behaviour is useTooltip's (valyro-ui/headless): delays, the shared warm-up, grace, Escape, aria-describedby.
+  const tooltip = useTooltip({
+    open: openProp,
+    defaultOpen,
+    onOpenChange,
+    delay,
+    disabled: disabled || !hasContent,
+    floating: false,
+    glide: animation === 'spring',
   });
-  const hideSoon = () => {
-    window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => hide(), HIDE_GRACE_MS);
-  };
-  const keepOpen = () => window.clearTimeout(timer.current);
+  const { visible, glide, instantExit } = tooltip;
 
-  useEffect(() => {
-    if (!visible) return;
-    if (closeActive !== hide) closeActive?.(glide !== null);
-    closeActive = hide;
-    lastAnchor = triggerRef.current?.getBoundingClientRect() ?? null;
-    return () => {
-      if (closeActive === hide) closeActive = null;
-    };
-  }, [visible, hide, glide]);
-
-  // Escape closes the tooltip first; outside presses ignore it and reach the layers below.
-  useDismissableLayer({ enabled: visible, refs: [], onDismiss: () => hide(), closeOnOutside: false, passThrough: true });
-
+  // The child keeps its own aria-describedby: the tooltip's id joins it (Slot would let the child's win).
   const childDescribedBy = (children.props as { 'aria-describedby'?: string })['aria-describedby'];
-  const trigger = cloneElement(children as ReactElement<{ 'aria-describedby'?: string }>, {
-    'aria-describedby': cx(childDescribedBy, visible && id) || undefined,
-  });
+  const { 'aria-describedby': describedBy, ...triggerProps } = tooltip.getTriggerProps({ 'aria-describedby': childDescribedBy });
+  const trigger = cloneElement(children as ReactElement<{ 'aria-describedby'?: string }>, { 'aria-describedby': describedBy });
 
   return (
     <TooltipTriggerContext.Provider value={true}>
-      <Slot
-        ref={triggerRef}
-        onPointerEnter={(event: PointerEvent) => {
-          // Touch has no hover; a tap should just activate the control.
-          if (event.pointerType !== 'touch') show();
-        }}
-        onPointerLeave={hideSoon}
-        onPointerDown={() => hide()}
-        onFocus={(event: FocusEvent<HTMLElement>) => {
-          // Only keyboard focus shows the tooltip, and immediately.
-          if (event.target.matches(':focus-visible')) show(true);
-        }}
-        onBlur={() => hide()}
-      >
-        {trigger}
-      </Slot>
+      <Slot {...triggerProps}>{trigger}</Slot>
       <TooltipTriggerContext.Provider value={false}>
         <Floating
           {...rest}
           {...surfaceProps}
           ref={contentPart ? mergeRefs(ref, getElementRef(contentPart) as Ref<HTMLDivElement>) : ref}
           open={visible}
-          anchorRef={triggerRef}
+          anchorRef={tooltip.triggerRef}
           placement={placement}
           offset={offset}
           surface={false}
           animation={animation}
-          id={id}
-          role="tooltip"
+          {...tooltip.getTooltipProps({
+            onPointerEnter: onPointerEnter ? composeHandlers(surfaceProps.onPointerEnter, onPointerEnter) : surfaceProps.onPointerEnter,
+            onPointerLeave: onPointerLeave ? composeHandlers(surfaceProps.onPointerLeave, onPointerLeave) : surfaceProps.onPointerLeave,
+          })}
           className={cx('ui-tooltip', className, surfaceProps.className)}
           data-arrow={arrow || undefined}
           data-glide={glide ? '' : undefined}
@@ -199,9 +125,6 @@ export const Tooltip = withRef(function Tooltip({
             ...style,
             ...surfaceProps.style,
           }}
-          // The content is hoverable: the pointer may rest on it without it disappearing.
-          onPointerEnter={composeHandlers(surfaceProps.onPointerEnter, composeHandlers(onPointerEnter, keepOpen))}
-          onPointerLeave={composeHandlers(surfaceProps.onPointerLeave, composeHandlers(onPointerLeave, hideSoon))}
         >
           {content}
           {arrow && <span className="ui-tooltip__arrow" aria-hidden="true" />}

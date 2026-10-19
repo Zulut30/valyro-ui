@@ -5,6 +5,7 @@ import { StarIcon } from '../icons';
 import { clamp, cx, getDirection, inlineArrowStep, mergeRefs, useControllableState } from '../primitives';
 import { useFormField } from './form-field-context';
 import { FormValue, useMissingValue } from './form-value';
+import { useFormReset } from '../forms/form-reset';
 import './RatingInput.css';
 import { withRef } from '../primitives/react-compat';
 
@@ -25,6 +26,11 @@ export interface RatingInputProps extends Omit<ComponentPropsWithRef<'div'>, 'de
   /** Empty stars turn the danger color (`aria-invalid`). Also shown after a submit attempt while a required rating is missing. */
   invalid?: boolean;
   /** Text per whole star, e.g. ["Bad", …, "Excellent"]; shown next to the stars for the hovered or chosen value. */
+  valueLabels?: string[];
+  /**
+   * The old name of `valueLabels`.
+   * @deprecated Use `valueLabels` (in the other components `labels` overrides built-in text).
+   */
   labels?: string[];
   /** Accessible name of a value (each star, and the whole read-only rating). Default: "4 out of 5". */
   getValueLabel?: (value: number, max: number) => string;
@@ -50,6 +56,7 @@ export const RatingInput = withRef(function RatingInput({
   disabled = false,
   size = 'md',
   invalid = false,
+  valueLabels,
   labels,
   getValueLabel = defaultValueLabel,
   name,
@@ -62,13 +69,16 @@ export const RatingInput = withRef(function RatingInput({
   const [rating, setRating] = useControllableState({ value, defaultValue, onChange: onValueChange });
   const [hover, setHover] = useState<number | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
+  // A form reset brings the uncontrolled value back to its default (forms/form-reset.ts).
+  useFormReset(rootRef, () => setRating(defaultValue), value === undefined);
   const field = useFormField();
   const [missing, markMissing] = useMissingValue(rating > 0);
 
   const step = allowHalf ? 0.5 : 1;
   const interactive = !readOnly && !disabled;
   const shown = interactive && hover !== null ? hover : rating;
-  const textFor = (v: number) => (v > 0 ? labels?.[Math.ceil(v) - 1] : undefined);
+  const captions = valueLabels ?? labels;
+  const textFor = (v: number) => (v > 0 ? captions?.[Math.ceil(v) - 1] : undefined);
   const caption = textFor(shown);
   // Keyboard stop: the checked radio, or the first one when nothing is chosen yet.
   const tabStop = rating > 0 ? clamp(Math.round(rating / step) * step, step, max) : step;
@@ -169,12 +179,13 @@ export const RatingInput = withRef(function RatingInput({
       aria-labelledby={labelledBy ?? field?.labelId}
       aria-disabled={disabled || undefined}
       aria-invalid={invalid || missing || undefined}
-      aria-required={required || undefined}
+      // FormField's `required` only marks its label (aria-hidden); announce it on the group.
+      aria-required={(required ?? field?.required) || undefined}
       onKeyDown={onKeyDown}
       onPointerLeave={() => setHover(null)}
     >
       <span className="ui-rating-input__stars">{stars}</span>
-      {labels && (
+      {captions && (
         <span className="ui-rating-input__caption" aria-hidden="true">
           {caption}
         </span>

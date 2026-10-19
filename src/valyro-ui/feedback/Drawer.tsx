@@ -1,7 +1,7 @@
 'use client';
 
-import { createContext, useContext, useMemo, useRef, type ComponentPropsWithRef, type PointerEvent, type ReactNode, type Ref } from 'react';
-import { cx, mergeRefs, ModalLayer, useControllableState, useLatest, type ModalLayerProps } from '../primitives';
+import { createContext, useContext, useRef, type ComponentPropsWithRef, type PointerEvent, type ReactNode, type Ref } from 'react';
+import { cx, mergeRefs, ModalLayer, useLatest, type ModalLayerProps } from '../primitives';
 import { findPart, hasPart } from '../primitives/compound';
 import { XIcon } from '../icons';
 import { IconButton } from '../basic/IconButton';
@@ -16,17 +16,22 @@ import {
   type OverlayTitleProps,
   type OverlayTriggerProps,
 } from './overlay-parts';
+import { useDialog } from './useDialog';
 import './Drawer.css';
-import { withRef, useId } from '../primitives/react-compat';
+import { withRef } from '../primitives/react-compat';
 
-export type DrawerPlacement = 'right' | 'left' | 'bottom';
+/** `start` / `end` follow the reading direction: the left / right edge in LTR, mirrored under dir="rtl". */
+export type DrawerPlacement = 'right' | 'left' | 'start' | 'end' | 'bottom';
 export type DrawerSize = 'sm' | 'md' | 'lg' | 'full';
 
 export interface DrawerProps extends Omit<ModalLayerProps, 'open' | 'onClose' | 'placement' | 'from' | 'title' | 'children'> {
   open?: boolean;
   defaultOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
-  /** `bottom` is a sheet with a grab handle that can be dragged down to dismiss. */
+  /**
+   * `bottom` is a sheet with a grab handle that can be dragged down to dismiss. `start` / `end` mirror
+   * under dir="rtl" (a navigation drawer), `left` / `right` stay on that edge.
+   */
   placement?: DrawerPlacement;
   /** Width for side drawers, maximum height for bottom sheets. */
   size?: DrawerSize;
@@ -93,11 +98,13 @@ export const DrawerContent = withRef(function DrawerContent({ className, childre
   const description = findPart<DrawerDescriptionProps>(children, DrawerDescription);
   return (
     <ModalLayer
-      aria-labelledby={title ? (title.props.id ?? overlay.titleId) : undefined}
-      aria-describedby={description ? (description.props.id ?? overlay.descriptionId) : undefined}
-      {...rest}
-      {...props}
-      ref={mergeRefs(surface.panelRef, rest.ref, ref)}
+      {...overlay.dialog.getDialogProps({
+        'aria-labelledby': title ? (title.props.id ?? overlay.titleId) : undefined,
+        'aria-describedby': description ? (description.props.id ?? overlay.descriptionId) : undefined,
+        ...rest,
+        ...props,
+        ref: mergeRefs(surface.panelRef, rest.ref, ref),
+      })}
       open={overlay.open}
       onClose={() => overlay.setOpen(false)}
       placement={placement}
@@ -132,10 +139,10 @@ export const Drawer = withRef(function Drawer({
   children,
   ...rest
 }: DrawerProps) {
-  const [open, setOpen] = useControllableState({ value: openProp, defaultValue: defaultOpen, onChange: onOpenChange });
+  // The behaviour is useDialog's (valyro-ui/headless); ModalLayer is the layer (focus trap, scroll lock, Escape).
+  const dialog = useDialog({ open: openProp, defaultOpen, onOpenChange, layer: false });
+  const { open, setOpen, titleId, descriptionId } = dialog;
   const openLatest = useLatest(open);
-  const titleId = useId();
-  const descriptionId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
   const drag = useRef<{ y: number; time: number; dy: number } | null>(null);
 
@@ -173,7 +180,7 @@ export const Drawer = withRef(function Drawer({
     }
   };
 
-  const overlay = useMemo(() => ({ open, setOpen, titleId, descriptionId }), [open, setOpen, titleId, descriptionId]);
+  const overlay = { open, setOpen, titleId, descriptionId, dialog };
   const handle = placement === 'bottom' && (
     <div
       className="ui-drawer__handle"
@@ -196,10 +203,12 @@ export const Drawer = withRef(function Drawer({
   return (
     <parts.Context.Provider value={overlay}>
       <ModalLayer
-        aria-labelledby={title ? titleId : undefined}
-        aria-describedby={description ? descriptionId : undefined}
-        {...rest}
-        ref={mergeRefs(panelRef, ref)}
+        {...dialog.getDialogProps({
+          'aria-labelledby': title ? titleId : undefined,
+          'aria-describedby': description ? descriptionId : undefined,
+          ...rest,
+          ref: mergeRefs(panelRef, ref),
+        })}
         open={open}
         onClose={() => setOpen(false)}
         placement={placement}
@@ -210,16 +219,8 @@ export const Drawer = withRef(function Drawer({
         {handle}
         {(title || description) && (
           <div className="ui-drawer__header">
-            {title && (
-              <h2 id={titleId} className="ui-drawer__title">
-                {title}
-              </h2>
-            )}
-            {description && (
-              <div id={descriptionId} className="ui-drawer__description">
-                {description}
-              </div>
-            )}
+            {title && <h2 {...dialog.getTitleProps({ className: 'ui-drawer__title' })}>{title}</h2>}
+            {description && <div {...dialog.getDescriptionProps({ className: 'ui-drawer__description' })}>{description}</div>}
           </div>
         )}
         <div className="ui-drawer__body">{children}</div>

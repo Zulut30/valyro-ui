@@ -9,6 +9,7 @@ import {
   cx,
   Floating,
   formatDate,
+  GREGORIAN,
   isSameDay,
   mergeRefs,
   startOfDay,
@@ -23,6 +24,7 @@ import { Button } from '../basic/Button';
 import { Calendar, DEFAULT_CALENDAR_LABELS, type CalendarLabels, type DateRange } from './Calendar';
 import { FormValue, toISODate, useMissingValue } from './form-value';
 import { PickerTrigger, type FieldSize } from './PickerTrigger';
+import { useFormReset } from '../forms/form-reset';
 import './DateRangePicker.css';
 import { withRef, useId, useSyncExternalStore } from '../primitives/react-compat';
 
@@ -117,7 +119,7 @@ function getDefaultDateRangePresets(labels: DateRangePickerLabels, today = start
 function formatDateRange({ start, end }: DateRange, locale?: string) {
   if (!start) return '';
   if (!end) return `${formatDate(start, locale)} – …`;
-  return new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).formatRange(start, end);
+  return new Intl.DateTimeFormat(locale, { ...GREGORIAN, dateStyle: 'medium' }).formatRange(start, end);
 }
 
 // Below this width two months plus the preset column no longer fit beside each other (keep in sync with the CSS).
@@ -188,6 +190,15 @@ export const DateRangePicker = withRef(function DateRangePicker({
   const [month, setMonth] = useState(() => monthFor(range, months, max));
   const triggerRef = useRef<HTMLButtonElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
+  // A form reset brings the uncontrolled value back to its default (forms/form-reset.ts).
+  useFormReset(
+    triggerRef,
+    () => {
+      setRange(defaultValue);
+      setDraft(defaultValue);
+    },
+    value === undefined,
+  );
   const dialogId = useId();
   const popoverOpen = open && !inline;
   // Focus returns to the trigger only on Escape or a pick, never after a click elsewhere.

@@ -1,6 +1,16 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, type ComponentPropsWithRef, type CSSProperties, type KeyboardEvent, type PointerEvent } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentPropsWithRef,
+  type CSSProperties,
+  type KeyboardEvent,
+  type PointerEvent,
+  type RefObject,
+} from 'react';
 import type { IconProps } from '../icons';
 import {
   clamp,
@@ -14,17 +24,24 @@ import {
   useIsClient,
   type DismissReason,
 } from '../primitives';
+import { HiddenRange } from '../primitives/HiddenRange';
 import { useLocale } from '../theme/ThemeProvider';
 import { IconButton } from '../basic/IconButton';
 import { hexToHsv, hsvToHex, hsvToRgb, normalizeHex, type HSVA } from './color';
+import { useFormField } from './form-field-context';
 import { FormValue } from './form-value';
 import { PickerTrigger, type FieldSize } from './PickerTrigger';
+import { useFormReset } from '../forms/form-reset';
 import './ColorPicker.css';
 import { withRef, useId } from '../primitives/react-compat';
 
 export interface ColorPickerLabels {
   /** Saturation/brightness area. */
   area: string;
+  /** The area's horizontal axis (its own control for screen readers). */
+  saturation: string;
+  /** The area's vertical axis. */
+  brightness: string;
   /** Spoken value of the area; receives formatted percentages. */
   areaValue: (saturation: string, brightness: string) => string;
   hue: string;
@@ -36,6 +53,8 @@ export interface ColorPickerLabels {
 
 export const DEFAULT_COLOR_PICKER_LABELS: ColorPickerLabels = {
   area: 'Saturation and brightness',
+  saturation: 'Saturation',
+  brightness: 'Brightness',
   areaValue: (saturation, brightness) => `Saturation ${saturation}, brightness ${brightness}`,
   hue: 'Hue',
   opacity: 'Opacity',
@@ -55,6 +74,8 @@ export interface ColorPickerProps extends Omit<ComponentPropsWithRef<'div'>, 'de
   presets?: string[];
   /** Submits the colour with the surrounding form as lowercase hex (`#rrggbb` or `#rrggbbaa`). */
   name?: string;
+  /** Error state, e.g. from a FormField (marks the root with `data-invalid`). */
+  invalid?: boolean;
   labels?: Partial<ColorPickerLabels>;
 }
 
@@ -94,8 +115,11 @@ const PipetteIcon = withRef(function PipetteIcon({ size = 16, strokeWidth, class
   );
 });
 
-/** Pointer handlers that report the pointer position inside the element as 0–1 fractions, with capture. */
-function dragHandlers(onMove: (x: number, y: number) => void) {
+/**
+ * Pointer handlers that report the pointer position inside the element as 0–1 fractions, with capture. A press
+ * moves focus to `focusTarget`, the hidden range input of the control.
+ */
+function dragHandlers(onMove: (x: number, y: number) => void, focusTarget: RefObject<HTMLElement | null>) {
   const report = (event: PointerEvent<HTMLElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
     onMove(
@@ -108,7 +132,7 @@ function dragHandlers(onMove: (x: number, y: number) => void) {
       if (event.button !== 0) return;
       event.preventDefault();
       event.currentTarget.setPointerCapture(event.pointerId);
-      event.currentTarget.focus({ preventScroll: true });
+      focusTarget.current?.focus({ preventScroll: true });
       report(event);
     },
     onPointerMove: (event: PointerEvent<HTMLElement>) => {
@@ -155,9 +179,13 @@ export const ColorPicker = withRef(function ColorPicker({
   presets,
   name,
   labels: labelsProp,
+  invalid = false,
   className,
+  ref,
   ...rest
 }: ColorPickerProps) {
+  // Inside a FormField its label names the group (a `for` pointing at a div names nothing).
+  const field = useFormField();
   const labels = { ...DEFAULT_COLOR_PICKER_LABELS, ...labelsProp };
   const locale = useLocale();
   const formats = useMemo(
@@ -168,6 +196,9 @@ export const ColorPicker = withRef(function ColorPicker({
     [locale],
   );
   const [hex, setHex] = useControllableState({ value, defaultValue, onChange: onValueChange });
+  const rootRef = useRef<HTMLDivElement>(null);
+  // A form reset brings the uncontrolled value back to its default (forms/form-reset.ts).
+  useFormReset(rootRef, () => setHex(defaultValue), value === undefined);
   // HSV is the source of truth while editing: hex alone loses the hue at zero saturation or brightness.
   const [hsva, setHsva] = useState<HSVA>(() => hexToHsv(hex) ?? FALLBACK);
   const [syncedHex, setSyncedHex] = useState(hex);
@@ -178,6 +209,9 @@ export const ColorPicker = withRef(function ColorPicker({
   }
 
   const [hexDraft, setHexDraft] = useState<string | null>(null);
+  // The hidden range inputs take focus; the drawn area shows the ring while its focus is visible.
+  const [areaFocusVisible, setAreaFocusVisible] = useState(false);
+  const saturationRef = useRef<HTMLInputElement>(null);
   const isClient = useIsClient();
   const EyeDropper = isClient ? getEyeDropper() : undefined;
 
@@ -220,23 +254,49 @@ export const ColorPicker = withRef(function ColorPicker({
   const swatchStyle = (c: string) => ({ '--_swatch': c }) as CSSProperties;
 
   return (
-    <div {...rest} className={cx('ui-color-picker', className)}>
+    <div
+      role="group"
+      aria-labelledby={rest['aria-label'] ? undefined : field?.labelId}
+      {...rest}
+      ref={mergeRefs(rootRef, ref)}
+      className={cx('ui-color-picker', className)}
+      data-invalid={invalid || undefined}
+    >
+      {/* Two hidden range inputs, one per axis (React Aria's ColorArea): the arrows move both from either; a
+          screen reader's swipe changes the axis of the input it is on. Only saturation is a Tab stop. */}
       <div
-        role="slider"
-        tabIndex={0}
+        role="group"
         aria-label={labels.area}
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-valuenow={Math.round(hsva.s * 100)}
-        aria-valuetext={labels.areaValue(formats.percent.format(hsva.s), formats.percent.format(hsva.v))}
         className="ui-color-picker__area"
         style={areaStyle}
+        data-ui-slider=""
+        data-focus-visible={areaFocusVisible || undefined}
         onKeyDown={onAreaKeyDown}
-        {...dragHandlers((x, y) => update({ ...hsva, s: x, v: 1 - y }))}
+        {...dragHandlers((x, y) => update({ ...hsva, s: x, v: 1 - y }), saturationRef)}
       >
         <span
           className="ui-color-picker__thumb"
           style={{ left: pct(hsva.s), top: pct(1 - hsva.v), ...swatchStyle(opaque) }}
+        />
+        <HiddenRange
+          ref={saturationRef}
+          aria-label={labels.saturation}
+          aria-valuetext={labels.areaValue(formats.percent.format(hsva.s), formats.percent.format(hsva.v))}
+          min={0}
+          max={100}
+          value={Math.round(hsva.s * 100)}
+          onValueChange={(next) => update({ ...hsva, s: clamp(next / 100, 0, 1) })}
+          onFocusVisibleChange={setAreaFocusVisible}
+        />
+        <HiddenRange
+          tabIndex={-1}
+          aria-label={labels.brightness}
+          aria-valuetext={labels.areaValue(formats.percent.format(hsva.s), formats.percent.format(hsva.v))}
+          min={0}
+          max={100}
+          value={Math.round(hsva.v * 100)}
+          onValueChange={(next) => update({ ...hsva, v: clamp(next / 100, 0, 1) })}
+          onFocusVisibleChange={setAreaFocusVisible}
         />
       </div>
 
@@ -252,6 +312,7 @@ export const ColorPicker = withRef(function ColorPicker({
             value={hsva.h / 360}
             valueText={formats.degree.format(hsva.h)}
             step={1 / 360}
+            max={360}
             thumbColor={`hsl(${hsva.h} 100% 50%)`}
             onChange={(x) => update({ ...hsva, h: x * 360 })}
           />
@@ -262,6 +323,7 @@ export const ColorPicker = withRef(function ColorPicker({
               value={hsva.a}
               valueText={formats.percent.format(hsva.a)}
               step={0.01}
+              max={100}
               thumbColor={current}
               style={{ '--_rgb': `${r} ${g} ${b}` } as CSSProperties}
               onChange={(x) => update({ ...hsva, a: Math.round(x * 100) / 100 })}
@@ -328,25 +390,22 @@ interface ColorSliderProps {
   value: number;
   valueText: string;
   step: number;
+  /** The hidden range input runs 0–`max` in whole steps (degrees of hue, percent of opacity). */
+  max: number;
   thumbColor: string;
   style?: CSSProperties;
   onChange: (value: number) => void;
 }
 
-function ColorSlider({ label, channel, value, valueText, step, thumbColor, style, onChange }: ColorSliderProps) {
-  const percent = Math.round(value * 100);
+function ColorSlider({ label, channel, value, valueText, step, max, thumbColor, style, onChange }: ColorSliderProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [focusVisible, setFocusVisible] = useState(false);
   return (
     <div
-      role="slider"
-      tabIndex={0}
-      aria-label={label}
-      aria-orientation="horizontal"
-      aria-valuemin={0}
-      aria-valuemax={100}
-      aria-valuenow={percent}
-      aria-valuetext={valueText}
       className="ui-color-picker__slider"
       data-channel={channel}
+      data-ui-slider=""
+      data-focus-visible={focusVisible || undefined}
       style={style}
       onKeyDown={(event) => {
         const delta = keyDelta(event, step, 'x');
@@ -354,9 +413,19 @@ function ColorSlider({ label, channel, value, valueText, step, thumbColor, style
         event.preventDefault();
         onChange(clamp(value + (delta.x ?? 0), 0, 1));
       }}
-      {...dragHandlers((x) => onChange(x))}
+      {...dragHandlers((x) => onChange(x), inputRef)}
     >
       <span className="ui-color-picker__thumb" style={{ left: `${value * 100}%`, '--_swatch': thumbColor } as CSSProperties} />
+      <HiddenRange
+        ref={inputRef}
+        aria-label={label}
+        aria-valuetext={valueText}
+        min={0}
+        max={max}
+        value={Math.round(value * max)}
+        onValueChange={(next) => onChange(clamp(next / max, 0, 1))}
+        onFocusVisibleChange={setFocusVisible}
+      />
     </div>
   );
 }
@@ -413,6 +482,8 @@ export const ColorPickerPopover = withRef(function ColorPickerPopover({
   const [hex, setHex] = useControllableState({ value, defaultValue, onChange: onValueChange });
   const [open, setOpen] = useControllableState({ value: openProp, defaultValue: defaultOpen, onChange: onOpenChange });
   const triggerRef = useRef<HTMLButtonElement>(null);
+  // A form reset brings the uncontrolled value back to its default (forms/form-reset.ts).
+  useFormReset(triggerRef, () => setHex(defaultValue), value === undefined);
   const panelRef = useRef<HTMLDivElement>(null);
   const dialogId = useId();
   // Focus returns to the trigger only on Escape, never after a click elsewhere.
@@ -422,7 +493,7 @@ export const ColorPickerPopover = withRef(function ColorPickerPopover({
     if (!open) return;
     // Wait a frame: the popover stays hidden until its first position is computed.
     const frame = requestAnimationFrame(() =>
-      panelRef.current?.querySelector<HTMLElement>('[role="slider"]')?.focus({ preventScroll: true }),
+      panelRef.current?.querySelector<HTMLElement>('input[type="range"]')?.focus({ preventScroll: true }),
     );
     return () => cancelAnimationFrame(frame);
   }, [open]);

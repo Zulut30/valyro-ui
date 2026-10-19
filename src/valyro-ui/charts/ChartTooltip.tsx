@@ -30,6 +30,8 @@ export interface ChartTooltipProps {
   title?: ReactNode;
   rows?: ChartTooltipRow[];
   children?: ReactNode;
+  /** `plain`: the last row reads as a total, without its own rule (candlestick, gantt, map, sankey, scatter, treemap). */
+  variant?: 'plain';
   className?: string;
 }
 
@@ -52,6 +54,7 @@ export function ChartTooltip({
   title,
   rows,
   children,
+  variant,
   className,
 }: ChartTooltipProps) {
   const ref = useRef<HTMLDivElement>(null);
@@ -80,7 +83,13 @@ export function ChartTooltip({
   });
 
   return (
-    <div ref={ref} className={cx('ui-floating ui-chart-tooltip', className)} aria-hidden="true">
+    <div
+      ref={ref}
+      // ui-chart-tooltip--plain: the older class for the plain variant, kept for styles that target it.
+      className={cx('ui-floating ui-chart-tooltip', variant === 'plain' && 'ui-chart-tooltip--plain', className)}
+      data-variant={variant}
+      aria-hidden="true"
+    >
       {title != null && <div className="ui-chart-tooltip__title">{title}</div>}
       {rows && rows.length > 0 && (
         <ul className="ui-chart-tooltip__rows">

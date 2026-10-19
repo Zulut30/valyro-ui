@@ -10,6 +10,7 @@ export default {
     entries: ['src/index.tsx', 'src/index.jsx'],
     anchor: /<App\s*\/>/g,
     wrapped: '<App />',
-    note: ({ attrs }) => `Parcel: put ${attrs} on <html> in src/index.html.`,
+    note: ({ attrs }) =>
+      `Parcel: put ${attrs} on <html> in src/index.html, and delete the template's src/App.css and its import in App.tsx: it centers the page on <html> (display: flex, height: 100%).`,
   },
 };

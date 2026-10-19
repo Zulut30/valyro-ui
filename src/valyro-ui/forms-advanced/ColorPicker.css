@@ -11,6 +11,7 @@
 }
 
 /* ── Saturation / brightness area ── */
+/* The area and the sliders hold hidden range inputs, which take focus: they draw its ring (data-focus-visible). */
 .ui-color-picker__area {
   position: relative;
   height: 160px;
@@ -24,7 +25,7 @@
   touch-action: none;
 }
 
-.ui-color-picker__area:focus-visible {
+.ui-color-picker__area[data-focus-visible] {
   box-shadow: inset 0 0 0 1px var(--ui-divider), var(--ui-focus-ring);
 }
 
@@ -91,7 +92,7 @@
     var(--_checker);
 }
 
-.ui-color-picker__slider:focus-visible .ui-color-picker__thumb {
+.ui-color-picker__slider[data-focus-visible] .ui-color-picker__thumb {
   box-shadow: var(--ui-color-picker-thumb-shadow-focus);
 }
 
@@ -203,8 +204,25 @@
   }
 }
 
-/* Touch: swatches take the gap around them as hit area, without overlapping a neighbour. */
+/* Touch: swatches take the gap around them as hit area, without overlapping a neighbour; six to a row,
+   so each reaches about 40px with that gap. The thin sliders take taps 40px tall, spaced so the two
+   hit areas meet instead of overlapping. */
 @media (pointer: coarse) {
+  .ui-color-picker__swatches {
+    grid-template-columns: repeat(6, 1fr);
+  }
+
+  .ui-color-picker__sliders {
+    gap: calc(40px - var(--ui-color-picker-slider-h));
+  }
+
+  .ui-color-picker__slider::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    inset-block: calc((40px - 100%) / -2);
+  }
+
   .ui-color-picker__swatch {
     position: relative;
   }

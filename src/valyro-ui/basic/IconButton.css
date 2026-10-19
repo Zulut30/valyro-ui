@@ -1,4 +1,26 @@
-/* burst: particles in the icon's colour, launched and removed by IconButton.tsx. */
+/* burst: on each click the icon pops on the bouncy spring — data-burst alternates a / b, and the new name restarts
+   the animation — and a ring of particles in the icon's colour flies out, each to its own --_dx / --_dy
+   (IconButton.tsx adds them and they remove themselves when they land). */
+.ui-icon-button[data-burst='a'] .ui-button__icon {
+  animation: ui-icon-button-pop-a calc(var(--ui-duration-slow) * 2.61) var(--ui-spring-bouncy);
+}
+
+.ui-icon-button[data-burst='b'] .ui-button__icon {
+  animation: ui-icon-button-pop-b calc(var(--ui-duration-slow) * 2.61) var(--ui-spring-bouncy);
+}
+
+@keyframes ui-icon-button-pop-a {
+  from {
+    transform: scale(0.6);
+  }
+}
+
+@keyframes ui-icon-button-pop-b {
+  from {
+    transform: scale(0.6);
+  }
+}
+
 .ui-icon-button__particle {
   position: absolute;
   top: 50%;
@@ -8,4 +30,13 @@
   border-radius: 50%;
   background: currentColor;
   pointer-events: none;
+  transform: translate(-50%, -50%);
+  animation: ui-icon-button-particle calc(var(--ui-duration-slow) * 1.8235) cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+}
+
+@keyframes ui-icon-button-particle {
+  to {
+    transform: translate(calc(-50% + var(--_dx, 0px)), calc(-50% + var(--_dy, 0px))) scale(0);
+    opacity: 0;
+  }
 }

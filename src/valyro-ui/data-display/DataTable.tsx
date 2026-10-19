@@ -1,7 +1,18 @@
 'use client';
 
-import { useMemo, useRef, useState, type ComponentPropsWithRef, type CSSProperties, type ReactNode } from 'react';
-import { cx, useControllableState } from '../primitives';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type ComponentPropsWithRef,
+  type CSSProperties,
+  type ReactNode,
+} from 'react';
+import { cx } from '../primitives';
+import { announce } from '../primitives/liveAnnouncer';
 import { collectionPart, partsOf } from '../primitives/compound';
 import {
   ArrowDownIcon,
@@ -19,21 +30,17 @@ import { IconButton } from '../basic/IconButton';
 import { Skeleton } from '../basic/Skeleton';
 import { EmptyState } from './EmptyState';
 import {
+  ARIA_SORT,
   createValueFormatter,
-  filterRows,
   getCellValue,
-  getSelectionState,
   getVirtualWindow,
-  nextSort,
-  paginate,
-  sortRows,
+  selectRange,
   toSearchText,
-  toggleAll,
-  toggleOne,
   windowRuns,
   type SortDirection,
   type SortState,
 } from './data-table';
+import { useDataTable, type DataTableEntry } from './useDataTable';
 import './DataTable.css';
 import { withRef, useLayoutEffect } from '../primitives/react-compat';
 
@@ -64,6 +71,8 @@ export interface DataTableLabels {
   /** Row checkbox name; `name` is the row's first-column text when it has one. */
   selectRow: (name: string | null) => string;
   selected: (count: number, total: number) => string;
+  /** Read to screen readers when the sort changes; `column` is the header text, `direction` null when unsorted. */
+  sorted: (column: string, direction: SortDirection | null) => string;
   range: (start: number, end: number, total: number) => string;
   rows: (count: number) => string;
   page: (page: number, pageCount: number) => string;
@@ -126,16 +135,6 @@ export interface DataTableProps<T extends object> extends Omit<ComponentPropsWit
   labels?: Partial<DataTableLabels>;
 }
 
-interface Entry<T> {
-  row: T;
-  id: string;
-}
-
-function defaultRowId(row: object, index: number) {
-  const id = getCellValue(row, 'id');
-  return typeof id === 'string' || typeof id === 'number' ? String(id) : String(index);
-}
-
 function defaultLabels(n: (value: number) => string): DataTableLabels {
   return {
     search: (tableLabel) => (tableLabel ? `Search ${tableLabel}` : 'Search'),
@@ -143,6 +142,8 @@ function defaultLabels(n: (value: number) => string): DataTableLabels {
     selectAll: 'Select all rows on this page',
     selectRow: (name) => (name ? `Select ${name}` : 'Select row'),
     selected: (count, total) => `${n(count)} of ${n(total)} selected`,
+    sorted: (column, direction) =>
+      `${column}, ${direction === 'asc' ? 'sorted ascending' : direction === 'desc' ? 'sorted descending' : 'not sorted'}`,
     range: (start, end, total) => `${n(start)}–${n(end)} of ${n(total)}`,
     rows: (count) => `${n(count)} ${count === 1 ? 'row' : 'rows'}`,
     page: (page, pageCount) => `Page ${n(page)} of ${n(pageCount)}`,
@@ -157,7 +158,6 @@ function defaultLabels(n: (value: number) => string): DataTableLabels {
 }
 
 const SKELETON_WIDTHS = ['72%', '48%', '60%', '36%', '54%'];
-const ARIA_SORT: Record<SortDirection, 'ascending' | 'descending'> = { asc: 'ascending', desc: 'descending' };
 
 /** Estimated body row height until the first rendered row is measured. */
 const ESTIMATED_ROW_HEIGHT = 45;
@@ -305,14 +305,6 @@ export const DataTable = withRef(function DataTable<T extends object>({
   const parts = useMemo(() => (dataProp && columnsProp ? null : tableFromParts(children)), [dataProp, columnsProp, children]);
   const data = (dataProp ?? parts?.data ?? []) as readonly T[];
   const columns = (columnsProp ?? parts?.columns ?? []) as readonly DataTableColumn<T>[];
-  const [sort, setSort] = useControllableState({ value: sortProp, defaultValue: defaultSort, onChange: onSortChange });
-  const [selected, setSelected] = useControllableState({
-    value: selectedProp,
-    defaultValue: defaultSelected,
-    onChange: onSelectedChange,
-  });
-  const [query, setQuery] = useState('');
-  const [page, setPage] = useState(0);
   const viewport = useScrollViewport(virtualize);
   const locale = useLocale(localeProp);
   const tableRef = useRef<HTMLTableElement>(null);
@@ -338,41 +330,53 @@ export const DataTable = withRef(function DataTable<T extends object>({
     };
   }, [columns]);
 
-  const entries = useMemo<Entry<T>[]>(
-    () => data.map((row, index) => ({ row, id: getRowId ? getRowId(row, index) : defaultRowId(row, index) })),
-    [data, getRowId],
+  // Stable per data/columns change: the hook reads it once per row, so typing in the search box stays cheap on large tables.
+  const getSearchText = useCallback(
+    (row: T) =>
+      columns
+        .map((column) => (column.getSearchValue ? column.getSearchValue(row) : toSearchText(valueOf(row, column.key), format)))
+        .join('\n')
+        .toLowerCase(),
+    [columns, valueOf, format],
   );
-  // Built once per data/columns change so typing in the search box stays cheap on large tables.
-  const searchText = useMemo(() => {
-    if (!searchable) return null;
-    const map = new Map<Entry<T>, string>();
-    for (const entry of entries) {
-      const parts = columns.map((column) =>
-        column.getSearchValue ? column.getSearchValue(entry.row) : toSearchText(valueOf(entry.row, column.key), format),
-      );
-      map.set(entry, parts.join('\n').toLowerCase());
-    }
-    return map;
-  }, [searchable, entries, columns, valueOf, format]);
-
-  const filtered = useMemo(
-    () => (searchText ? filterRows(entries, query, (entry) => searchText.get(entry) ?? '') : entries),
-    [entries, query, searchText],
-  );
-  const sorted = useMemo(
-    () => sortRows(filtered, sort, (entry, key) => valueOf(entry.row, key), locale),
-    [filtered, sort, valueOf, locale],
-  );
-  const paged = useMemo(() => (pageSize ? paginate(sorted, page, pageSize) : null), [sorted, page, pageSize]);
-  const visible = paged ? paged.rows : sorted;
-
-  const selectedSet = useMemo(() => new Set(selected), [selected]);
+  // Search, sort, pages and selection come from the headless hook, so `useDataTable` drives the same table.
+  const table = useDataTable({
+    data,
+    getRowId,
+    getValue: valueOf,
+    getSearchText: searchable ? getSearchText : undefined,
+    sort: sortProp,
+    defaultSort,
+    onSortChange,
+    selected: selectedProp,
+    defaultSelected,
+    onSelectedChange,
+    pageSize,
+    locale,
+  });
+  const { entries, results: sorted, sort, query, selectionState: headerState, selectedCount } = table;
+  const paged = pageSize ? { page: table.page, pageCount: table.pageCount, start: table.pageStart, rows: table.rows } : null;
+  const visible = table.rows;
   const visibleIds = useMemo(() => visible.map((entry) => entry.id), [visible]);
-  const headerState = useMemo(() => getSelectionState(visibleIds, selected), [visibleIds, selected]);
-  const selectedCount = useMemo(
-    () => entries.reduce((n, entry) => n + (selectedSet.has(entry.id) ? 1 : 0), 0),
-    [entries, selectedSet],
-  );
+
+  // The new order is read out, as React Aria's tables do: screen readers do not announce a changed aria-sort on their
+  // own, and after a click focus is still on the same header button.
+  const announcedSort = useRef(sort);
+  useEffect(() => {
+    const previous = announcedSort.current;
+    announcedSort.current = sort;
+    if (previous?.key === sort?.key && previous?.direction === sort?.direction) return;
+    const index = columns.findIndex((column) => column.key === (sort ?? previous)?.key);
+    if (index === -1) return;
+    const header = columns[index].header;
+    const name =
+      typeof header === 'string' || typeof header === 'number'
+        ? String(header)
+        : (tableRef.current?.tHead?.rows[0]?.cells[index + (selectable ? 1 : 0)]?.textContent?.trim() ?? '');
+    if (name) announce(labels.sorted(name, sort?.direction ?? null), 'assertive', 500);
+  }, [sort, columns, selectable, labels]);
+  // The row checkbox toggled last: Shift+click extends from it.
+  const anchorRef = useRef<string | null>(null);
 
   const windowed = virtualize && !loading;
   const rowHeight = rowMetrics.row || ESTIMATED_ROW_HEIGHT;
@@ -432,8 +436,8 @@ export const DataTable = withRef(function DataTable<T extends object>({
       </tr>
     );
 
-  const renderRow = ({ row, id }: Entry<T>, index: number) => {
-    const isSelected = selectedSet.has(id);
+  const renderRow = ({ row, id }: DataTableEntry<T>, index: number) => {
+    const isSelected = table.isSelected(id);
     return (
       <tr
         key={id}
@@ -467,7 +471,14 @@ export const DataTable = withRef(function DataTable<T extends object>({
             <TableCheckbox
               label={labels.selectRow(rowName(row))}
               checked={isSelected}
-              onChange={() => setSelected((prev) => toggleOne(prev, id))}
+              onChange={(event) => {
+                const anchor = anchorRef.current;
+                anchorRef.current = id;
+                // Shift+click sets every visible row from the last toggled one to this one, as in mail clients.
+                if ((event.nativeEvent as MouseEvent).shiftKey && anchor !== null && anchor !== id) {
+                  table.setSelected(selectRange(table.selected, visibleIds, anchor, id, !isSelected));
+                } else table.toggleRow(id);
+              }}
             />
           </td>
         )}
@@ -513,8 +524,7 @@ export const DataTable = withRef(function DataTable<T extends object>({
               placeholder={labels.searchPlaceholder}
               aria-label={labels.search(label)}
               onChange={(event) => {
-                setQuery(event.target.value);
-                setPage(0);
+                table.setQuery(event.target.value);
               }}
             />
           </label>
@@ -551,8 +561,11 @@ export const DataTable = withRef(function DataTable<T extends object>({
                         label={labels.selectAll}
                         checked={headerState === 'all'}
                         indeterminate={headerState === 'some'}
-                        disabled={loading || visibleIds.length === 0}
-                        onChange={() => setSelected((prev) => toggleAll(prev, visibleIds))}
+                        disabled={loading || visible.length === 0}
+                        onChange={() => {
+                          anchorRef.current = null;
+                          table.toggleAll();
+                        }}
                       />
                     </th>
                   )}
@@ -565,7 +578,8 @@ export const DataTable = withRef(function DataTable<T extends object>({
                         data-align={column.align}
                         data-pin={pin(index)}
                         style={column.width !== undefined ? { width: column.width } : undefined}
-                        aria-sort={direction ? ARIA_SORT[direction] : undefined}
+                        // `none` tells screen-reader users the column can be sorted (React Aria does the same).
+                        aria-sort={direction ? ARIA_SORT[direction] : column.sortable ? 'none' : undefined}
                       >
                         {column.sortable ? (
                           <button
@@ -573,8 +587,7 @@ export const DataTable = withRef(function DataTable<T extends object>({
                             className="ui-data-table__sort"
                             data-active={direction ? true : undefined}
                             onClick={() => {
-                              setSort((prev) => nextSort(prev, column.key));
-                              setPage(0);
+                              table.toggleSort(column.key);
                             }}
                           >
                             <span className="ui-data-table__sort-label">{column.header}</span>
@@ -658,7 +671,7 @@ export const DataTable = withRef(function DataTable<T extends object>({
                   ref={prevPageRef}
                   disabled={loading || paged.page === 0}
                   onClick={() => {
-                    setPage(paged.page - 1);
+                    table.setPage(paged.page - 1);
                     // The button disables on the first page: focus moves to Next instead of falling to the page.
                     // After the re-render: Next is still disabled now (on a two-page table), and a disabled button takes no focus.
                     if (paged.page - 1 === 0) requestAnimationFrame(() => nextPageRef.current?.focus());
@@ -672,7 +685,7 @@ export const DataTable = withRef(function DataTable<T extends object>({
                   ref={nextPageRef}
                   disabled={loading || paged.page >= paged.pageCount - 1}
                   onClick={() => {
-                    setPage(paged.page + 1);
+                    table.setPage(paged.page + 1);
                     if (paged.page + 1 >= paged.pageCount - 1) requestAnimationFrame(() => prevPageRef.current?.focus());
                   }}
                 />
@@ -690,7 +703,7 @@ interface TableCheckboxProps {
   checked: boolean;
   indeterminate?: boolean;
   disabled?: boolean;
-  onChange: () => void;
+  onChange: (event: ChangeEvent<HTMLInputElement>) => void;
 }
 
 /** Minimal local checkbox; `indeterminate` exists only as a DOM property, so it is set through a ref. */

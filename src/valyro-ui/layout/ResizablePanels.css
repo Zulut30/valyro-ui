@@ -56,9 +56,10 @@
   cursor: row-resize;
 }
 
+/* Touch: a 41px hit area across the hairline, over the kit's 40px minimum. */
 @media (pointer: coarse) {
   .ui-resizable-handle {
-    --_hit: 10px;
+    --_hit: 20px;
   }
 }
 

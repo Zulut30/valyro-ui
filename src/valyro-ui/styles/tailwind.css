@@ -6,12 +6,31 @@
  *   @import 'valyro-ui/styles.css';
  *   @import 'valyro-ui/tailwind.css';
  *
+ *   <ThemeScope theme="glass" mode="dark">
+ *     <div class="rounded-card bg-surface p-4 text-fg shadow-card duration-ui ease-ui transition-colors">
+ *       <h2 class="font-display text-ui-xl font-heading tracking-display">Glass, dark</h2>
+ *       <p class="text-fg-muted dark:text-fg-subtle">Every class above reads a --ui-* token.</p>
+ *     </div>
+ *   </ThemeScope>
+ *
  * `@theme inline` makes each utility use the var(--ui-…) itself instead of copying a value, so a ThemeScope,
  * a dark subtree or a Theme Builder override restyles the utilities too. Tailwind itself is not a dependency:
- * without Tailwind the at-rules below are ignored. Spacing, type sizes and breakpoints stay Tailwind's own.
- * Every name mapped here is checked against the theme files (styles/tailwind.test.ts).
+ * without Tailwind the at-rules below are ignored. Spacing and breakpoints stay Tailwind's own; so does its
+ * type scale (text-sm, text-lg…): the theme's sizes are text-ui-xs … text-ui-5xl. Every name mapped here is
+ * checked against the theme files (styles/tailwind.test.ts).
+ *
+ * Colours: every surface, text, border, action, status, hue and chart token (bg-surface-2, text-accent-text,
+ * border-border-field, fill-chart-3, ring-focus…), the role colours shared by components (bg-raised, bg-chip,
+ * text-action, text-nav-item, bg-menu-highlight…) and the primitive grey scale as ui-gray-100 … ui-gray-1000 and
+ * ui-gray-alpha-* (prefixed: Tailwind's own gray-* palette stays). The page fill can be a gradient, so it is
+ * the background utility `bg-page`, not a colour.
  */
-@custom-variant dark (&:where([data-mode='dark'], [data-mode='dark'] *));
+
+/*
+ * dark: follows the nearest data-mode, like the tokens do: a light ThemeScope inside a dark page is light.
+ * (Up to three nested modes: dark › light › dark. ThemeProvider and ThemeScope always write data-mode.)
+ */
+@custom-variant dark (&:where([data-mode='dark'], [data-mode='dark'] *):not(:where([data-mode='dark'] [data-mode='light'], [data-mode='dark'] [data-mode='light'] *):not(:where([data-mode='dark'] [data-mode='light'] [data-mode='dark'], [data-mode='dark'] [data-mode='light'] [data-mode='dark'] *))));
 
 @theme inline {
   /* Surfaces */
@@ -21,8 +40,13 @@
   --color-surface-3: var(--ui-surface-3);
   --color-elevated: var(--ui-elevated);
   --color-field: var(--ui-field-bg);
+  --color-raised: var(--ui-raised-bg);
+  --color-chip: var(--ui-chip-bg);
+  --color-control-track: var(--ui-control-track-bg);
   --color-hover: var(--ui-hover);
   --color-active: var(--ui-active);
+  --color-menu-highlight: var(--ui-menu-highlight-bg);
+  --color-menu-highlight-fg: var(--ui-menu-highlight-fg);
   --color-overlay: var(--ui-overlay);
   --color-tooltip: var(--ui-tooltip-bg);
   --color-tooltip-fg: var(--ui-tooltip-fg);
@@ -34,12 +58,19 @@
   --color-fg-faint: var(--ui-fg-faint);
   --color-fg-disabled: var(--ui-fg-disabled);
   --color-fg-inverse: var(--ui-fg-inverse);
+  --color-action: var(--ui-action-fg);
+  --color-action-muted: var(--ui-action-fg-muted);
+  --color-nav-item: var(--ui-nav-item-fg);
 
   /* Borders */
   --color-border: var(--ui-border);
   --color-border-strong: var(--ui-border-strong);
   --color-border-field: var(--ui-border-field);
   --color-divider: var(--ui-divider);
+  --color-section-divider: var(--ui-section-divider);
+  --color-section-divider-faint: var(--ui-section-divider-faint);
+  --color-section-divider-strong: var(--ui-section-divider-strong);
+  --color-floating-border: var(--ui-floating-border-color);
   --color-focus: var(--ui-focus-color);
 
   /* Brand and actions */
@@ -52,7 +83,7 @@
   --color-primary-hover: var(--ui-primary-hover);
   --color-primary-fg: var(--ui-primary-fg);
 
-  /* Status */
+  /* Status (danger-fg: the ink on danger fills, white unless the theme sets it) */
   --color-success: var(--ui-success);
   --color-success-soft: var(--ui-success-soft);
   --color-success-text: var(--ui-success-text);
@@ -63,9 +94,21 @@
   --color-danger-hover: var(--ui-danger-hover);
   --color-danger-soft: var(--ui-danger-soft);
   --color-danger-text: var(--ui-danger-text);
+  --color-danger-fg: var(--ui-danger-fg, #fff);
   --color-info: var(--ui-info);
   --color-info-soft: var(--ui-info-soft);
   --color-info-text: var(--ui-info-text);
+  --color-rating: var(--ui-rating-fg);
+
+  /* Named hues (badges, avatars, tags): bare names, next to Tailwind's numbered palettes */
+  --color-gray: var(--ui-gray);
+  --color-blue: var(--ui-blue);
+  --color-green: var(--ui-green);
+  --color-amber: var(--ui-amber);
+  --color-red: var(--ui-red);
+  --color-purple: var(--ui-purple);
+  --color-pink: var(--ui-pink);
+  --color-teal: var(--ui-teal);
 
   /* Data visualisation */
   --color-chart-1: var(--ui-chart-1);
@@ -79,7 +122,29 @@
   --color-chart-grid: var(--ui-chart-grid);
   --color-chart-axis: var(--ui-chart-axis);
 
-  /* Shape: the scale, then the radius of each kind of piece */
+  /* Primitive grey scale (components use the semantic colours above) */
+  --color-ui-gray-100: var(--ui-gray-100);
+  --color-ui-gray-200: var(--ui-gray-200);
+  --color-ui-gray-300: var(--ui-gray-300);
+  --color-ui-gray-400: var(--ui-gray-400);
+  --color-ui-gray-500: var(--ui-gray-500);
+  --color-ui-gray-600: var(--ui-gray-600);
+  --color-ui-gray-700: var(--ui-gray-700);
+  --color-ui-gray-800: var(--ui-gray-800);
+  --color-ui-gray-900: var(--ui-gray-900);
+  --color-ui-gray-1000: var(--ui-gray-1000);
+  --color-ui-gray-alpha-100: var(--ui-gray-alpha-100);
+  --color-ui-gray-alpha-200: var(--ui-gray-alpha-200);
+  --color-ui-gray-alpha-300: var(--ui-gray-alpha-300);
+  --color-ui-gray-alpha-400: var(--ui-gray-alpha-400);
+  --color-ui-gray-alpha-500: var(--ui-gray-alpha-500);
+  --color-ui-gray-alpha-600: var(--ui-gray-alpha-600);
+  --color-ui-gray-alpha-700: var(--ui-gray-alpha-700);
+  --color-ui-gray-alpha-800: var(--ui-gray-alpha-800);
+  --color-ui-gray-alpha-900: var(--ui-gray-alpha-900);
+  --color-ui-gray-alpha-1000: var(--ui-gray-alpha-1000);
+
+  /* Shape: the scale, then the radius of each kind of piece (rounded-full stays Tailwind's) */
   --radius-xs: var(--ui-radius-xs);
   --radius-sm: var(--ui-radius-sm);
   --radius-md: var(--ui-radius-md);
@@ -90,20 +155,79 @@
   --radius-card: var(--ui-radius-card);
   --radius-popover: var(--ui-radius-popover);
   --radius-modal: var(--ui-radius-modal);
+  --radius-chip: var(--ui-radius-chip);
+  --radius-picker: var(--ui-picker-popover-radius);
+  --radius-inset-panel: var(--ui-inset-panel-radius);
 
   /* Elevation */
   --shadow-sm: var(--ui-shadow-sm);
   --shadow-card: var(--ui-shadow-card);
   --shadow-popover: var(--ui-shadow-popover);
   --shadow-modal: var(--ui-shadow-modal);
+  --shadow-tooltip: var(--ui-tooltip-shadow);
+  --shadow-raised: var(--ui-raised-shadow);
+  --shadow-raised-focus: var(--ui-raised-shadow-focus);
+  --shadow-tile: var(--ui-tile-shadow);
+  --shadow-field: var(--ui-field-shadow);
+  --shadow-inset-panel: var(--ui-inset-panel-shadow);
   --shadow-focus: var(--ui-focus-ring);
+  --shadow-focus-invalid: var(--ui-focus-ring-invalid);
+  /* Glass light along the edges and the top of large surfaces (none outside material themes) */
+  --inset-shadow-highlight: var(--ui-highlight);
+  --inset-shadow-sheen: var(--ui-sheen);
 
   /* Type: display and prose fall back to the surrounding font in themes without one */
   --font-sans: var(--ui-font-sans);
   --font-mono: var(--ui-font-mono);
   --font-display: var(--ui-font-display);
   --font-prose: var(--ui-font-prose);
+  --font-meta: var(--ui-font-meta);
+  --font-weight-regular: var(--ui-weight-regular);
+  --font-weight-medium: var(--ui-weight-medium);
+  --font-weight-semibold: var(--ui-weight-semibold);
+  --font-weight-bold: var(--ui-weight-bold);
+  --font-weight-label: var(--ui-weight-label);
+  --font-weight-heading: var(--ui-weight-heading);
+  --text-ui-xs: var(--ui-text-xs);
+  --text-ui-sm: var(--ui-text-sm);
+  --text-ui-md: var(--ui-text-md);
+  --text-ui-lg: var(--ui-text-lg);
+  --text-ui-xl: var(--ui-text-xl);
+  --text-ui-2xl: var(--ui-text-2xl);
+  --text-ui-3xl: var(--ui-text-3xl);
+  --text-ui-4xl: var(--ui-text-4xl);
+  --text-ui-5xl: var(--ui-text-5xl);
+  --leading-tight: var(--ui-leading-tight);
+  --leading-ui: var(--ui-leading);
+  --tracking-tight: var(--ui-tracking-tight);
+  --tracking-display: var(--ui-tracking-display);
+  --tracking-control: var(--ui-control-tracking);
 
-  /* Motion */
+  /* Motion: easings; `transition` uses the theme's duration and curve (1ms under prefers-reduced-motion) */
   --ease-ui: var(--ui-ease);
+  --ease-spring: var(--ui-ease-spring);
+  --ease-fluid: var(--ui-ease-fluid);
+  --default-transition-duration: var(--ui-duration);
+  --default-transition-timing-function: var(--ui-ease);
+}
+
+/* The page fill (a colour or background layers) and the theme's durations: Tailwind has no theme keys for them. */
+@utility bg-page {
+  background: var(--ui-page-bg);
+}
+@utility duration-fast {
+  --tw-duration: var(--ui-duration-fast);
+  transition-duration: var(--ui-duration-fast);
+}
+@utility duration-ui {
+  --tw-duration: var(--ui-duration);
+  transition-duration: var(--ui-duration);
+}
+@utility duration-slow {
+  --tw-duration: var(--ui-duration-slow);
+  transition-duration: var(--ui-duration-slow);
+}
+@utility duration-fluid {
+  --tw-duration: var(--ui-duration-fluid);
+  transition-duration: var(--ui-duration-fluid);
 }

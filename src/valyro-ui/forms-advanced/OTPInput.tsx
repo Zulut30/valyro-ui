@@ -8,7 +8,8 @@ import {
   type ComponentPropsWithRef,
   type KeyboardEvent,
 } from 'react';
-import { clamp, cx, useControllableState } from '../primitives';
+import { clamp, cx, mergeRefs, useControllableState } from '../primitives';
+import { useFormReset } from '../forms/form-reset';
 import { useFormField } from './form-field-context';
 import { FormValue } from './form-value';
 import './OTPInput.css';
@@ -76,9 +77,13 @@ export const OTPInput = withRef(function OTPInput({
   'aria-label': ariaLabel,
   'aria-labelledby': labelledBy,
   className,
+  ref,
   ...rest
 }: OTPInputProps) {
   const [code, setCode] = useControllableState({ value, defaultValue, onChange: onValueChange });
+  const rootRef = useRef<HTMLDivElement>(null);
+  // A form reset brings the uncontrolled value back to its default (forms/form-reset.ts).
+  useFormReset(rootRef, () => setCode(defaultValue), value === undefined);
   const inputs = useRef<(HTMLInputElement | null)[]>([]);
   // Focus moves inside the same event that changed the code, before the re-render;
   // the focus handler reads this to see the new length.
@@ -170,6 +175,7 @@ export const OTPInput = withRef(function OTPInput({
   return (
     <div
       {...rest}
+      ref={mergeRefs(rootRef, ref)}
       role="group"
       aria-label={ariaLabel ?? (labelledBy || field?.labelId ? undefined : labels.group)}
       aria-labelledby={labelledBy ?? field?.labelId}

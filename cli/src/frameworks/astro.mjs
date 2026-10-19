@@ -5,7 +5,8 @@ export default {
   kind: 'react',
   detect: (dir, deps) => (deps.astro ? { rsc: false, defaultDir: 'src/components/valyro-ui' } : null),
   patch: {
-    entries: ['src/layouts/Layout.astro', 'src/layouts/BaseLayout.astro', 'src/layouts/Base.astro'],
+    // The minimal template (`--template minimal`) has no layout, only this page.
+    entries: ['src/layouts/Layout.astro', 'src/layouts/BaseLayout.astro', 'src/layouts/Base.astro', 'src/pages/index.astro'],
     anchor: null,
     islands: true,
     note: ({ attrs, provider }) =>

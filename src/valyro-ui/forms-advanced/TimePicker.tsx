@@ -6,6 +6,8 @@ import {
   composeHandlers,
   cx,
   Floating,
+  getHourCycle,
+  isMotionReduced,
   mergeRefs,
   useControllableState,
   useFocusTrap,
@@ -14,6 +16,7 @@ import {
 import { useLocale } from '../theme/ThemeProvider';
 import { FormValue, toTimeValue, useMissingValue } from './form-value';
 import { PickerTrigger, type FieldSize } from './PickerTrigger';
+import { useFormReset } from '../forms/form-reset';
 import './TimePicker.css';
 import { withRef, useId, useLayoutEffect } from '../primitives/react-compat';
 
@@ -44,7 +47,7 @@ export interface TimePickerProps extends Omit<ComponentPropsWithRef<'button'>, '
   open?: boolean;
   defaultOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
-  /** Display and pick in 12-hour (AM/PM) or 24-hour format. The value is always 24-hour. */
+  /** Display and pick in 12-hour (AM/PM) or 24-hour format; defaults to the locale's clock. The value is always 24-hour. */
   hourCycle?: 12 | 24;
   /** Minutes between options in the minute column. */
   minuteStep?: number;
@@ -117,7 +120,7 @@ export const TimePicker = withRef(function TimePicker({
   open: openProp,
   defaultOpen = false,
   onOpenChange,
-  hourCycle = 24,
+  hourCycle: hourCycleProp,
   minuteStep = 5,
   placeholder = 'Pick a time',
   locale: localeProp,
@@ -136,10 +139,14 @@ export const TimePicker = withRef(function TimePicker({
 }: TimePickerProps) {
   const labels = { ...DEFAULT_TIME_PICKER_LABELS, ...labelsProp };
   const locale = useLocale(localeProp);
+  // The locale's own clock when not set: 12-hour in en-US, 24-hour in most of Europe.
+  const hourCycle = useMemo(() => hourCycleProp ?? getHourCycle(locale), [hourCycleProp, locale]);
   const [raw, setRaw] = useControllableState({ value, defaultValue, onChange: onValueChange });
   const [open, setOpen] = useControllableState({ value: openProp, defaultValue: defaultOpen, onChange: onOpenChange });
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  // A form reset brings the uncontrolled value back to its default (forms/form-reset.ts).
+  useFormReset(triggerRef, () => setRaw(defaultValue), value === undefined);
   const dialogId = useId();
   const time = parseTime(raw);
   const popoverOpen = open && !inline;
@@ -312,8 +319,8 @@ function TimeColumn({ label, options, selected, onSelect }: TimeColumnProps) {
     const first = list?.firstElementChild;
     const option = index >= 0 ? list?.children[index] : null;
     if (!list || !(first instanceof HTMLElement) || !(option instanceof HTMLElement)) return;
-    // Jump on open, glide afterwards.
-    list.scrollTo({ top: option.offsetTop - first.offsetTop, behavior: scrolled.current ? 'smooth' : 'auto' });
+    // Jump on open, glide afterwards (unless motion is reduced).
+    list.scrollTo({ top: option.offsetTop - first.offsetTop, behavior: scrolled.current && !isMotionReduced(list) ? 'smooth' : 'auto' });
     scrolled.current = true;
   }, [index]);
 

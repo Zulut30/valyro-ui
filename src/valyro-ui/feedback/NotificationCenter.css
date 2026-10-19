@@ -43,12 +43,8 @@
   min-height: 48px;
   padding-block: var(--ui-space-2) 0;
   padding-inline: var(--ui-space-4) var(--ui-space-2);
-  /* `initial`: the start side keeps the shorthand's physical value (left; the right one in RTL). */
+  /* `initial` in the theme: the start side keeps the shorthand's value, mirrored under dir="rtl". */
   padding-inline-start: var(--ui-notification-center-header-pad-start, var(--_pad-start));
-}
-
-.ui-notification-center__header:dir(rtl) {
-  --_pad-start: var(--ui-space-2);
 }
 
 .ui-notification-center__title {
@@ -265,6 +261,23 @@ button.ui-notification-center__item:focus-visible {
 }
 
 /* Forced colors repaint backgrounds with Canvas: the pressed filter, unread dots and the badge need system colours. */
+/* Touch: the All / Unread tabs take taps 44px tall (they sit side by side, so the width stays). */
+@media (pointer: coarse) {
+  .ui-notification-center__tab {
+    position: relative;
+  }
+
+  .ui-notification-center__tab::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: max(100%, 44px);
+    translate: 0 -50%;
+  }
+}
+
 @media (forced-colors: active) {
   .ui-notification-center__tabs .ui-notification-center__tab[aria-pressed='true'] {
     background: Highlight;

@@ -6,6 +6,11 @@
   cursor: not-allowed;
 }
 
+/* Read-only looks like a read-only TextInput: the value can be read and copied, not changed. */
+.ui-combobox[data-readonly] {
+  background: var(--ui-surface-2);
+}
+
 .ui-combobox__input:disabled {
   cursor: not-allowed;
 }
@@ -64,8 +69,8 @@
     position: absolute;
     top: 50%;
     left: 50%;
-    /* Narrower than 44px: a clear button can sit right next to it. */
-    width: 32px;
+    /* 40px, not 44: a clear button can sit right next to it, and each still owns its own centre. */
+    width: 40px;
     height: 44px;
     translate: -50% -50%;
   }

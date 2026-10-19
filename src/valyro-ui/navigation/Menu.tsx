@@ -1,97 +1,30 @@
 'use client';
 
-import { Fragment, useEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent, type PointerEvent, type ReactNode, type RefObject } from 'react';
+import { Fragment, useRef, useState, type ReactNode } from 'react';
 import { CheckIcon, ChevronRightIcon } from '../icons';
-import {
-  cx,
-  Floating,
-  inlineArrowStep,
-  mergeRefs,
-  useDirection,
-  useListNavigation,
-  type FloatingProps,
-} from '../primitives';
-import { usePointerMoved } from './internal';
+import { cx, Floating, type FloatingProps } from '../primitives';
+import type { MenuItem, MenuLabelItem, MenuSeparatorItem } from './menu-items';
+import { entryLabel, useMenu, type MenuEntry, type MenuHighlight } from './useMenu';
+import { useLocale } from '../theme/ThemeProvider';
 import './Menu.css';
-import { withRef, useId, useLayoutEffect } from '../primitives/react-compat';
+import { withRef, useLayoutEffect } from '../primitives/react-compat';
 
 /*
- * Shared menu model and renderer for DropdownMenu, ContextMenu and the
- * collapsed menus of Breadcrumbs / Sidebar. Not exported from the library;
- * only the item types are public.
+ * Shared menu renderer for DropdownMenu, ContextMenu and the collapsed menus of Breadcrumbs / Sidebar: the markup
+ * of one useMenu level (navigation/useMenu.ts, in valyro-ui/headless). Not exported from the library; only the
+ * item types are public.
  */
 
-export interface MenuActionItem {
-  type?: 'item';
-  label: string;
-  icon?: ReactNode;
-  /** Shortcut hint shown on the right, e.g. "⌘C". Display only. */
-  shortcut?: string;
-  /** Renders the row as a link. */
-  href?: string;
-  danger?: boolean;
-  disabled?: boolean;
-  onSelect?: () => void;
-  /** Child items shown in a submenu that opens on hover or ArrowRight (ArrowLeft in RTL). */
-  items?: MenuItem[];
-}
-
-export interface MenuCheckboxItem {
-  type: 'checkbox';
-  label: string;
-  shortcut?: string;
-  disabled?: boolean;
-  checked: boolean;
-  onCheckedChange: (checked: boolean) => void;
-}
-
-export interface MenuRadioOption {
-  value: string;
-  label: string;
-  disabled?: boolean;
-}
-
-export interface MenuRadioGroup {
-  type: 'radio';
-  /** Heading shown above the options. */
-  label?: string;
-  value: string;
-  onValueChange: (value: string) => void;
-  options: MenuRadioOption[];
-}
-
-export interface MenuSeparatorItem {
-  type: 'separator';
-}
-
-export interface MenuLabelItem {
-  type: 'label';
-  label: string;
-}
-
-export type MenuItem = MenuActionItem | MenuCheckboxItem | MenuRadioGroup | MenuSeparatorItem | MenuLabelItem;
-
-/** Rows reachable by keyboard, in render order. */
-type Entry =
-  | { kind: 'action'; item: MenuActionItem }
-  | { kind: 'checkbox'; item: MenuCheckboxItem }
-  | { kind: 'radio'; group: MenuRadioGroup; option: MenuRadioOption };
-
-function collectEntries(items: MenuItem[]): Entry[] {
-  const entries: Entry[] = [];
-  for (const item of items) {
-    if (item.type === 'radio') item.options.forEach((option) => entries.push({ kind: 'radio', group: item, option }));
-    else if (item.type === 'checkbox') entries.push({ kind: 'checkbox', item });
-    else if (item.type === undefined || item.type === 'item') entries.push({ kind: 'action', item });
-  }
-  return entries;
-}
-
-const entryLabel = (entry: Entry) => (entry.kind === 'radio' ? entry.option.label : entry.item.label);
-const entryDisabled = (entry: Entry | undefined) =>
-  !entry || !!(entry.kind === 'radio' ? entry.option.disabled : entry.item.disabled);
-
-export type MenuHighlight = 'first' | 'last' | 'none';
+export type {
+  MenuActionItem,
+  MenuCheckboxItem,
+  MenuRadioOption,
+  MenuRadioGroup,
+  MenuSeparatorItem,
+  MenuLabelItem,
+  MenuItem,
+} from './menu-items';
+export type { MenuHighlight } from './useMenu';
 
 export interface MenuPopupProps extends Omit<FloatingProps, 'children' | 'onDismiss'> {
   items: MenuItem[];
@@ -127,54 +60,9 @@ const MenuSurface = withRef(function MenuSurface({
   ref,
   ...floatingProps
 }: MenuPopupProps) {
-  const surfaceRef = useRef<HTMLDivElement>(null);
-  // Submenus open towards the inline end and the arrows follow: right in LTR, left in RTL.
-  const direction = useDirection(surfaceRef);
-  const anchors = useRef<Record<number, RefObject<HTMLElement | null>>>({});
-  const baseId = useId();
-  const entries = useMemo(() => collectEntries(items), [items]);
-  const isDisabled = (index: number) => entryDisabled(entries[index]);
-  const rowId = (index: number) => `${baseId}-item-${index}`;
-  const firstEnabled = entries.findIndex((entry) => !entryDisabled(entry));
-  const lastEnabled = entries.findLastIndex((entry) => !entryDisabled(entry));
-
-  const [sub, setSub] = useState<{ index: number; keyboard: boolean } | null>(null);
-  const hoverTimer = useRef<number>(undefined);
-  useEffect(() => () => window.clearTimeout(hoverTimer.current), []);
-
-  const pointerMoved = usePointerMoved();
-
-  const activate = (index: number, viaKeyboard: boolean) => {
-    const entry = entries[index];
-    if (!entry || isDisabled(index)) return;
-    if (entry.kind === 'action' && entry.item.items) {
-      // The submenu belongs to the highlighted row: a tap (no pointermove before it) or a screen reader's
-      // double-tap highlights the row first, or the submenu would close in the same render.
-      setActiveIndex(index);
-      setSub({ index, keyboard: viaKeyboard });
-      return;
-    }
-    if (entry.kind === 'action' && entry.item.href && viaKeyboard) {
-      // A real click keeps native link behaviour; the row's onClick then closes the menu.
-      document.getElementById(rowId(index))?.click();
-      return;
-    }
-    onClose(true);
-    if (entry.kind === 'action') entry.item.onSelect?.();
-    else if (entry.kind === 'checkbox') entry.item.onCheckedChange(!entry.item.checked);
-    else entry.group.onValueChange(entry.option.value);
-  };
-
-  const { activeIndex, setActiveIndex, onKeyDown } = useListNavigation({
-    count: entries.length,
-    isDisabled,
-    getLabel: (index) => entryLabel(entries[index]),
-    onSelect: (index) => activate(index, true),
-    initialIndex: initialHighlight === 'first' ? firstEnabled : initialHighlight === 'last' ? lastEnabled : -1,
-  });
-
-  // A submenu belongs to the highlighted row; moving the highlight away closes it.
-  if (sub && sub.index !== activeIndex) setSub(null);
+  // The behaviour is useMenu's; Floating positions and dismisses the surface.
+  const menu = useMenu({ items, open, onClose, onBack, defaultHighlight: initialHighlight, focusOnOpen, floating: false, locale: useLocale() });
+  const { entries, activeIndex, direction } = menu;
 
   // animation="spring": one highlight glides from row to row instead of each row lighting up on its own.
   const spring = floatingProps.animation === 'spring';
@@ -182,7 +70,7 @@ const MenuSurface = withRef(function MenuSurface({
   useLayoutEffect(() => {
     const glide = glideRef.current;
     if (!glide) return;
-    const row = activeIndex >= 0 ? document.getElementById(`${baseId}-item-${activeIndex}`) : null;
+    const row = activeIndex >= 0 ? document.getElementById(menu.getItemId(activeIndex)) : null;
     if (!row) {
       glide.removeAttribute('data-visible');
       return;
@@ -193,47 +81,16 @@ const MenuSurface = withRef(function MenuSurface({
     glide.style.height = `${row.offsetHeight}px`;
     glide.toggleAttribute('data-danger', row.hasAttribute('data-danger'));
     glide.setAttribute('data-visible', '');
-  }, [activeIndex, baseId]);
-
-  useEffect(() => {
-    if (!open || !focusOnOpen) return;
-    // Floating stays visibility:hidden until its first measurement, and hidden elements can't take focus.
-    const frame = requestAnimationFrame(() => surfaceRef.current?.focus({ preventScroll: true }));
-    return () => cancelAnimationFrame(frame);
-  }, [open, focusOnOpen]);
-
-  useEffect(() => {
-    if (activeIndex >= 0) document.getElementById(`${baseId}-item-${activeIndex}`)?.scrollIntoView({ block: 'nearest' });
-  }, [activeIndex, baseId]);
-
-  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    // Keys pressed in a (portaled) submenu bubble here through the React tree; that level handles them.
-    if (!event.currentTarget.contains(event.target as Node)) return;
-    const entry = entries[activeIndex];
-    const inline = inlineArrowStep(event.key, direction);
-    if (event.key === 'Tab') {
-      event.preventDefault();
-      onClose(true);
-    } else if (inline === 1 && entry?.kind === 'action' && entry.item.items && !isDisabled(activeIndex)) {
-      event.preventDefault();
-      setSub({ index: activeIndex, keyboard: true });
-    } else if (inline === -1 && onBack) {
-      event.preventDefault();
-      onBack();
-    } else {
-      onKeyDown(event);
-    }
-  };
+  }, [activeIndex]);
 
   // Labels line up with row text when any row has an icon or check column.
   const inset = entries.some((entry) => entry.kind !== 'action' || !!entry.item.icon);
   let counter = -1;
 
-  const renderRow = (entry: Entry) => {
+  const renderRow = (entry: MenuEntry) => {
     const index = ++counter;
-    const disabled = isDisabled(index);
+    const disabled = entry.kind === 'radio' ? !!entry.option.disabled : !!entry.item.disabled;
     const submenu = entry.kind === 'action' ? entry.item.items : undefined;
-    const subOpen = !!submenu && sub?.index === index;
     const checked =
       entry.kind === 'checkbox'
         ? entry.item.checked
@@ -242,42 +99,10 @@ const MenuSurface = withRef(function MenuSurface({
           : undefined;
     const shortcut = entry.kind === 'radio' ? undefined : entry.item.shortcut;
     const href = entry.kind === 'action' && !disabled ? entry.item.href : undefined;
-    const anchorRef = submenu ? (anchors.current[index] ??= { current: null }) : undefined;
-
-    const props = {
-      id: rowId(index),
-      ref: anchorRef ? (node: HTMLElement | null) => void (anchorRef.current = node) : undefined,
-      role: entry.kind === 'checkbox' ? 'menuitemcheckbox' : entry.kind === 'radio' ? 'menuitemradio' : 'menuitem',
-      'aria-checked': checked,
-      'aria-disabled': disabled || undefined,
-      'aria-haspopup': submenu ? ('menu' as const) : undefined,
-      'aria-expanded': submenu ? subOpen : undefined,
+    const props = menu.getItemProps(index, {
       className: 'ui-menu-item',
-      'data-highlighted': activeIndex === index || undefined,
       'data-danger': (entry.kind === 'action' && entry.item.danger) || undefined,
-      onPointerMove: (event: PointerEvent) => {
-        if (!pointerMoved(event)) return;
-        window.clearTimeout(hoverTimer.current);
-        if (disabled) {
-          if (!sub && activeIndex !== -1) setActiveIndex(-1);
-          return;
-        }
-        const hover = () => {
-          setActiveIndex(index);
-          if (submenu) setSub({ index, keyboard: false });
-        };
-        if (sub && sub.index !== index) {
-          // Grace period: a diagonal move toward the open submenu crosses other rows without closing it.
-          hoverTimer.current = window.setTimeout(hover, 150);
-        } else if (activeIndex !== index || (submenu && !sub)) {
-          hover();
-        }
-      },
-      onClick: (event: MouseEvent) => {
-        if (disabled) event.preventDefault();
-        else activate(index, false);
-      },
-    };
+    });
 
     const content = (
       <>
@@ -300,6 +125,7 @@ const MenuSurface = withRef(function MenuSurface({
       </>
     );
 
+    const sub = submenu ? menu.getSubmenuOptions(index) : undefined;
     return (
       <Fragment key={`row-${index}`}>
         {href ? (
@@ -309,73 +135,94 @@ const MenuSurface = withRef(function MenuSurface({
         ) : (
           <div {...props}>{content}</div>
         )}
-        {submenu && anchorRef && (
+        {sub && (
           <MenuPopup
-            open={subOpen && open}
-            anchorRef={anchorRef}
+            open={!!sub.open}
+            anchorRef={sub.anchorRef}
             placement={direction === 'rtl' ? 'left-start' : 'right-start'}
             offset={6}
             animation={floatingProps.animation}
-            items={submenu}
-            initialHighlight={sub?.keyboard ? 'first' : 'none'}
-            focusOnOpen={!!sub?.keyboard}
+            items={sub.items}
+            initialHighlight={sub.defaultHighlight}
+            focusOnOpen={sub.focusOnOpen}
+            // The row that opens it names the submenu, as a trigger names its menu.
+            aria-labelledby={menu.getItemId(index)}
             onClose={onClose}
-            onPointerEnter={() => window.clearTimeout(hoverTimer.current)}
-            onBack={() => {
-              setSub(null);
-              surfaceRef.current?.focus({ preventScroll: true });
-            }}
+            onPointerEnter={sub.onPointerEnter}
+            onBack={sub.onBack}
           />
         )}
       </Fragment>
     );
   };
 
+  const renderItem = (item: Exclude<MenuItem, MenuSeparatorItem | MenuLabelItem>, i: number) => {
+    if (item.type === 'radio') {
+      return (
+        <div key={i} {...menu.getGroupProps(i)}>
+          {item.label && <div {...menu.getGroupLabelProps(i, { className: 'ui-menu-label' })}>{item.label}</div>}
+          {item.options.map((option) => renderRow({ kind: 'radio', group: item, option }))}
+        </div>
+      );
+    }
+    return renderRow(item.type === 'checkbox' ? { kind: 'checkbox', item } : { kind: 'action', item });
+  };
+
+  // A label opens a section that runs to the next separator or label: its rows sit in a group the label names,
+  // so a screen reader says "Account, group" on entering it (React Aria's Menu sections).
+  const renderSections = () => {
+    const blocks: ReactNode[] = [];
+    let section: { index: number; label: string; rows: ReactNode[] } | null = null;
+    const flush = () => {
+      if (!section) return;
+      const { index, label, rows } = section;
+      blocks.push(
+        rows.length > 0 ? (
+          <div key={`section-${index}`} {...menu.getGroupProps(index)}>
+            <div {...menu.getGroupLabelProps(index, { className: 'ui-menu-label' })}>{label}</div>
+            {rows}
+          </div>
+        ) : (
+          <div key={`section-${index}`} className="ui-menu-label">
+            {label}
+          </div>
+        ),
+      );
+      section = null;
+    };
+    items.forEach((item, i) => {
+      if (item.type === 'separator') {
+        flush();
+        blocks.push(<div key={i} {...menu.getSeparatorProps({ className: 'ui-menu-separator' })} />);
+      } else if (item.type === 'label') {
+        flush();
+        section = { index: i, label: item.label, rows: [] };
+      } else if (section) {
+        section.rows.push(renderItem(item, i));
+      } else {
+        blocks.push(renderItem(item, i));
+      }
+    });
+    flush();
+    return blocks;
+  };
+
   return (
     <Floating
-      {...floatingProps}
-      ref={mergeRefs(surfaceRef, ref)}
+      {...menu.getMenuProps({
+        ...floatingProps,
+        ref,
+        className: cx('ui-menu', className),
+        'data-submenu': onBack ? '' : undefined,
+        'data-inset': inset || undefined,
+        'data-motion': spring ? 'spring' : undefined,
+      })}
       open={open}
-      role="menu"
-      tabIndex={-1}
-      aria-activedescendant={activeIndex >= 0 ? rowId(activeIndex) : undefined}
-      className={cx('ui-menu', className)}
-      data-submenu={onBack ? '' : undefined}
-      data-inset={inset || undefined}
-      data-motion={spring ? 'spring' : undefined}
-      onDismiss={(reason) => (onBack ? onBack() : onClose(reason === 'escape'))}
-      onKeyDown={handleKeyDown}
-      onPointerLeave={() => {
-        window.clearTimeout(hoverTimer.current);
-        if (!sub) setActiveIndex(-1);
-      }}
-      onContextMenu={(event) => event.preventDefault()}
+      anchorRef={floatingProps.anchorRef}
+      onDismiss={menu.dismiss}
     >
       {spring && <span ref={glideRef} className="ui-menu__glide" aria-hidden="true" />}
-      {items.map((item, i) => {
-        if (item.type === 'separator') return <div key={i} role="separator" className="ui-menu-separator" />;
-        if (item.type === 'label') {
-          return (
-            <div key={i} className="ui-menu-label">
-              {item.label}
-            </div>
-          );
-        }
-        if (item.type === 'radio') {
-          const labelId = `${baseId}-group-${i}`;
-          return (
-            <div key={i} role="group" aria-labelledby={item.label ? labelId : undefined}>
-              {item.label && (
-                <div id={labelId} className="ui-menu-label">
-                  {item.label}
-                </div>
-              )}
-              {item.options.map((option) => renderRow({ kind: 'radio', group: item, option }))}
-            </div>
-          );
-        }
-        return renderRow(item.type === 'checkbox' ? { kind: 'checkbox', item } : { kind: 'action', item });
-      })}
+      {renderSections()}
     </Floating>
   );
 });

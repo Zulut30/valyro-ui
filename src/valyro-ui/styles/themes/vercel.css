@@ -14,7 +14,7 @@
   /* Typography. Geist is self-hosted, opt-in: ui-kit/fonts/geist.css and geist-mono.css (src/lib/fonts). */
   --ui-font-sans: 'Geist', 'Geist Fallback', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
     'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
-  --ui-font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Monaco, 'Cascadia Mono', 'Roboto Mono', Consolas,
+  --ui-font-mono: 'Geist Mono', 'Geist Mono Fallback', ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Monaco, 'Cascadia Mono', 'Roboto Mono', Consolas,
     'Liberation Mono', 'Courier New', monospace;
   --ui-text-xs: 12px;
   --ui-text-sm: 13px;
@@ -72,48 +72,48 @@
   --ui-menu-item-h: 36px;
 
   /* Geist gray scales (primitives; components use the semantic tokens below). */
-  --ui-gray-100: #f2f2f2;
-  --ui-gray-200: #ebebeb;
-  --ui-gray-300: #e6e6e6;
-  --ui-gray-400: #ebebeb;
-  --ui-gray-500: #c9c9c9;
-  --ui-gray-600: #a8a8a8;
-  --ui-gray-700: #8f8f8f;
-  --ui-gray-800: #7d7d7d;
-  --ui-gray-900: #666666;
-  --ui-gray-1000: #171717;
-  --ui-gray-alpha-100: rgba(0, 0, 0, 0.05);
-  --ui-gray-alpha-200: rgba(0, 0, 0, 0.08);
-  --ui-gray-alpha-300: rgba(0, 0, 0, 0.1);
-  --ui-gray-alpha-400: rgba(0, 0, 0, 0.08);
-  --ui-gray-alpha-500: rgba(0, 0, 0, 0.21);
-  --ui-gray-alpha-600: rgba(0, 0, 0, 0.34);
-  --ui-gray-alpha-700: rgba(0, 0, 0, 0.44);
-  --ui-gray-alpha-800: rgba(0, 0, 0, 0.51);
-  --ui-gray-alpha-900: rgba(0, 0, 0, 0.61);
-  --ui-gray-alpha-1000: rgba(0, 0, 0, 0.91);
+  --ui-gray-100: oklch(96.12% 0 0);
+  --ui-gray-200: oklch(94.01% 0 0);
+  --ui-gray-300: oklch(92.49% 0 0);
+  --ui-gray-400: oklch(94.01% 0 0);
+  --ui-gray-500: oklch(83.59% 0 0);
+  --ui-gray-600: oklch(73.16% 0 0);
+  --ui-gray-700: oklch(65% 0 0);
+  --ui-gray-800: oklch(58.97% 0 0);
+  --ui-gray-900: oklch(51.03% 0 0);
+  --ui-gray-1000: oklch(20.46% 0 0);
+  --ui-gray-alpha-100: oklch(0% 0 0 / 0.05);
+  --ui-gray-alpha-200: oklch(0% 0 0 / 0.08);
+  --ui-gray-alpha-300: oklch(0% 0 0 / 0.1);
+  --ui-gray-alpha-400: oklch(0% 0 0 / 0.08);
+  --ui-gray-alpha-500: oklch(0% 0 0 / 0.21);
+  --ui-gray-alpha-600: oklch(0% 0 0 / 0.34);
+  --ui-gray-alpha-700: oklch(0% 0 0 / 0.44);
+  --ui-gray-alpha-800: oklch(0% 0 0 / 0.51);
+  --ui-gray-alpha-900: oklch(0% 0 0 / 0.61);
+  --ui-gray-alpha-1000: oklch(0% 0 0 / 0.91);
 
   /* Page & surfaces */
-  --ui-page-bg: #fafafa;
-  --ui-bg: #ffffff;
-  --ui-surface: #ffffff;
+  --ui-page-bg: oklch(98.51% 0 0);
+  --ui-bg: oklch(100% 0 0);
+  --ui-surface: oklch(100% 0 0);
   --ui-surface-2: var(--ui-gray-100);
   --ui-surface-3: var(--ui-gray-200);
-  --ui-elevated: #ffffff;
+  --ui-elevated: oklch(100% 0 0);
   --ui-hover: var(--ui-gray-alpha-100);
   --ui-active: var(--ui-gray-alpha-200);
-  --ui-overlay: rgba(0, 0, 0, 0.32);
+  --ui-overlay: oklch(0% 0 0 / 0.32);
   --ui-overlay-blur: none;
   --ui-tooltip-bg: var(--ui-gray-1000);
-  --ui-tooltip-fg: #ededed;
+  --ui-tooltip-fg: oklch(94.61% 0 0);
   /* Tooltips and value bubbles (Slider). */
-  --ui-tooltip-shadow: 0 0 #0000;
+  --ui-tooltip-shadow: 0 0 oklch(0% 0 0 / 0);
 
   /* Borders */
   --ui-border: var(--ui-gray-alpha-400);
-  --ui-border-strong: rgba(0, 0, 0, 0.16);
+  --ui-border-strong: oklch(0% 0 0 / 0.16);
   /* Field edges reach 3:1 against the field and the page (WCAG 1.4.11); hover darkens them a step. */
-  --ui-border-field: rgba(0, 0, 0, 0.44);
+  --ui-border-field: oklch(0% 0 0 / 0.44);
   /* Hairlines between rows/sections inside a surface (Glass --ui-border is a white edge highlight). */
   --ui-divider: var(--ui-border);
   /* Fill of text fields (.ui-field). */
@@ -123,67 +123,67 @@
   --ui-fg: var(--ui-gray-1000);
   --ui-fg-muted: var(--ui-gray-900);
   /* Text tiers: muted > subtle, both ≥ 4.5:1 on --ui-bg / --ui-surface (subtle: 4.74 on white, 4.54 on the page). */
-  --ui-fg-subtle: #6a6a6a;
+  --ui-fg-subtle: oklch(52.43% 0 0);
   /* Non-text decoration only (field icons, chevrons, separators, ticks): ≥ 3:1, never for text. */
   --ui-fg-faint: var(--ui-gray-700);
   --ui-fg-disabled: var(--ui-gray-600);
-  --ui-fg-inverse: #ffffff;
+  --ui-fg-inverse: oklch(100% 0 0);
 
   /* Brand / accent */
-  --ui-accent: #0070f3;
-  --ui-accent-hover: #0062d6;
-  --ui-accent-fg: #ffffff;
-  --ui-accent-soft: #e9f2fe;
-  --ui-accent-text: #0062cc;
+  --ui-accent: oklch(57.31% 0.2145 258.247);
+  --ui-accent-hover: oklch(52.121% 0.19465 258.197);
+  --ui-accent-fg: oklch(100% 0 0);
+  --ui-accent-soft: oklch(95.79% 0.0188 255.53);
+  --ui-accent-text: oklch(51.33% 0.18187 256.955);
 
   /* Primary action (Vercel: monochrome) */
   --ui-primary: var(--ui-gray-1000);
-  --ui-primary-hover: #383838;
-  --ui-primary-fg: #ffffff;
+  --ui-primary-hover: oklch(34.07% 0 0);
+  --ui-primary-fg: oklch(100% 0 0);
 
   /* Status */
-  --ui-success: #28a948;
-  --ui-success-soft: #e8f7ec;
-  --ui-success-text: #297a3a;
-  --ui-warning: #ffb224;
-  --ui-warning-soft: #fff4d6;
-  --ui-warning-text: #a35200;
+  --ui-success: oklch(64.593% 0.17504 147.18);
+  --ui-success-soft: oklch(96.2% 0.0215 154.13);
+  --ui-success-text: oklch(51.454% 0.12513 147.43);
+  --ui-warning: oklch(81.69% 0.1639 75.84);
+  --ui-warning-soft: oklch(96.805% 0.04087 90.24);
+  --ui-warning-text: oklch(52.79% 0.13126 54.65);
   /* Solid fill that carries white text (≥ 4.5:1). */
-  --ui-danger: #da2f35;
-  --ui-danger-hover: #c52a30;
-  --ui-danger-soft: #feebec;
-  --ui-danger-text: #ca2a30;
-  --ui-info: #0070f3;
-  --ui-info-soft: #e9f2fe;
-  --ui-info-text: #0068d6;
+  --ui-danger: oklch(58.112% 0.20606 24.99);
+  --ui-danger-hover: oklch(53.92% 0.1905 24.76);
+  --ui-danger-soft: oklch(95.55% 0.0207 13.86);
+  --ui-danger-text: oklch(54.82% 0.1952 24.96);
+  --ui-info: oklch(57.31% 0.2145 258.247);
+  --ui-info-soft: oklch(95.79% 0.0188 255.53);
+  --ui-info-text: oklch(53.389% 0.18749 256.731);
 
   /* Named hues (badges, avatars, tags) */
-  --ui-gray: #8f8f8f;
-  --ui-blue: #0070f3;
-  --ui-green: #28a948;
-  --ui-amber: #f5a623;
-  --ui-red: #e5484d;
-  --ui-purple: #8e4ec6;
-  --ui-pink: #d6409f;
-  --ui-teal: #12a594;
+  --ui-gray: oklch(65% 0 0);
+  --ui-blue: oklch(57.31% 0.2145 258.247);
+  --ui-green: oklch(64.593% 0.17504 147.18);
+  --ui-amber: oklch(78.365% 0.15872 72.99);
+  --ui-red: oklch(62.557% 0.19334 23.03);
+  --ui-purple: oklch(55.56% 0.1829 305.86);
+  --ui-pink: oklch(61.68% 0.2076 346);
+  --ui-teal: oklch(64.908% 0.11357 181.963);
 
   /* Data visualisation */
-  --ui-chart-1: #0070f3;
-  --ui-chart-2: #7928ca;
-  --ui-chart-3: #ff0080;
-  --ui-chart-4: #c4841a;
-  --ui-chart-5: #0ca386;
-  --ui-chart-6: #171717;
-  --ui-chart-7: #8f8f8f;
-  --ui-chart-8: #e5600b;
-  --ui-chart-grid: rgba(0, 0, 0, 0.06);
-  --ui-chart-axis: #757575;
+  --ui-chart-1: oklch(57.31% 0.2145 258.247);
+  --ui-chart-2: oklch(49.067% 0.22753 300.45);
+  --ui-chart-3: oklch(64.535% 0.26034 2.47);
+  --ui-chart-4: oklch(66.27% 0.1341 73);
+  --ui-chart-5: oklch(63.907% 0.11997 173.81);
+  --ui-chart-6: oklch(20.46% 0 0);
+  --ui-chart-7: oklch(65% 0 0);
+  --ui-chart-8: oklch(64.858% 0.18324 44.635);
+  --ui-chart-grid: oklch(0% 0 0 / 0.06);
+  --ui-chart-axis: var(--ui-fg-subtle);
 
   /* Elevation: Geist's layered shadows (a 1px ring stands in for the border of floating layers). */
-  --ui-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
-  --ui-shadow-card: 0 2px 2px rgba(0, 0, 0, 0.04), 0 8px 8px -8px rgba(0, 0, 0, 0.04);
-  --ui-shadow-popover: 0 0 0 1px rgba(0, 0, 0, 0.08), 0 1px 1px rgba(0, 0, 0, 0.02), 0 4px 8px -4px rgba(0, 0, 0, 0.04), 0 16px 24px -8px rgba(0, 0, 0, 0.06);
-  --ui-shadow-modal: 0 0 0 1px rgba(0, 0, 0, 0.08), 0 1px 1px rgba(0, 0, 0, 0.02), 0 8px 16px -4px rgba(0, 0, 0, 0.04), 0 24px 32px -8px rgba(0, 0, 0, 0.06);
+  --ui-shadow-sm: 0 1px 2px oklch(0% 0 0 / 0.04);
+  --ui-shadow-card: 0 2px 2px oklch(0% 0 0 / 0.04), 0 8px 8px -8px oklch(0% 0 0 / 0.04);
+  --ui-shadow-popover: 0 0 0 1px oklch(0% 0 0 / 0.08), 0 1px 1px oklch(0% 0 0 / 0.02), 0 4px 8px -4px oklch(0% 0 0 / 0.04), 0 16px 24px -8px oklch(0% 0 0 / 0.06);
+  --ui-shadow-modal: 0 0 0 1px oklch(0% 0 0 / 0.08), 0 1px 1px oklch(0% 0 0 / 0.02), 0 8px 16px -4px oklch(0% 0 0 / 0.04), 0 24px 32px -8px oklch(0% 0 0 / 0.06);
   /* The ring itself reaches 3:1 against the page (WCAG 1.4.11); it follows the accent. */
   --ui-focus-color: color-mix(in srgb, var(--ui-accent) 92%, transparent);
   --ui-focus-ring: 0 0 0 1px var(--ui-bg), 0 0 0 3px var(--ui-focus-color);
@@ -194,9 +194,9 @@
   --ui-blur-thin: none;
   --ui-blur: none;
   --ui-blur-strong: none;
-  --ui-highlight: 0 0 #0000;
+  --ui-highlight: 0 0 oklch(0% 0 0 / 0);
   /* Inner light falloff along the top edge of large glass surfaces (panels, popovers, dialogs). */
-  --ui-sheen: 0 0 #0000;
+  --ui-sheen: 0 0 oklch(0% 0 0 / 0);
   --ui-glass-border: var(--ui-border);
 
   /* Motion */
@@ -258,7 +258,7 @@
   /* Raised pieces (suggestion cards, capsule triggers, source cards) with keyboard focus. */
   --ui-raised-shadow-focus: var(--ui-focus-ring);
   /* Shimmer swept across an assistant's in-progress label ("Thinking…", "Generating…"), clipped to the text. */
-  --ui-ai-shimmer: linear-gradient(90deg, var(--ui-fg-subtle) 0%, var(--ui-fg-subtle) 35%, var(--ui-fg) 50%, var(--ui-fg-subtle) 65%, var(--ui-fg-subtle) 100%);
+  --ui-ai-shimmer: linear-gradient(90deg in srgb, var(--ui-fg-subtle) 0%, var(--ui-fg-subtle) 35%, var(--ui-fg) 50%, var(--ui-fg-subtle) 65%, var(--ui-fg-subtle) 100%);
   /* Rule between sections inside cards, sheets and panels (a border shorthand). */
   --ui-separator: 1px solid var(--ui-divider);
   /* Depth of thumbnails, paired with --ui-tile-border (a hairline here, a soft shadow in Glass). */
@@ -304,21 +304,21 @@
 
   /* ── Component tokens: --ui-<component>-<property>, one value per theme file ── */
   /* AI assistant components (voice, agent plan, streaming text, answer card) */
-  --ui-voice-orb-base: #e8f2ff;
-  --ui-voice-orb-color-1: #0070f3;
-  --ui-voice-orb-color-2: #00c2ff;
-  --ui-voice-orb-color-3: #ffffff;
-  --ui-voice-orb-color-4: #5b8cff;
-  --ui-voice-orb-glow: rgba(0, 112, 243, 0.26);
-  --ui-voice-orb-shine: rgba(255, 255, 255, 0.85);
+  --ui-voice-orb-base: oklch(95.75% 0.0205 254.91);
+  --ui-voice-orb-color-1: oklch(57.31% 0.2145 258.247);
+  --ui-voice-orb-color-2: oklch(76.23% 0.15189 229.99);
+  --ui-voice-orb-color-3: oklch(100% 0 0);
+  --ui-voice-orb-color-4: oklch(66.23% 0.1786 264.64);
+  --ui-voice-orb-glow: oklch(57.31% 0.2145 258.247 / 0.26);
+  --ui-voice-orb-shine: oklch(100% 0 0 / 0.85);
   --ui-voice-input-wave-start: var(--ui-fg);
   --ui-voice-input-wave-end: var(--ui-fg);
   --ui-agent-plan-glow: 0 0 0 3px var(--ui-accent-soft);
   --ui-streaming-text-caret: var(--ui-fg);
-  --ui-streaming-text-caret-glow: 0 0 #0000;
+  --ui-streaming-text-caret-glow: 0 0 oklch(0% 0 0 / 0);
   --ui-answer-card-mark-bg: var(--ui-fg);
   --ui-answer-card-mark-fg: var(--ui-bg);
-  --ui-answer-card-mark-glow: 0 0 #0000;
+  --ui-answer-card-mark-glow: 0 0 oklch(0% 0 0 / 0);
   /* [ai] */
   /* AIChatWindow: the composer sits on a fade; a bordered empty-state tile; flat suggestion cards. */
   --ui-ai-chat-window-heading-gap: var(--ui-space-1);
@@ -394,20 +394,20 @@
      (keyword weight `initial`: the surrounding weight). DiffReview and DiffViewer read the palette too. */
   --ui-code-block-bg: var(--ui-bg);
   --ui-code-block-header-bg: color-mix(in srgb, var(--ui-surface-2) 55%, var(--ui-bg));
-  --ui-code-block-keyword-fg: #c41562;
-  --ui-code-block-string-fg: #107d32;
-  --ui-code-block-number-fg: #0068d6;
-  --ui-code-block-constant-fg: #0068d6;
-  --ui-code-block-function-fg: #7d00cc;
-  --ui-code-block-type-fg: #a35200;
-  --ui-code-block-tag-fg: #0068d6;
-  --ui-code-block-attr-fg: #a35200;
-  --ui-code-block-property-fg: #0060c7;
-  --ui-code-block-variable-fg: #a35200;
-  --ui-code-block-comment-fg: #6b6b6b;
-  --ui-code-block-punctuation-fg: #5c5c5c;
-  --ui-code-block-inserted-fg: #107d32;
-  --ui-code-block-deleted-fg: #c4202a;
+  --ui-code-block-keyword-fg: oklch(53.566% 0.20633 2.91);
+  --ui-code-block-string-fg: oklch(51.63% 0.1443 147.77);
+  --ui-code-block-number-fg: oklch(53.389% 0.18749 256.731);
+  --ui-code-block-constant-fg: oklch(53.389% 0.18749 256.731);
+  --ui-code-block-function-fg: oklch(47.782% 0.25048 303.3);
+  --ui-code-block-type-fg: oklch(52.79% 0.13126 54.65);
+  --ui-code-block-tag-fg: oklch(53.389% 0.18749 256.731);
+  --ui-code-block-attr-fg: oklch(52.79% 0.13126 54.65);
+  --ui-code-block-property-fg: oklch(50.509% 0.17784 256.797);
+  --ui-code-block-variable-fg: oklch(52.79% 0.13126 54.65);
+  --ui-code-block-comment-fg: oklch(52.78% 0 0);
+  --ui-code-block-punctuation-fg: oklch(47.48% 0 0);
+  --ui-code-block-inserted-fg: oklch(51.63% 0.1443 147.77);
+  --ui-code-block-deleted-fg: oklch(52.979% 0.19677 24.86);
   --ui-code-block-keyword-weight: initial;
   /* MarkdownPreview: bordered inline code, quotes with a start-edge border, a blinking block caret. */
   --ui-markdown-preview-code-border-color: var(--ui-border);
@@ -548,11 +548,11 @@
   --ui-avatar-group-more-fg: var(--ui-fg-muted);
   /* Badge: white text on solid fills (`initial`: dark ink in the badge's hue), saturated hues deepened so
      it reaches 4.5:1; no hairline on subtle badges. */
-  --ui-badge-solid-fg: #ffffff;
-  --ui-badge-solid-blue: color-mix(in srgb, var(--ui-blue) 84%, #000000);
-  --ui-badge-solid-red: color-mix(in srgb, var(--ui-red) 84%, #000000);
-  --ui-badge-solid-purple: color-mix(in srgb, var(--ui-purple) 84%, #000000);
-  --ui-badge-solid-pink: color-mix(in srgb, var(--ui-pink) 84%, #000000);
+  --ui-badge-solid-fg: oklch(100% 0 0);
+  --ui-badge-solid-blue: color-mix(in srgb, var(--ui-blue) 84%, oklch(0% 0 0));
+  --ui-badge-solid-red: color-mix(in srgb, var(--ui-red) 84%, oklch(0% 0 0));
+  --ui-badge-solid-purple: color-mix(in srgb, var(--ui-purple) 84%, oklch(0% 0 0));
+  --ui-badge-solid-pink: color-mix(in srgb, var(--ui-pink) 84%, oklch(0% 0 0));
   --ui-badge-subtle-shadow: none;
   /* Button: flat fills, no press scale. Secondary buttons read core tokens in their own scope (CTASection
      re-maps them), so the theme picks a set, not values: of --ui-button-secondary-field (hover
@@ -560,12 +560,12 @@
      `initial` (on), the other empty (off). Ghost text `initial`: --ui-fg in the button's own scope. */
   --ui-button-transform-active: none;
   --ui-button-solid-sheen: none;
-  --ui-button-solid-highlight: 0 0 #0000;
-  --ui-button-solid-glow: 0 0 #0000;
+  --ui-button-solid-highlight: 0 0 oklch(0% 0 0 / 0);
+  --ui-button-solid-glow: 0 0 oklch(0% 0 0 / 0);
   --ui-button-secondary-field: initial;
   --ui-button-secondary-glass: ;
   --ui-button-secondary-bg-active: var(--ui-surface-3);
-  --ui-button-secondary-shadow: 0 0 #0000;
+  --ui-button-secondary-shadow: 0 0 oklch(0% 0 0 / 0);
   --ui-button-ghost-fg: initial;
   /* ButtonGroup: attached segments share 1px borders (`initial`: the secondary button's own fill and ring). */
   --ui-button-group-inset: 0px;
@@ -607,7 +607,7 @@
   --ui-chart-swatch-radius: 2px;
   /* AnalyticsFilterBar */
   --ui-analytics-filter-bar-segment-selected-bg: var(--ui-surface-2);
-  --ui-analytics-filter-bar-segment-selected-shadow: 0 0 #0000;
+  --ui-analytics-filter-bar-segment-selected-shadow: 0 0 oklch(0% 0 0 / 0);
   --ui-analytics-filter-bar-chip-border-color: var(--ui-border-field);
   --ui-analytics-filter-bar-chip-shadow: none;
   --ui-analytics-filter-bar-chip-remove-radius: calc(var(--ui-radius-button) - 2px);
@@ -788,7 +788,7 @@
   --ui-comment-guide-opacity: 1;
   /* ProfileCard */
   --ui-profile-card-cover-h: 104px;
-  --ui-profile-card-avatar-shadow: 0 0 #0000;
+  --ui-profile-card-avatar-shadow: 0 0 oklch(0% 0 0 / 0);
   --ui-profile-card-horizontal-padding: var(--ui-space-3) var(--ui-space-4);
   --ui-profile-card-horizontal-radius: var(--ui-radius-card);
   /* ReactionBar */
@@ -818,7 +818,7 @@
   --ui-card-interactive-bg-active: color-mix(in srgb, var(--ui-hover) 50%, var(--ui-surface));
   --ui-card-interactive-transform-hover: none;
   --ui-card-interactive-transform-active: none;
-  --ui-card-interactive-shadow-hover: var(--ui-highlight), 0 2px 4px -1px rgba(0, 0, 0, 0.04), 0 8px 16px -4px rgba(0, 0, 0, 0.08);
+  --ui-card-interactive-shadow-hover: var(--ui-highlight), 0 2px 4px -1px oklch(0% 0 0 / 0.04), 0 8px 16px -4px oklch(0% 0 0 / 0.08);
   /* Overlapping states: disabled beats focus beats hover. */
   --ui-card-interactive-shadow-hover-focus: var(--ui-highlight), var(--ui-shadow-card), var(--ui-focus-ring);
   --ui-card-interactive-shadow-disabled-hover: var(--ui-highlight), var(--ui-shadow-card);
@@ -856,11 +856,11 @@
   --ui-media-player-bar-border: transparent;
   --ui-media-player-bar-radius: 0px;
   --ui-media-player-bar-inset: 0px;
-  --ui-media-player-fg: #ffffff;
-  --ui-media-player-track: rgba(255, 255, 255, 0.28);
-  --ui-media-player-buffered: rgba(255, 255, 255, 0.5);
-  --ui-media-player-progress: #ffffff;
-  --ui-media-player-big-play-bg: rgba(0, 0, 0, 0.55);
+  --ui-media-player-fg: oklch(100% 0 0);
+  --ui-media-player-track: oklch(100% 0 0 / 0.28);
+  --ui-media-player-buffered: oklch(100% 0 0 / 0.5);
+  --ui-media-player-progress: oklch(100% 0 0);
+  --ui-media-player-big-play-bg: oklch(0% 0 0 / 0.55);
   --ui-media-player-big-play-blur: none;
   /* EmptyState: dashed outline only; the icon sits on a hairline surface tile. */
   --ui-empty-state-bordered-bg: transparent;
@@ -953,7 +953,7 @@
   --ui-timeline-icon-border-tint: 35%;
   --ui-timeline-icon-fill: 12%;
   --ui-timeline-icon-gradient: none;
-  --ui-timeline-icon-shadow: 0 0 #0000;
+  --ui-timeline-icon-shadow: 0 0 oklch(0% 0 0 / 0);
   --ui-timeline-icon-glow: none;
   --ui-timeline-icon-fg: initial;
   --ui-timeline-icon-default-border-color: var(--ui-border);
@@ -997,7 +997,7 @@
   --ui-data-table-row-selected-hover: color-mix(in srgb, var(--ui-accent) 10%, transparent);
   --ui-data-table-pin-bg: var(--ui-surface);
   --ui-data-table-pin-tint: initial;
-  --ui-data-table-pin-shadow: rgba(0, 0, 0, 0.08);
+  --ui-data-table-pin-shadow: oklch(0% 0 0 / 0.08);
   --ui-data-table-container-position: static;
   --ui-data-table-container-isolation: auto;
   --ui-data-table-container-bg: var(--ui-surface);
@@ -1019,7 +1019,7 @@
   --ui-aurora-background-blend: normal;
   --ui-animated-border-beam: var(--ui-fg);
   --ui-animated-border-tail: transparent;
-  --ui-animated-border-spectrum: #007cf0, #00dfd8, #7928ca, #ff0080, #ff4d4d, #f9cb28, #007cf0;
+  --ui-animated-border-spectrum: oklch(59.589% 0.19686 255.092), oklch(81.581% 0.14055 190.74), oklch(49.067% 0.22753 300.45), oklch(64.535% 0.26034 2.47), oklch(67.296% 0.21457 25.04), oklch(85.819% 0.16726 91.19), oklch(59.589% 0.19686 255.092);
   --ui-animated-border-glow: 0.35;
   --ui-shimmer-text-shine: var(--ui-fg);
   --ui-shimmer-text-sweep: var(--ui-fg-faint);
@@ -1045,8 +1045,8 @@
      saturation `none`). It refracts only to zoom (`initial`: no refracted frost, no brightness lift). */
   --ui-glass-lens-tint: color-mix(in srgb, var(--ui-bg) 72%, transparent);
   --ui-glass-lens-shadow: var(--ui-shadow-popover);
-  --ui-glass-lens-zoom-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5), 0 0 0 1px var(--ui-border-strong), 0 12px 32px -12px rgba(0, 0, 0, 0.35);
-  --ui-glass-lens-drag-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5), 0 0 0 1px var(--ui-border-strong), 0 20px 40px -12px rgba(0, 0, 0, 0.4);
+  --ui-glass-lens-zoom-shadow: inset 0 0 0 1px oklch(100% 0 0 / 0.5), 0 0 0 1px var(--ui-border-strong), 0 12px 32px -12px oklch(0% 0 0 / 0.35);
+  --ui-glass-lens-drag-shadow: inset 0 0 0 1px oklch(100% 0 0 / 0.5), 0 0 0 1px var(--ui-border-strong), 0 20px 40px -12px oklch(0% 0 0 / 0.4);
   --ui-glass-lens-saturate: 1.5;
   --ui-glass-lens-zoom-saturate: none;
   --ui-glass-lens-brightness: initial;
@@ -1065,12 +1065,12 @@
   --ui-morphing-capsule-fill: var(--ui-bg);
   --ui-morphing-capsule-rim: var(--ui-border-strong);
   --ui-morphing-capsule-shine: transparent;
-  --ui-morphing-capsule-shadow: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.08)) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.06));
+  --ui-morphing-capsule-shadow: drop-shadow(0 6px 16px oklch(0% 0 0 / 0.08)) drop-shadow(0 1px 2px oklch(0% 0 0 / 0.06));
   --ui-morphing-capsule-frost: blur(8px) saturate(1.4);
   /* FloatingTabBar: a crisp frosted bar with a 1px border and a monochrome selection. */
   --ui-floating-tab-bar-duration: 420ms;
   --ui-floating-tab-bar-bg: color-mix(in srgb, var(--ui-bg) 82%, transparent);
-  --ui-floating-tab-bar-shadow: 0 0 0 1px var(--ui-border), 0 8px 24px -8px rgba(0, 0, 0, 0.16), 0 2px 6px rgba(0, 0, 0, 0.04);
+  --ui-floating-tab-bar-shadow: 0 0 0 1px var(--ui-border), 0 8px 24px -8px oklch(0% 0 0 / 0.16), 0 2px 6px oklch(0% 0 0 / 0.04);
   --ui-floating-tab-bar-frost: blur(12px) saturate(1.8);
   --ui-floating-tab-bar-indicator-bg: var(--ui-hover);
   --ui-floating-tab-bar-indicator-shadow: none;
@@ -1264,7 +1264,7 @@
   --ui-switch-knob-transition:
     inset-inline-start var(--ui-duration) var(--ui-ease-spring),
     width var(--ui-duration) var(--ui-ease-spring);
-  --ui-switch-knob-bg-active: #fff;
+  --ui-switch-knob-bg-active: oklch(100% 0 0);
   --ui-switch-knob-shadow-active: var(--ui-switch-knob-shadow);
   --ui-switch-knob-transform-active: none;
   /* Slider: thin track, small round thumb with a halo on hover and while dragged. */
@@ -1278,7 +1278,7 @@
   --ui-slider-thumb-shadow-hover: var(--ui-shadow-sm), 0 0 0 4px color-mix(in srgb, var(--ui-primary) 14%, transparent);
   --ui-slider-thumb-shadow-dragging: var(--ui-slider-thumb-shadow-hover);
   --ui-slider-thumb-shadow-focus: var(--ui-focus-ring);
-  --ui-slider-thumb-bg-dragging: #fff;
+  --ui-slider-thumb-bg-dragging: oklch(100% 0 0);
   --ui-slider-thumb-scale-dragging: 1;
   --ui-slider-value-offset: 8px;
   --ui-slider-value-padding: 3px 7px;
@@ -1422,7 +1422,7 @@
   --ui-time-picker-option-h: 32px;
   --ui-time-picker-option-radius: var(--ui-radius-xs);
   --ui-time-picker-option-size: 1em;
-  --ui-time-picker-option-selected-shadow: 0 0 #0000;
+  --ui-time-picker-option-selected-shadow: 0 0 oklch(0% 0 0 / 0);
   /* WheelPicker: row height (the label size follows it). */
   --ui-wheel-picker-item-h: 32px;
   /* [layout] */
@@ -1495,7 +1495,7 @@
   --ui-hero-backdrop-filter: none;
   --ui-hero-backdrop-animation: none;
   --ui-hero-backdrop-glow-display: block;
-  --ui-hero-highlight-bg: linear-gradient(90deg, var(--ui-blue), var(--ui-purple) 50%, var(--ui-pink));
+  --ui-hero-highlight-bg: linear-gradient(90deg in srgb, var(--ui-blue), var(--ui-purple) 50%, var(--ui-pink));
   --ui-hero-eyebrow-bg-hover: var(--ui-surface-2);
   --ui-hero-visual-shadow: 0 0 0 6px color-mix(in srgb, var(--ui-fg) 4%, transparent), var(--ui-shadow-card), 0 32px 64px -32px color-mix(in srgb, var(--ui-fg) 22%, transparent);
   /* ComparisonTable: opaque card, opaque sticky cells, monochrome highlight */
@@ -1741,29 +1741,29 @@
   /* NodeCanvas: backdrop, port/edge labels (mono in Vercel), wire colour per socket type (MODEL, CLIP, CONDITIONING, LATENT, IMAGE, VAE, MASK, numbers, text, other). */
   --ui-node-canvas-bg: var(--ui-page-bg);
   --ui-node-canvas-label-font: var(--ui-font-mono);
-  --ui-node-canvas-wire-1: #7e57c2;
-  --ui-node-canvas-wire-2: #a87b00;
-  --ui-node-canvas-wire-3: #d96200;
-  --ui-node-canvas-wire-4: #d81b60;
-  --ui-node-canvas-wire-5: #1e88e5;
-  --ui-node-canvas-wire-6: #e53935;
-  --ui-node-canvas-wire-7: #2e7d32;
-  --ui-node-canvas-wire-8: #00838f;
-  --ui-node-canvas-wire-9: #558b2f;
-  --ui-node-canvas-wire-10: #3949ab;
+  --ui-node-canvas-wire-1: oklch(54.95% 0.1615 297.66);
+  --ui-node-canvas-wire-2: oklch(61.129% 0.12574 82.81);
+  --ui-node-canvas-wire-3: oklch(63.303% 0.17132 48.41);
+  --ui-node-canvas-wire-4: oklch(57.374% 0.21777 7.85);
+  --ui-node-canvas-wire-5: oklch(61.788% 0.16678 250.87);
+  --ui-node-canvas-wire-6: oklch(60.83% 0.209 27.03);
+  --ui-node-canvas-wire-7: oklch(52.343% 0.13466 144.17);
+  --ui-node-canvas-wire-8: oklch(55.706% 0.09532 206.08);
+  --ui-node-canvas-wire-9: oklch(57.896% 0.1366 134.66);
+  --ui-node-canvas-wire-10: oklch(45.11% 0.157 271.6);
   /* [productivity] */
   /* BulkActionBar: an inverted near-black bar, like Vercel's and Linear's selection bars. */
-  --ui-bulk-action-bar-bg: #171717;
-  --ui-bulk-action-bar-fg: #ededed;
-  --ui-bulk-action-bar-fg-muted: #a1a1a1;
-  --ui-bulk-action-bar-hover: rgba(255, 255, 255, 0.1);
-  --ui-bulk-action-bar-active: rgba(255, 255, 255, 0.16);
-  --ui-bulk-action-bar-divider: rgba(255, 255, 255, 0.16);
+  --ui-bulk-action-bar-bg: oklch(20.46% 0 0);
+  --ui-bulk-action-bar-fg: oklch(94.61% 0 0);
+  --ui-bulk-action-bar-fg-muted: oklch(70.9% 0 0);
+  --ui-bulk-action-bar-hover: oklch(100% 0 0 / 0.1);
+  --ui-bulk-action-bar-active: oklch(100% 0 0 / 0.16);
+  --ui-bulk-action-bar-divider: oklch(100% 0 0 / 0.16);
   --ui-bulk-action-bar-border: transparent;
-  --ui-bulk-action-bar-shadow: 0 2px 6px rgba(0, 0, 0, 0.12), 0 12px 32px -8px rgba(0, 0, 0, 0.32);
+  --ui-bulk-action-bar-shadow: 0 2px 6px oklch(0% 0 0 / 0.12), 0 12px 32px -8px oklch(0% 0 0 / 0.32);
   --ui-bulk-action-bar-radius: var(--ui-radius-lg);
-  --ui-bulk-action-bar-danger: #ff6166;
-  --ui-bulk-action-bar-link: #52a8ff;
+  --ui-bulk-action-bar-danger: oklch(69.84% 0.1925 21.75);
+  --ui-bulk-action-bar-link: oklch(71.733% 0.15222 251);
   /* DataGrid: an opaque tinted header, square ticks, pinned columns that cover what scrolls under them.
      `initial`: the row's fill over pinned cells; the empty frost layer adds no background layer (DataGrid.css).
      --ui-data-grid-row-h-extra is added to the row and header heights (read by DataGrid.tsx). */
@@ -1784,7 +1784,7 @@
   --ui-data-grid-container-frost-content: none;
   --ui-data-grid-pin-bg: var(--ui-surface);
   --ui-data-grid-pin-row-tint: initial;
-  --ui-data-grid-pin-shadow: rgba(0, 0, 0, 0.08);
+  --ui-data-grid-pin-shadow: oklch(0% 0 0 / 0.08);
   --ui-data-grid-pin-bg-scrolled: var(--ui-surface);
   --ui-data-grid-pin-frost-layer: ;
   --ui-data-grid-pin-backdrop-scrolled: none;
@@ -1830,7 +1830,7 @@
   --ui-scheduler-today-shadow: none;
   --ui-scheduler-today-weekday-fg: var(--ui-fg);
   --ui-scheduler-off-bg:
-    repeating-linear-gradient(-45deg, transparent 0 5px, color-mix(in srgb, var(--ui-fg) 4%, transparent) 5px 6px),
+    repeating-linear-gradient(-45deg in srgb, transparent 0 5px, color-mix(in srgb, var(--ui-fg) 4%, transparent) 5px 6px),
     color-mix(in srgb, var(--ui-fg) 1.5%, transparent);
   --ui-scheduler-toolbar-pad-y: var(--ui-space-3);
   --ui-scheduler-toolbar-border-color: initial;
@@ -1866,99 +1866,99 @@
 [data-theme='vercel'][data-mode='dark'] {
   color-scheme: dark;
 
-  --ui-gray-100: #1a1a1a;
-  --ui-gray-200: #1f1f1f;
-  --ui-gray-300: #292929;
-  --ui-gray-400: #2e2e2e;
-  --ui-gray-500: #454545;
-  --ui-gray-600: #878787;
-  --ui-gray-700: #8f8f8f;
-  --ui-gray-800: #7d7d7d;
-  --ui-gray-900: #a1a1a1;
-  --ui-gray-1000: #ededed;
-  --ui-gray-alpha-100: rgba(255, 255, 255, 0.06);
-  --ui-gray-alpha-200: rgba(255, 255, 255, 0.09);
-  --ui-gray-alpha-300: rgba(255, 255, 255, 0.13);
-  --ui-gray-alpha-400: rgba(255, 255, 255, 0.14);
-  --ui-gray-alpha-500: rgba(255, 255, 255, 0.24);
-  --ui-gray-alpha-600: rgba(255, 255, 255, 0.51);
-  --ui-gray-alpha-700: rgba(255, 255, 255, 0.54);
-  --ui-gray-alpha-800: rgba(255, 255, 255, 0.47);
-  --ui-gray-alpha-900: rgba(255, 255, 255, 0.61);
-  --ui-gray-alpha-1000: rgba(255, 255, 255, 0.92);
+  --ui-gray-100: oklch(21.78% 0 0);
+  --ui-gray-200: oklch(23.93% 0 0);
+  --ui-gray-300: oklch(28.09% 0 0);
+  --ui-gray-400: oklch(30.12% 0 0);
+  --ui-gray-500: oklch(39.04% 0 0);
+  --ui-gray-600: oklch(62.34% 0 0);
+  --ui-gray-700: oklch(65% 0 0);
+  --ui-gray-800: oklch(58.97% 0 0);
+  --ui-gray-900: oklch(70.9% 0 0);
+  --ui-gray-1000: oklch(94.61% 0 0);
+  --ui-gray-alpha-100: oklch(100% 0 0 / 0.06);
+  --ui-gray-alpha-200: oklch(100% 0 0 / 0.09);
+  --ui-gray-alpha-300: oklch(100% 0 0 / 0.13);
+  --ui-gray-alpha-400: oklch(100% 0 0 / 0.14);
+  --ui-gray-alpha-500: oklch(100% 0 0 / 0.24);
+  --ui-gray-alpha-600: oklch(100% 0 0 / 0.51);
+  --ui-gray-alpha-700: oklch(100% 0 0 / 0.54);
+  --ui-gray-alpha-800: oklch(100% 0 0 / 0.47);
+  --ui-gray-alpha-900: oklch(100% 0 0 / 0.61);
+  --ui-gray-alpha-1000: oklch(100% 0 0 / 0.92);
 
-  --ui-page-bg: #000000;
-  --ui-bg: #0a0a0a;
-  --ui-surface: #0a0a0a;
+  --ui-page-bg: oklch(0% 0 0);
+  --ui-bg: oklch(14.48% 0 0);
+  --ui-surface: oklch(14.48% 0 0);
   --ui-surface-2: var(--ui-gray-100);
-  --ui-surface-3: #262626;
-  --ui-elevated: #0f0f0f;
+  --ui-surface-3: oklch(26.86% 0 0);
+  --ui-elevated: oklch(16.84% 0 0);
   --ui-hover: var(--ui-gray-alpha-100);
-  --ui-active: rgba(255, 255, 255, 0.1);
-  --ui-overlay: rgba(0, 0, 0, 0.6);
+  --ui-active: oklch(100% 0 0 / 0.1);
+  --ui-overlay: oklch(0% 0 0 / 0.6);
   --ui-tooltip-bg: var(--ui-gray-1000);
-  --ui-tooltip-fg: #0a0a0a;
+  --ui-tooltip-fg: oklch(14.48% 0 0);
 
-  --ui-border: rgba(255, 255, 255, 0.12);
-  --ui-border-strong: rgba(255, 255, 255, 0.2);
-  --ui-border-field: rgba(255, 255, 255, 0.36);
+  --ui-border: oklch(100% 0 0 / 0.12);
+  --ui-border-strong: oklch(100% 0 0 / 0.2);
+  --ui-border-field: oklch(100% 0 0 / 0.36);
 
   --ui-fg: var(--ui-gray-1000);
   --ui-fg-muted: var(--ui-gray-900);
   /* 5.7:1 on --ui-bg, 5:1 on --ui-surface-2. */
-  --ui-fg-subtle: #8f8f8f;
-  --ui-fg-faint: #7c7c7c;
-  --ui-fg-disabled: #565656;
-  --ui-fg-inverse: #0a0a0a;
+  --ui-fg-subtle: oklch(65% 0 0);
+  --ui-fg-faint: oklch(58.63% 0 0);
+  --ui-fg-disabled: oklch(45.32% 0 0);
+  --ui-fg-inverse: oklch(14.48% 0 0);
 
-  --ui-accent: #0070f3;
-  --ui-accent-hover: #0062d6;
-  --ui-accent-fg: #ffffff;
-  --ui-accent-soft: rgba(0, 112, 243, 0.16);
-  --ui-accent-text: #52a8ff;
+  --ui-accent: oklch(57.31% 0.2145 258.247);
+  --ui-accent-hover: oklch(52.121% 0.19465 258.197);
+  --ui-accent-fg: oklch(100% 0 0);
+  --ui-accent-soft: oklch(57.31% 0.2145 258.247 / 0.16);
+  --ui-accent-text: oklch(71.733% 0.15222 251);
 
-  --ui-primary: #ededed;
-  --ui-primary-hover: #cccccc;
-  --ui-primary-fg: #0a0a0a;
+  --ui-primary: oklch(94.61% 0 0);
+  --ui-primary-hover: oklch(84.52% 0 0);
+  --ui-primary-fg: oklch(14.48% 0 0);
 
-  --ui-success: #3ec05e;
-  --ui-success-soft: rgba(62, 192, 94, 0.14);
-  --ui-success-text: #62c073;
-  --ui-warning: #ffb224;
-  --ui-warning-soft: rgba(255, 178, 36, 0.14);
-  --ui-warning-text: #f1a10d;
-  --ui-danger: #da2f35;
-  --ui-danger-hover: #c52a30;
-  --ui-danger-soft: rgba(229, 72, 77, 0.16);
-  --ui-danger-text: #ff6166;
-  --ui-info: #0070f3;
-  --ui-info-soft: rgba(0, 112, 243, 0.16);
-  --ui-info-text: #52a8ff;
+  --ui-success: oklch(71.506% 0.17811 147.99);
+  --ui-success-soft: oklch(71.506% 0.17811 147.99 / 0.14);
+  --ui-success-text: oklch(73.08% 0.1423 147.99);
+  --ui-warning: oklch(81.69% 0.1639 75.84);
+  --ui-warning-soft: oklch(81.69% 0.1639 75.84 / 0.14);
+  --ui-warning-text: oklch(76.929% 0.16169 73.12);
+  --ui-danger: oklch(58.112% 0.20606 24.99);
+  --ui-danger-hover: oklch(53.92% 0.1905 24.76);
+  --ui-danger-soft: oklch(62.557% 0.19334 23.03 / 0.16);
+  --ui-danger-text: oklch(69.84% 0.1925 21.75);
+  --ui-info: oklch(57.31% 0.2145 258.247);
+  --ui-info-soft: oklch(57.31% 0.2145 258.247 / 0.16);
+  --ui-info-text: oklch(71.733% 0.15222 251);
 
-  --ui-gray: #8f8f8f;
-  --ui-blue: #3291ff;
-  --ui-green: #3ec05e;
-  --ui-amber: #f7b955;
-  --ui-red: #ff6166;
-  --ui-purple: #a873e8;
-  --ui-pink: #f06cb6;
-  --ui-teal: #2ec4a8;
+  --ui-gray: oklch(65% 0 0);
+  --ui-blue: oklch(65.8% 0.1851 254.96);
+  --ui-green: oklch(71.506% 0.17811 147.99);
+  --ui-amber: oklch(82.46% 0.1358 76.72);
+  --ui-red: oklch(69.84% 0.1925 21.75);
+  --ui-purple: oklch(65.97% 0.1733 302.86);
+  --ui-pink: oklch(71.21% 0.1808 347.9);
+  --ui-teal: oklch(73.81% 0.1275 176.58);
 
-  --ui-chart-1: #3291ff;
-  --ui-chart-2: #a259ff;
-  --ui-chart-3: #ff4d9d;
-  --ui-chart-4: #f7b955;
-  --ui-chart-5: #50e3c2;
-  --ui-chart-6: #ededed;
-  --ui-chart-7: #7c7c7c;
-  --ui-chart-8: #ff8a3d;
-  --ui-chart-grid: rgba(255, 255, 255, 0.08);
-  --ui-chart-axis: #7c7c7c;
+  --ui-chart-1: oklch(65.8% 0.1851 254.96);
+  --ui-chart-2: oklch(63.093% 0.23493 299.84);
+  --ui-chart-3: oklch(69.123% 0.22288 357.25);
+  --ui-chart-4: oklch(82.46% 0.1358 76.72);
+  --ui-chart-5: oklch(82.914% 0.13329 174.96);
+  --ui-chart-6: oklch(94.61% 0 0);
+  --ui-chart-7: oklch(58.63% 0 0);
+  --ui-chart-8: oklch(75% 0.1668 50.54);
+  --ui-chart-grid: oklch(100% 0 0 / 0.08);
+  --ui-chart-axis: oklch(58.63% 0 0);
 
-  --ui-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --ui-shadow-card: 0 0 #0000;
-  --ui-shadow-popover: 0 0 0 1px rgba(255, 255, 255, 0.1), 0 16px 32px -8px rgba(0, 0, 0, 0.6);
-  --ui-shadow-modal: 0 0 0 1px rgba(255, 255, 255, 0.1), 0 24px 48px -12px rgba(0, 0, 0, 0.7);
+  --ui-shadow-sm: 0 1px 2px oklch(0% 0 0 / 0.4);
+  --ui-shadow-card: 0 0 oklch(0% 0 0 / 0);
+  --ui-shadow-popover: 0 0 0 1px oklch(100% 0 0 / 0.1), 0 16px 32px -8px oklch(0% 0 0 / 0.6);
+  --ui-shadow-modal: 0 0 0 1px oklch(100% 0 0 / 0.1), 0 24px 48px -12px oklch(0% 0 0 / 0.7);
   /* The lighter accent tint keeps 3:1 against the near-black page. */
   --ui-focus-color: color-mix(in srgb, var(--ui-accent-text) 85%, transparent);
 
@@ -1966,29 +1966,29 @@
 
   /* ── Component tokens: --ui-<component>-<property>, one value per theme file ── */
   /* AI assistant components */
-  --ui-voice-orb-base: #03101f;
-  --ui-voice-orb-color-1: #0a72ef;
-  --ui-voice-orb-color-2: #2fd0ff;
-  --ui-voice-orb-color-3: #d6e9ff;
-  --ui-voice-orb-color-4: #3d5fe0;
-  --ui-voice-orb-glow: rgba(10, 114, 239, 0.4);
-  --ui-voice-orb-shine: rgba(255, 255, 255, 0.38);
+  --ui-voice-orb-base: oklch(16.95% 0.0378 250.48);
+  --ui-voice-orb-color-1: oklch(57.49% 0.2064 257.84);
+  --ui-voice-orb-color-2: oklch(79.88% 0.1401 223.39);
+  --ui-voice-orb-color-3: oklch(92.67% 0.0362 252.08);
+  --ui-voice-orb-color-4: oklch(53.8% 0.2 267.77);
+  --ui-voice-orb-glow: oklch(57.49% 0.2064 257.84 / 0.4);
+  --ui-voice-orb-shine: oklch(100% 0 0 / 0.38);
   /* [ai · dark] */
   /* CodeBlock: Geist dark code colours */
-  --ui-code-block-keyword-fg: #ff4d94;
-  --ui-code-block-string-fg: #62c073;
-  --ui-code-block-number-fg: #52a8ff;
-  --ui-code-block-constant-fg: #52a8ff;
-  --ui-code-block-function-fg: #c472fb;
-  --ui-code-block-type-fg: #ffb224;
-  --ui-code-block-tag-fg: #52a8ff;
-  --ui-code-block-attr-fg: #ffb224;
-  --ui-code-block-property-fg: #7cbcff;
-  --ui-code-block-variable-fg: #ffb224;
-  --ui-code-block-comment-fg: #8f8f8f;
-  --ui-code-block-punctuation-fg: #a1a1a1;
-  --ui-code-block-inserted-fg: #62c073;
-  --ui-code-block-deleted-fg: #ff6166;
+  --ui-code-block-keyword-fg: oklch(68.844% 0.21984 0.5);
+  --ui-code-block-string-fg: oklch(73.08% 0.1423 147.99);
+  --ui-code-block-number-fg: oklch(71.733% 0.15222 251);
+  --ui-code-block-constant-fg: oklch(71.733% 0.15222 251);
+  --ui-code-block-function-fg: oklch(69.84% 0.2043 309.75);
+  --ui-code-block-type-fg: oklch(81.69% 0.1639 75.84);
+  --ui-code-block-tag-fg: oklch(71.733% 0.15222 251);
+  --ui-code-block-attr-fg: oklch(81.69% 0.1639 75.84);
+  --ui-code-block-property-fg: oklch(77.854% 0.11674 250.59);
+  --ui-code-block-variable-fg: oklch(81.69% 0.1639 75.84);
+  --ui-code-block-comment-fg: oklch(65% 0 0);
+  --ui-code-block-punctuation-fg: oklch(70.9% 0 0);
+  --ui-code-block-inserted-fg: oklch(73.08% 0.1423 147.99);
+  --ui-code-block-deleted-fg: oklch(69.84% 0.1925 21.75);
   /* [basic · dark] */
   /* Badge: dark ink on solid fills (`initial`: Badge.css), hues not deepened */
   --ui-badge-solid-fg: initial;
@@ -2003,11 +2003,11 @@
   /* [commerce · dark] */
   /* [data-display · dark] */
   /* Card: a deeper hover shadow, which also beats the focus ring and the disabled shadow. */
-  --ui-card-interactive-shadow-hover: var(--ui-highlight), 0 8px 24px -8px rgba(0, 0, 0, 0.6);
+  --ui-card-interactive-shadow-hover: var(--ui-highlight), 0 8px 24px -8px oklch(0% 0 0 / 0.6);
   --ui-card-interactive-shadow-hover-focus: var(--ui-card-interactive-shadow-hover);
   --ui-card-interactive-shadow-disabled-hover: var(--ui-card-interactive-shadow-hover);
   /* DataTable: a deeper edge shadow on the pinned column. */
-  --ui-data-table-pin-shadow: rgba(0, 0, 0, 0.4);
+  --ui-data-table-pin-shadow: oklch(0% 0 0 / 0.4);
   /* [effects · dark] */
   --ui-aurora-background-opacity: 0.45;
   --ui-aurora-background-blend: screen;
@@ -2031,22 +2031,22 @@
   --ui-pricing-table-thumb-bg: var(--ui-surface-3);
   /* [navigation · dark] */
   /* [node-editor · dark] */
-  --ui-node-canvas-wire-1: #b39ddb;
-  --ui-node-canvas-wire-2: #ffd54f;
-  --ui-node-canvas-wire-3: #ffb74d;
-  --ui-node-canvas-wire-4: #f48fb1;
-  --ui-node-canvas-wire-5: #64b5f6;
-  --ui-node-canvas-wire-6: #ef5350;
-  --ui-node-canvas-wire-7: #81c784;
-  --ui-node-canvas-wire-8: #4dd0e1;
-  --ui-node-canvas-wire-9: #aed581;
-  --ui-node-canvas-wire-10: #9fa8da;
+  --ui-node-canvas-wire-1: oklch(73.735% 0.09094 300.46);
+  --ui-node-canvas-wire-2: oklch(88.591% 0.15386 91.23);
+  --ui-node-canvas-wire-3: oklch(82.867% 0.14524 73.54);
+  --ui-node-canvas-wire-4: oklch(76.57% 0.1276 358.96);
+  --ui-node-canvas-wire-5: oklch(74.82% 0.12345 244.75);
+  --ui-node-canvas-wire-6: oklch(65.392% 0.19257 25.14);
+  --ui-node-canvas-wire-7: oklch(76.6% 0.1179 145.3);
+  --ui-node-canvas-wire-8: oklch(79.311% 0.11448 207.31);
+  --ui-node-canvas-wire-9: oklch(82.53% 0.1181 129);
+  --ui-node-canvas-wire-10: oklch(74.234% 0.07296 276.54);
   /* [productivity · dark] */
-  --ui-bulk-action-bar-bg: #1f1f1f;
-  --ui-bulk-action-bar-border: rgba(255, 255, 255, 0.14);
-  --ui-bulk-action-bar-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.7);
+  --ui-bulk-action-bar-bg: oklch(23.93% 0 0);
+  --ui-bulk-action-bar-border: oklch(100% 0 0 / 0.14);
+  --ui-bulk-action-bar-shadow: 0 16px 40px -8px oklch(0% 0 0 / 0.7);
   /* DataGrid: a deeper edge shadow on pinned columns. */
-  --ui-data-grid-pin-shadow: rgba(0, 0, 0, 0.45);
+  --ui-data-grid-pin-shadow: oklch(0% 0 0 / 0.45);
   /* Scheduler: denser event tints, lighter ink. */
   --ui-scheduler-event-fill-mix: 22%;
   --ui-scheduler-event-fill-mix-hover: 30%;
@@ -2058,30 +2058,30 @@
 @media (prefers-contrast: more) {
   :root:not([data-theme], [data-mode='dark']),
   [data-theme='vercel']:not([data-mode='dark']) {
-    --ui-border: rgba(0, 0, 0, 0.28);
-    --ui-border-strong: rgba(0, 0, 0, 0.5);
-    --ui-border-field: rgba(0, 0, 0, 0.5);
-    --ui-divider: rgba(0, 0, 0, 0.22);
-    --ui-hover: rgba(0, 0, 0, 0.08);
-    --ui-active: rgba(0, 0, 0, 0.14);
-    --ui-fg-muted: #4d4d4d;
-    --ui-fg-subtle: #575757;
-    --ui-fg-faint: #6b6b6b;
-    --ui-fg-disabled: #8a8a8a;
+    --ui-border: oklch(0% 0 0 / 0.28);
+    --ui-border-strong: oklch(0% 0 0 / 0.5);
+    --ui-border-field: oklch(0% 0 0 / 0.5);
+    --ui-divider: oklch(0% 0 0 / 0.22);
+    --ui-hover: oklch(0% 0 0 / 0.08);
+    --ui-active: oklch(0% 0 0 / 0.14);
+    --ui-fg-muted: oklch(42.02% 0 0);
+    --ui-fg-subtle: oklch(45.68% 0 0);
+    --ui-fg-faint: oklch(52.78% 0 0);
+    --ui-fg-disabled: oklch(63.34% 0 0);
     --ui-focus-color: var(--ui-accent);
   }
 
   [data-theme='vercel'][data-mode='dark'] {
-    --ui-border: rgba(255, 255, 255, 0.3);
-    --ui-border-strong: rgba(255, 255, 255, 0.5);
-    --ui-border-field: rgba(255, 255, 255, 0.5);
-    --ui-divider: rgba(255, 255, 255, 0.24);
-    --ui-hover: rgba(255, 255, 255, 0.1);
-    --ui-active: rgba(255, 255, 255, 0.16);
-    --ui-fg-muted: #c2c2c2;
-    --ui-fg-subtle: #b0b0b0;
-    --ui-fg-faint: #9a9a9a;
-    --ui-fg-disabled: #707070;
+    --ui-border: oklch(100% 0 0 / 0.3);
+    --ui-border-strong: oklch(100% 0 0 / 0.5);
+    --ui-border-field: oklch(100% 0 0 / 0.5);
+    --ui-divider: oklch(100% 0 0 / 0.24);
+    --ui-hover: oklch(100% 0 0 / 0.1);
+    --ui-active: oklch(100% 0 0 / 0.16);
+    --ui-fg-muted: oklch(81.41% 0 0);
+    --ui-fg-subtle: oklch(75.72% 0 0);
+    --ui-fg-faint: oklch(68.62% 0 0);
+    --ui-fg-disabled: oklch(54.52% 0 0);
     --ui-focus-color: var(--ui-accent-text);
   }
 }

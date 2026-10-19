@@ -274,7 +274,7 @@
 
 .ui-chart-tooltip__rows {
   display: grid;
-  gap: 4px;
+  gap: var(--ui-space-1);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -294,7 +294,7 @@
 }
 
 /* Tooltips that list fields of one datum (x, y, size…) have no summary row. */
-.ui-chart-tooltip--plain .ui-chart-tooltip__row:last-child:not(:first-child) {
+.ui-chart-tooltip:where([data-variant='plain']) .ui-chart-tooltip__row:last-child:not(:first-child) {
   margin-top: 0;
   padding-top: 0;
   border-top: 0;
@@ -410,6 +410,14 @@
 .ui-chart-legend__toggle:focus-visible {
   outline: none;
   box-shadow: var(--ui-focus-ring);
+}
+
+/* Touch: toggles are 44px rows (WCAG 2.5.5); wrapped rows sit 8px apart, so their targets never overlap. */
+@media (pointer: coarse) {
+  .ui-chart-legend__toggle {
+    min-height: 44px;
+    margin-block: 0;
+  }
 }
 
 .ui-chart-legend__item[data-hidden] .ui-chart-legend__swatch {

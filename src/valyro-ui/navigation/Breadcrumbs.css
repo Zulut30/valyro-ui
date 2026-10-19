@@ -211,4 +211,11 @@
     height: 44px;
     translate: 0 -50%;
   }
+
+  /* The ellipsis is narrow and flanked by separators, not crumbs: it may grow sideways to 40px. */
+  .ui-breadcrumbs__ellipsis::after {
+    left: 50%;
+    width: max(100%, 40px);
+    translate: -50% -50%;
+  }
 }

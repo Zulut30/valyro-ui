@@ -16,6 +16,14 @@
   user-select: none;
 }
 
+/* Touch: days grow to 40px where the screen has room (seven of them, plus padding, fit a 320px phone).
+   Not through ::after: that draws the today dot. */
+@media (pointer: coarse) {
+  .ui-calendar {
+    --_cell: max(var(--ui-calendar-cell-size), min(40px, calc((100vw - 56px) / 7)));
+  }
+}
+
 .ui-calendar__month {
   display: flex;
   flex-direction: column;
@@ -53,6 +61,41 @@
   border-collapse: collapse;
   border-spacing: 0;
   table-layout: fixed;
+}
+
+/* A new month (Calendar.tsx sets data-turn): the grid slides in from the side the month comes from and fades
+   in on the smooth spring, the caption fades with it. data-turn-again swaps the keyframes' name on every other
+   turn, which restarts them. */
+.ui-calendar[data-turn] :is(.ui-calendar__grid, .ui-calendar__caption) {
+  animation: ui-calendar-turn calc(var(--ui-duration-slow) * 1.92) var(--ui-spring-smooth);
+}
+
+.ui-calendar[data-turn][data-turn-again] :is(.ui-calendar__grid, .ui-calendar__caption) {
+  animation-name: ui-calendar-turn-again;
+}
+
+.ui-calendar[data-turn='next'] .ui-calendar__grid,
+.ui-calendar[data-turn='previous'] .ui-calendar__grid:dir(rtl) {
+  --_turn-x: calc(var(--ui-motion-distance, 24px) * 2 / 3);
+}
+
+.ui-calendar[data-turn='previous'] .ui-calendar__grid,
+.ui-calendar[data-turn='next'] .ui-calendar__grid:dir(rtl) {
+  --_turn-x: calc(var(--ui-motion-distance, 24px) * -2 / 3);
+}
+
+@keyframes ui-calendar-turn {
+  from {
+    opacity: 0;
+    translate: var(--_turn-x, 0px) 0;
+  }
+}
+
+@keyframes ui-calendar-turn-again {
+  from {
+    opacity: 0;
+    translate: var(--_turn-x, 0px) 0;
+  }
 }
 
 .ui-calendar__weekday {

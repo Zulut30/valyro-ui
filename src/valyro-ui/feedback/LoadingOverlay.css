@@ -26,8 +26,9 @@
   flex-direction: column;
   align-items: center;
   gap: var(--ui-space-3);
-  min-width: var(--ui-loading-overlay-panel-min-w);
-  max-width: 280px;
+  /* Never wider than the covered area: a narrow card on a phone keeps the panel inside it. */
+  min-width: min(var(--ui-loading-overlay-panel-min-w), 100%);
+  max-width: min(280px, 100%);
   padding: var(--ui-loading-overlay-panel-padding);
   border: var(--ui-loading-overlay-panel-border);
   border-radius: var(--ui-loading-overlay-panel-radius);
@@ -42,7 +43,7 @@
 }
 
 .ui-loading-overlay[data-fullscreen] .ui-loading-overlay__panel {
-  min-width: 200px;
+  min-width: min(200px, 100%);
   padding: var(--ui-space-6);
   border: 1px solid var(--ui-glass-border);
   border-radius: var(--ui-radius-modal);

@@ -11,12 +11,20 @@
   display: inline-flex;
   align-items: stretch;
   height: var(--_h);
+  /* As a grid or flex item it never sizes its track to all segments: past the container's width the row
+     scrolls (an auto grid column grew to the segments and pushed the control out of a phone-width card). */
+  min-width: 0;
   max-width: 100%;
   border-radius: var(--_radius);
   corner-shape: var(--ui-control-corner-shape);
   background: var(--ui-segmented-control-bg);
   box-shadow: var(--ui-segmented-control-shadow);
   vertical-align: middle;
+}
+
+/* Error state (`invalid`, e.g. from a FormField): the track's edge turns red, as on radios and checkboxes. */
+.ui-segmented-control[aria-invalid='true'] {
+  box-shadow: inset 0 0 0 var(--ui-border-width, 1px) var(--ui-danger);
 }
 
 .ui-segmented-control:dir(rtl) {
@@ -87,7 +95,7 @@
   justify-content: center;
   gap: 6px;
   min-width: calc(var(--_h) - 2 * var(--_pad));
-  padding: 0 12px;
+  padding: 0 var(--ui-space-3);
   border: 0;
   border-radius: calc(var(--_radius) - var(--_pad));
   corner-shape: var(--ui-control-corner-shape);
@@ -112,7 +120,7 @@
 }
 
 .ui-segmented-control[data-size='lg'] .ui-segmented-control__item {
-  padding: 0 16px;
+  padding: 0 var(--ui-space-4);
   font-size: var(--ui-text-lg);
 }
 

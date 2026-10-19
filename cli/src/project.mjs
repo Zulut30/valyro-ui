@@ -54,10 +54,18 @@ const LOCKFILES = [
   ['npm-shrinkwrap.json', 'npm'],
 ];
 
-/** Lockfile (searching up to the filesystem root), then `packageManager`, then the invoking agent. */
+/**
+ * Lockfile (searching up to the filesystem root), then `packageManager`, then the invoking agent.
+ * With several lockfiles in one directory the newest wins: the SolidStart template ships pnpm-lock.yaml,
+ * and `npm install` adds package-lock.json next to it.
+ */
 export function detectPackageManager(dir, env = process.env) {
   for (let current = path.resolve(dir); ; current = path.dirname(current)) {
-    for (const [file, pm] of LOCKFILES) if (exists(current, file)) return pm;
+    const found = LOCKFILES.filter(([file]) => exists(current, file)).map(([file, pm]) => ({
+      pm,
+      mtime: fs.statSync(path.join(current, file)).mtimeMs,
+    }));
+    if (found.length) return found.reduce((newest, lock) => (lock.mtime > newest.mtime ? lock : newest)).pm;
     const field = readPackageJson(current)?.packageManager;
     if (typeof field === 'string') {
       const pm = field.split('@')[0];
@@ -84,11 +92,8 @@ export function detectFramework(dir, pkg = readPackageJson(dir) ?? {}) {
 
 export const isCssOnly = (name) => adapterByName(name)?.kind === 'css';
 
-/**
- * Import alias for the install dir from tsconfig/jsconfig `paths`, e.g.
- * `@/*` -> `./src/*` and installDir `src/components/valyro-ui` give `@/components/valyro-ui`.
- */
-export function detectAlias(dir, installDir) {
+/** tsconfig.json / jsconfig.json and the configs they list in `references` (Vite: tsconfig.app.json). */
+function projectTsconfigs(dir) {
   const configs = [];
   for (const name of ['tsconfig.json', 'jsconfig.json']) {
     const config = readJsonFile(path.join(dir, name), { jsonc: true });
@@ -101,6 +106,15 @@ export function detectAlias(dir, installDir) {
       if (refConfig) configs.push({ config: refConfig, file: refFile });
     }
   }
+  return configs;
+}
+
+/**
+ * Import alias for the install dir from tsconfig/jsconfig `paths`, e.g.
+ * `@/*` -> `./src/*` and installDir `src/components/valyro-ui` give `@/components/valyro-ui`.
+ */
+export function detectAlias(dir, installDir) {
+  const configs = projectTsconfigs(dir);
   const target = path.resolve(dir, installDir);
   for (const { config, file } of configs) {
     const options = config.compilerOptions ?? {};
@@ -113,6 +127,87 @@ export function detectAlias(dir, installDir) {
     }
   }
   return null;
+}
+
+/** The ECMAScript year of a `target` or full `lib` entry (`ES2020`, `ES6`, `ESNext`); null for `DOM`, `ES2021.Intl`… */
+function esYear(value) {
+  const m = /^es(next|\d+)$/i.exec(String(value));
+  if (!m) return null;
+  if (/next/i.test(m[1])) return Infinity;
+  const n = Number(m[1]);
+  return n === 6 ? 2015 : n < 2015 ? 2009 : n;
+}
+
+/** compilerOptions with `extends` applied (relative files and packages in node_modules), plus the `include` in effect. */
+function resolveTsconfig(file, depth = 0) {
+  const config = depth < 8 ? readJsonFile(file, { jsonc: true }) : null;
+  if (!config) return { options: {}, include: undefined, base: path.dirname(file) };
+  let options = {};
+  let include;
+  let base = path.dirname(file);
+  for (const spec of [config.extends ?? []].flat()) {
+    if (typeof spec !== 'string') continue;
+    const candidates = /^\.{1,2}[\\/]|^[\\/]|^[a-zA-Z]:/.test(spec)
+      ? [path.resolve(path.dirname(file), spec)]
+      : [path.join(path.dirname(file), 'node_modules', spec)];
+    const found = candidates
+      .flatMap((p) => [p, `${p}.json`, path.join(p, 'tsconfig.json')])
+      .find((p) => fs.existsSync(p) && fs.statSync(p).isFile());
+    if (!found) continue;
+    const parent = resolveTsconfig(found, depth + 1);
+    options = { ...options, ...parent.options };
+    if (parent.include) ({ include, base } = parent);
+  }
+  if (config.include) {
+    include = config.include;
+    base = path.dirname(file);
+  } else if (config.files && !include) {
+    include = [];
+  }
+  return { options: { ...options, ...config.compilerOptions }, include, base };
+}
+
+/** Whether an `include` list (default: everything) reaches the install dir. */
+function includesDir({ include, base }, target) {
+  return (include ?? ['**/*']).some((pattern) => {
+    const root = path.resolve(base, String(pattern).split(/[*?{]/)[0] || '.');
+    const rel = path.relative(root, target);
+    return !rel.startsWith('..') && !path.isAbsolute(rel);
+  });
+}
+
+/** Strictness flags the copied ValyroUI sources are not written for. */
+const STRICT_FLAGS = ['exactOptionalPropertyTypes', 'noUncheckedIndexedAccess'];
+
+/**
+ * Notes for TypeScript settings under which `tsc` fails on the copied sources: they are written against
+ * lib ES2023 and without exactOptionalPropertyTypes / noUncheckedIndexedAccess. The Tauri, Rsbuild and
+ * Parcel templates set lib ES2020 (the base files already fail), React Router and TanStack Start ES2022
+ * (the menus fail); Waku turns both flags on.
+ */
+export function tsconfigNotes(dir, installDir) {
+  const target = path.resolve(dir, installDir);
+  const notes = [];
+  for (const { file } of projectTsconfigs(dir)) {
+    const resolved = resolveTsconfig(path.join(dir, file));
+    if (!includesDir(resolved, target)) continue;
+    const { lib, target: esTarget } = resolved.options;
+    const years = Array.isArray(lib) ? lib.map(esYear).filter((y) => y !== null) : [];
+    const year = Array.isArray(lib) ? (years.length ? Math.max(...years) : null) : esTarget ? esYear(esTarget) : null;
+    if (year !== null && year < 2023) {
+      const setting = Array.isArray(lib) ? `"lib" is ${JSON.stringify(lib)}` : `"target" is "${esTarget}" with no "lib"`;
+      notes.push(
+        `${file}: ${setting}, but the ValyroUI sources are typed against ES2023 (the base files use Intl hourCycle from ES2021, some components Array.prototype.at and Intl.Segmenter from ES2022, DropdownMenu, ContextMenu and Menu findLastIndex from ES2023), so tsc fails on them: set "lib": ["ES2023", "DOM", "DOM.Iterable"].`,
+      );
+    }
+    const flags = STRICT_FLAGS.filter((flag) => resolved.options[flag] === true);
+    if (flags.length) {
+      notes.push(
+        `${file}: ${flags.join(' and ')} ${flags.length > 1 ? 'are' : 'is'} on; the ValyroUI sources are not written for ${flags.length > 1 ? 'them' : 'it'}, so tsc reports errors in ${installDir}. Turn ${flags.length > 1 ? 'them' : 'it'} off, or install the valyro-ui npm package instead of copying the sources.`,
+      );
+    }
+  }
+  return [...new Set(notes)];
 }
 
 export function configPath(dir) {

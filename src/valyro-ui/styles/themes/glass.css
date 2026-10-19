@@ -63,40 +63,40 @@
   --ui-menu-item-h: 36px;
 
   /* Neutral primitives (the Geist scales; Glass surfaces derive from the material below instead). */
-  --ui-gray-100: #f2f2f2;
-  --ui-gray-200: #ebebeb;
-  --ui-gray-300: #e6e6e6;
-  --ui-gray-400: #ebebeb;
-  --ui-gray-500: #c9c9c9;
-  --ui-gray-600: #a8a8a8;
-  --ui-gray-700: #8f8f8f;
-  --ui-gray-800: #7d7d7d;
-  --ui-gray-900: #666666;
-  --ui-gray-1000: #171717;
-  --ui-gray-alpha-100: rgba(0, 0, 0, 0.05);
-  --ui-gray-alpha-200: rgba(0, 0, 0, 0.08);
-  --ui-gray-alpha-300: rgba(0, 0, 0, 0.1);
-  --ui-gray-alpha-400: rgba(0, 0, 0, 0.08);
-  --ui-gray-alpha-500: rgba(0, 0, 0, 0.21);
-  --ui-gray-alpha-600: rgba(0, 0, 0, 0.34);
-  --ui-gray-alpha-700: rgba(0, 0, 0, 0.44);
-  --ui-gray-alpha-800: rgba(0, 0, 0, 0.51);
-  --ui-gray-alpha-900: rgba(0, 0, 0, 0.61);
-  --ui-gray-alpha-1000: rgba(0, 0, 0, 0.91);
+  --ui-gray-100: oklch(96.12% 0 0);
+  --ui-gray-200: oklch(94.01% 0 0);
+  --ui-gray-300: oklch(92.49% 0 0);
+  --ui-gray-400: oklch(94.01% 0 0);
+  --ui-gray-500: oklch(83.59% 0 0);
+  --ui-gray-600: oklch(73.16% 0 0);
+  --ui-gray-700: oklch(65% 0 0);
+  --ui-gray-800: oklch(58.97% 0 0);
+  --ui-gray-900: oklch(51.03% 0 0);
+  --ui-gray-1000: oklch(20.46% 0 0);
+  --ui-gray-alpha-100: oklch(0% 0 0 / 0.05);
+  --ui-gray-alpha-200: oklch(0% 0 0 / 0.08);
+  --ui-gray-alpha-300: oklch(0% 0 0 / 0.1);
+  --ui-gray-alpha-400: oklch(0% 0 0 / 0.08);
+  --ui-gray-alpha-500: oklch(0% 0 0 / 0.21);
+  --ui-gray-alpha-600: oklch(0% 0 0 / 0.34);
+  --ui-gray-alpha-700: oklch(0% 0 0 / 0.44);
+  --ui-gray-alpha-800: oklch(0% 0 0 / 0.51);
+  --ui-gray-alpha-900: oklch(0% 0 0 / 0.61);
+  --ui-gray-alpha-1000: oklch(0% 0 0 / 0.91);
 
   --ui-page-bg:
     radial-gradient(1200px 800px at 8% 0%, #ffd9e8 0%, transparent 55%),
     radial-gradient(1000px 700px at 95% 10%, #c9defc 0%, transparent 55%),
     radial-gradient(900px 700px at 70% 100%, #d4f5e4 0%, transparent 55%),
     radial-gradient(800px 600px at 0% 100%, #e6dcff 0%, transparent 55%),
-    #eef1f6;
+    oklch(95.729% 0.00743 260.73);
 
   /*
    * Glass material. Every frosted surface is the tint at an opacity derived from --ui-glass-opacity
    * (the regular material); the three blur layers derive from --ui-glass-blur / -saturation / -brightness.
    * Override these five to retune the whole theme. Keep --ui-glass-opacity ≤ 0.8 (the thickest layer adds 0.2).
    */
-  --ui-glass-tint: #ffffff;
+  --ui-glass-tint: oklch(100% 0 0);
   --ui-glass-opacity: 0.52;
   --ui-glass-blur: 24px;
   --ui-glass-saturation: 1.8;
@@ -105,103 +105,103 @@
   --ui-bg: color-mix(in srgb, var(--ui-glass-tint) calc((var(--ui-glass-opacity) + 0.2) * 100%), transparent);
   --ui-surface: color-mix(in srgb, var(--ui-glass-tint) calc(var(--ui-glass-opacity) * 100%), transparent);
   --ui-surface-2: color-mix(in srgb, var(--ui-glass-tint) calc((var(--ui-glass-opacity) - 0.1) * 100%), transparent);
-  --ui-surface-3: rgba(120, 120, 128, 0.16);
+  --ui-surface-3: oklch(57.534% 0.01214 286.01 / 0.16);
   /* popovers, menus, dialogs */
   --ui-elevated: color-mix(in srgb, var(--ui-glass-tint) calc((var(--ui-glass-opacity) + 0.18) * 100%), transparent);
-  --ui-hover: rgba(120, 120, 128, 0.12);
-  --ui-active: rgba(120, 120, 128, 0.2);
-  --ui-overlay: rgba(20, 20, 30, 0.18);
+  --ui-hover: oklch(57.534% 0.01214 286.01 / 0.12);
+  --ui-active: oklch(57.534% 0.01214 286.01 / 0.2);
+  --ui-overlay: oklch(19.62% 0.02 284.41 / 0.18);
   --ui-overlay-blur: blur(6px);
   /* Light frosted tooltips in light mode, like macOS / iPadOS. */
-  --ui-tooltip-bg: rgba(255, 255, 255, 0.8);
-  --ui-tooltip-fg: #1d1d1f;
+  --ui-tooltip-bg: oklch(100% 0 0 / 0.8);
+  --ui-tooltip-fg: oklch(23.16% 0.0038 286.1);
   /* A hairline edge keeps the light card (and its arrow) visible on pale backgrounds. */
   --ui-tooltip-shadow:
     var(--ui-highlight),
     0 0 0 0.5px var(--ui-border-strong),
-    0 8px 24px -6px rgba(0, 0, 0, 0.18),
-    0 2px 6px rgba(0, 0, 0, 0.06);
+    0 8px 24px -6px oklch(0% 0 0 / 0.18),
+    0 2px 6px oklch(0% 0 0 / 0.06);
 
-  --ui-border: rgba(255, 255, 255, 0.6);
-  --ui-border-strong: rgba(60, 60, 67, 0.22);
+  --ui-border: oklch(100% 0 0 / 0.6);
+  --ui-border-strong: oklch(35.88% 0.012 285.78 / 0.22);
   /* Field edges reach 3:1 (WCAG 1.4.11); the pointer darkens them a step (decoration hook, styles/tokens.css). */
-  --ui-border-field: rgba(60, 60, 67, 0.62);
-  --ui-field-border-hover: rgba(60, 60, 67, 0.65);
-  --ui-divider: rgba(60, 60, 67, 0.14);
+  --ui-border-field: oklch(35.88% 0.012 285.78 / 0.62);
+  --ui-field-border-hover: oklch(35.88% 0.012 285.78 / 0.65);
+  --ui-divider: oklch(35.88% 0.012 285.78 / 0.14);
   /* Near-opaque so fields read clearly on frosted cards. */
   --ui-field-bg: color-mix(in srgb, var(--ui-glass-tint) min(100%, calc((var(--ui-glass-opacity) + 0.33) * 100%)), transparent);
 
-  --ui-fg: #1d1d1f;
+  --ui-fg: oklch(23.16% 0.0038 286.1);
   /* Vibrant labels: alphas of Apple's label grey, tuned so every text tier keeps 4.5:1 even straight on the
      darkest page tint (#c9defc) and on every material over it; faint ≥ 3:1 on --ui-surface (non-text only). */
-  --ui-fg-muted: rgba(60, 60, 67, 0.86);
-  --ui-fg-subtle: rgba(60, 60, 67, 0.78);
-  --ui-fg-faint: rgba(60, 60, 67, 0.6);
-  --ui-fg-disabled: rgba(60, 60, 67, 0.38);
-  --ui-fg-inverse: #ffffff;
+  --ui-fg-muted: oklch(35.88% 0.012 285.78 / 0.86);
+  --ui-fg-subtle: oklch(35.88% 0.012 285.78 / 0.78);
+  --ui-fg-faint: oklch(35.88% 0.012 285.78 / 0.6);
+  --ui-fg-disabled: oklch(35.88% 0.012 285.78 / 0.38);
+  --ui-fg-inverse: oklch(100% 0 0);
 
   /* apple.com action blue: system blue (#007aff) only reaches 4:1 with white text. */
-  --ui-accent: #0071e3;
-  --ui-accent-hover: #0066cc;
-  --ui-accent-fg: #ffffff;
-  --ui-accent-soft: rgba(0, 113, 227, 0.14);
-  --ui-accent-text: #0059bb;
+  --ui-accent: oklch(56.292% 0.19333 256.156);
+  --ui-accent-hover: oklch(52.2% 0.1771 255.83);
+  --ui-accent-fg: oklch(100% 0 0);
+  --ui-accent-soft: oklch(56.292% 0.19333 256.156 / 0.14);
+  --ui-accent-text: oklch(48.044% 0.17075 257.03);
 
-  --ui-primary: #0071e3;
-  --ui-primary-hover: #0066cc;
-  --ui-primary-fg: #ffffff;
+  --ui-primary: oklch(56.292% 0.19333 256.156);
+  --ui-primary-hover: oklch(52.2% 0.1771 255.83);
+  --ui-primary-fg: oklch(100% 0 0);
 
-  --ui-success: #34c759;
-  --ui-success-soft: rgba(52, 199, 89, 0.16);
-  --ui-success-text: #136b2d;
-  --ui-warning: #ff9500;
-  --ui-warning-soft: rgba(255, 149, 0, 0.16);
-  --ui-warning-text: #934a00;
-  --ui-danger: #dc3229;
-  --ui-danger-hover: #c8251d;
-  --ui-danger-soft: rgba(255, 59, 48, 0.14);
-  --ui-danger-text: #c00012;
-  --ui-info: #0071e3;
-  --ui-info-soft: rgba(0, 113, 227, 0.14);
-  --ui-info-text: #005bbf;
+  --ui-success: oklch(73.032% 0.19438 147.444);
+  --ui-success-soft: oklch(73.032% 0.19438 147.444 / 0.16);
+  --ui-success-text: oklch(46.37% 0.1245 148.12);
+  --ui-warning: oklch(76.52% 0.1752 62.57);
+  --ui-warning-soft: oklch(76.52% 0.1752 62.57 / 0.16);
+  --ui-warning-text: oklch(49.053% 0.12125 55.14);
+  --ui-danger: oklch(58.567% 0.20716 28.515);
+  --ui-danger-hover: oklch(53.914% 0.19873 28.8);
+  --ui-danger-soft: oklch(65.421% 0.23214 28.66 / 0.14);
+  --ui-danger-text: oklch(50.802% 0.20715 27.19);
+  --ui-info: oklch(56.292% 0.19333 256.156);
+  --ui-info-soft: oklch(56.292% 0.19333 256.156 / 0.14);
+  --ui-info-text: oklch(48.797% 0.17353 257.046);
 
-  --ui-gray: #8e8e93;
-  --ui-blue: #007aff;
-  --ui-green: #34c759;
-  --ui-amber: #ff9500;
-  --ui-red: #ff3b30;
-  --ui-purple: #af52de;
-  --ui-pink: #ff2d55;
-  --ui-teal: #30b0c7;
+  --ui-gray: oklch(64.831% 0.00735 286.19);
+  --ui-blue: oklch(60.276% 0.21771 257.424);
+  --ui-green: oklch(73.032% 0.19438 147.444);
+  --ui-amber: oklch(76.52% 0.1752 62.57);
+  --ui-red: oklch(65.421% 0.23214 28.66);
+  --ui-purple: oklch(61.49% 0.2129 312.41);
+  --ui-pink: oklch(64.965% 0.23834 17.9);
+  --ui-teal: oklch(69.976% 0.11091 212.72);
 
-  --ui-chart-1: #007aff;
-  --ui-chart-2: #af52de;
-  --ui-chart-3: #ff2d55;
-  --ui-chart-4: #d27a00;
-  --ui-chart-5: #1a9cb4;
-  --ui-chart-6: #1fa646;
-  --ui-chart-7: #8e8e93;
-  --ui-chart-8: #5856d6;
-  --ui-chart-grid: rgba(60, 60, 67, 0.1);
-  --ui-chart-axis: rgba(60, 60, 67, 0.72);
+  --ui-chart-1: oklch(60.276% 0.21771 257.424);
+  --ui-chart-2: oklch(61.49% 0.2129 312.41);
+  --ui-chart-3: oklch(64.965% 0.23834 17.9);
+  --ui-chart-4: oklch(66.146% 0.15124 62.73);
+  --ui-chart-5: oklch(63.9% 0.10773 214.45);
+  --ui-chart-6: oklch(63.593% 0.17526 147.64);
+  --ui-chart-7: oklch(64.831% 0.00735 286.19);
+  --ui-chart-8: oklch(52.95% 0.191 278.34);
+  --ui-chart-grid: oklch(35.88% 0.012 285.78 / 0.1);
+  --ui-chart-axis: var(--ui-fg-subtle);
 
   /* Depth: contact + key + ambient layers, tinted with the page's blue-grey instead of black. */
-  --ui-shadow-sm: 0 1px 2px rgba(20, 30, 60, 0.06), 0 2px 6px -2px rgba(20, 30, 60, 0.08);
-  --ui-shadow-card: 0 1px 2px rgba(31, 41, 80, 0.05), 0 4px 12px -4px rgba(31, 41, 80, 0.08), 0 16px 40px -12px rgba(31, 41, 80, 0.14);
-  --ui-shadow-popover: 0 2px 6px rgba(31, 41, 80, 0.08), 0 12px 28px -8px rgba(31, 41, 80, 0.16), 0 32px 64px -24px rgba(31, 41, 80, 0.2);
-  --ui-shadow-modal: 0 4px 12px rgba(31, 41, 80, 0.08), 0 24px 56px -12px rgba(31, 41, 80, 0.24), 0 48px 96px -32px rgba(31, 41, 80, 0.28);
+  --ui-shadow-sm: 0 1px 2px oklch(24.36% 0.059 267.97 / 0.06), 0 2px 6px -2px oklch(24.36% 0.059 267.97 / 0.08);
+  --ui-shadow-card: 0 1px 2px oklch(29.4% 0.0721 270.62 / 0.05), 0 4px 12px -4px oklch(29.4% 0.0721 270.62 / 0.08), 0 16px 40px -12px oklch(29.4% 0.0721 270.62 / 0.14);
+  --ui-shadow-popover: 0 2px 6px oklch(29.4% 0.0721 270.62 / 0.08), 0 12px 28px -8px oklch(29.4% 0.0721 270.62 / 0.16), 0 32px 64px -24px oklch(29.4% 0.0721 270.62 / 0.2);
+  --ui-shadow-modal: 0 4px 12px oklch(29.4% 0.0721 270.62 / 0.08), 0 24px 56px -12px oklch(29.4% 0.0721 270.62 / 0.24), 0 48px 96px -32px oklch(29.4% 0.0721 270.62 / 0.28);
   /* A gap ring: stays visible on blue controls and reaches 3:1 against the page. */
   --ui-focus-color: color-mix(in srgb, var(--ui-accent) 92%, transparent);
-  --ui-focus-ring: 0 0 0 2px rgba(255, 255, 255, 0.95), 0 0 0 4.5px var(--ui-focus-color);
-  --ui-focus-ring-invalid: 0 0 0 2px rgba(255, 255, 255, 0.95), 0 0 0 4.5px color-mix(in srgb, var(--ui-danger) 70%, transparent);
+  --ui-focus-ring: 0 0 0 2px oklch(100% 0 0 / 0.95), 0 0 0 4.5px var(--ui-focus-color);
+  --ui-focus-ring-invalid: 0 0 0 2px oklch(100% 0 0 / 0.95), 0 0 0 4.5px color-mix(in srgb, var(--ui-danger) 70%, transparent);
 
   --ui-blur-thin: blur(calc(var(--ui-glass-blur) * 0.67)) saturate(var(--ui-glass-saturation)) brightness(var(--ui-glass-brightness));
   --ui-blur: blur(var(--ui-glass-blur)) saturate(var(--ui-glass-saturation)) brightness(var(--ui-glass-brightness));
   --ui-blur-strong: blur(calc(var(--ui-glass-blur) * 1.67)) saturate(calc(var(--ui-glass-saturation) + 0.2)) brightness(var(--ui-glass-brightness));
   /* Specular rim: bright top edge, softer sides, faint bottom refraction line. */
-  --ui-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 -1px 0 rgba(255, 255, 255, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.35);
-  --ui-sheen: inset 0 20px 32px -28px rgba(255, 255, 255, 0.95);
-  --ui-glass-border: rgba(255, 255, 255, 0.65);
+  --ui-highlight: inset 0 1px 0 oklch(100% 0 0 / 0.9), inset 0 -1px 0 oklch(100% 0 0 / 0.3), inset 0 0 0 1px oklch(100% 0 0 / 0.35);
+  --ui-sheen: inset 0 20px 32px -28px oklch(100% 0 0 / 0.95);
+  --ui-glass-border: oklch(100% 0 0 / 0.65);
 
   --ui-ease: cubic-bezier(0.25, 0.1, 0.25, 1);
   --ui-ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
@@ -246,7 +246,7 @@
   /* The raised shadow stays on focus: no focus ring here (the pre-token cascade behaved so; kept pixel-identical). */
   --ui-raised-shadow-focus: var(--ui-raised-shadow);
   /* Apple Intelligence: the shimmer runs through the spectrum. */
-  --ui-ai-shimmer: linear-gradient(90deg, var(--ui-blue), var(--ui-purple), var(--ui-pink), var(--ui-amber), var(--ui-blue));
+  --ui-ai-shimmer: linear-gradient(90deg in srgb, var(--ui-blue), var(--ui-purple), var(--ui-pink), var(--ui-amber), var(--ui-blue));
   --ui-separator: 0.5px solid var(--ui-border-strong);
   --ui-tile-shadow: var(--ui-shadow-sm);
   --ui-choice-size: 20px;
@@ -255,7 +255,7 @@
   --ui-choice-checked-border-color-hover: var(--ui-accent);
   --ui-checked-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0) 60%);
   --ui-checked-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 1px 0 oklch(100% 0 0 / 0.35),
     0 2px 6px -1px color-mix(in srgb, var(--ui-accent) 55%, transparent);
   --ui-press-transform: scale(0.88);
   --ui-raised-shadow: var(--ui-highlight), var(--ui-shadow-sm);
@@ -278,25 +278,25 @@
   --ui-menu-highlight-hint-fg: currentcolor;
   --ui-menu-highlight-icon-fg: currentcolor;
   --ui-menu-danger-highlight-bg: var(--ui-danger);
-  --ui-menu-danger-highlight-fg: #ffffff;
+  --ui-menu-danger-highlight-fg: oklch(100% 0 0);
   --ui-modal-layer-edge-gap: var(--ui-space-3);
 
   /* ── Component tokens: --ui-<component>-<property>, one value per theme file ── */
   /* AI assistant components: the Apple Intelligence palette */
-  --ui-voice-orb-base: #fdf3fa;
+  --ui-voice-orb-base: oklch(97.39% 0.0141 336.14);
   --ui-voice-orb-color-1: var(--ui-blue);
   --ui-voice-orb-color-2: var(--ui-purple);
   --ui-voice-orb-color-3: var(--ui-pink);
   --ui-voice-orb-color-4: var(--ui-amber);
   --ui-voice-orb-glow: color-mix(in srgb, var(--ui-purple) 36%, transparent);
-  --ui-voice-orb-shine: rgba(255, 255, 255, 0.8);
+  --ui-voice-orb-shine: oklch(100% 0 0 / 0.8);
   --ui-voice-input-wave-start: var(--ui-blue);
   --ui-voice-input-wave-end: var(--ui-pink);
   --ui-agent-plan-glow: 0 0 0 4px color-mix(in srgb, var(--ui-accent) 12%, transparent), 0 0 16px color-mix(in srgb, var(--ui-accent) 45%, transparent);
-  --ui-streaming-text-caret: linear-gradient(180deg, var(--ui-blue), var(--ui-purple) 55%, var(--ui-pink));
+  --ui-streaming-text-caret: linear-gradient(180deg in srgb, var(--ui-blue), var(--ui-purple) 55%, var(--ui-pink));
   --ui-streaming-text-caret-glow: 0 0 10px color-mix(in srgb, var(--ui-purple) 55%, transparent);
-  --ui-answer-card-mark-bg: conic-gradient(from 200deg, var(--ui-blue), var(--ui-purple), var(--ui-pink), var(--ui-amber), var(--ui-blue));
-  --ui-answer-card-mark-fg: #ffffff;
+  --ui-answer-card-mark-bg: conic-gradient(from 200deg in srgb, var(--ui-blue), var(--ui-purple), var(--ui-pink), var(--ui-amber), var(--ui-blue));
+  --ui-answer-card-mark-fg: oklch(100% 0 0);
   --ui-answer-card-mark-glow: 0 4px 14px -4px color-mix(in srgb, var(--ui-purple) 60%, transparent);
   /* [ai] */
   /* AIChatWindow: the composer floats free over an iOS scroll edge (a blur strengthening toward the bottom);
@@ -308,9 +308,9 @@
   --ui-ai-chat-window-empty-icon-border: 0;
   --ui-ai-chat-window-empty-icon-radius: 50%;
   --ui-ai-chat-window-empty-icon-bg: initial;
-  --ui-ai-chat-window-empty-icon-fg: #fff;
+  --ui-ai-chat-window-empty-icon-fg: oklch(100% 0 0);
   --ui-ai-chat-window-empty-icon-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    inset 0 1px 0 oklch(100% 0 0 / 0.45),
     0 10px 30px -8px color-mix(in srgb, var(--ui-purple) 55%, transparent),
     0 0 0 6px color-mix(in srgb, var(--ui-pink) 10%, transparent);
   --ui-ai-chat-window-empty-icon-animation: ui-ai-rotate 8s linear infinite;
@@ -324,13 +324,13 @@
   --ui-chat-message-avatar-border: 0;
   --ui-chat-message-avatar-radius: 50%;
   --ui-chat-message-avatar-bg: initial;
-  --ui-chat-message-avatar-fg: #fff;
+  --ui-chat-message-avatar-fg: oklch(100% 0 0);
   --ui-chat-message-avatar-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.45),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.2),
+    inset 0 1px 0 oklch(100% 0 0 / 0.45),
+    inset 0 0 0 1px oklch(100% 0 0 / 0.2),
     0 4px 12px -4px color-mix(in srgb, var(--ui-purple) 60%, transparent);
   --ui-chat-message-avatar-shadow-streaming:
-    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    inset 0 1px 0 oklch(100% 0 0 / 0.45),
     0 0 0 3px color-mix(in srgb, var(--ui-purple) 18%, transparent),
     0 0 20px color-mix(in srgb, var(--ui-pink) 45%, transparent);
   --ui-chat-message-avatar-animation-streaming: ui-ai-rotate 2.4s linear infinite;
@@ -340,9 +340,9 @@
   --ui-chat-message-bubble-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0) 60%) var(--ui-accent);
   --ui-chat-message-bubble-fg: var(--ui-accent-fg);
   --ui-chat-message-bubble-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    inset 0 1px 0 oklch(100% 0 0 / 0.25),
     0 6px 16px -8px color-mix(in srgb, var(--ui-accent) 80%, transparent);
-  --ui-chat-message-bubble-selection-bg: rgba(255, 255, 255, 0.35);
+  --ui-chat-message-bubble-selection-bg: oklch(100% 0 0 / 0.35);
   --ui-chat-message-system-flex: 0 1 auto;
   --ui-chat-message-system-margin-inline: auto;
   --ui-chat-message-system-padding: 4px 12px;
@@ -381,10 +381,10 @@
   --ui-model-selector-bg-hover: var(--ui-active);
   --ui-model-selector-icon-radius: 50%;
   --ui-model-selector-icon-border-color-highlight: transparent;
-  --ui-model-selector-icon-bg-highlight: rgba(255, 255, 255, 0.22);
+  --ui-model-selector-icon-bg-highlight: oklch(100% 0 0 / 0.22);
   --ui-model-selector-offer-fg-highlight: currentcolor;
   --ui-model-selector-secondary-opacity-highlight: 0.85;
-  --ui-model-selector-tag-bg-highlight: rgba(255, 255, 255, 0.22);
+  --ui-model-selector-tag-bg-highlight: oklch(100% 0 0 / 0.22);
   --ui-model-selector-tag-fg-highlight: currentcolor;
   /* TokenUsage: round dots, glossy segments, a capsule cost. */
   --ui-token-usage-dot-radius: 50%;
@@ -393,20 +393,20 @@
   /* CodeBlock: a frosted sheet with a lit edge; Xcode "Default (Light)" colours, semibold keywords. */
   --ui-code-block-bg: color-mix(in srgb, var(--ui-bg) 70%, transparent);
   --ui-code-block-header-bg: var(--ui-hover);
-  --ui-code-block-keyword-fg: #9b2393;
-  --ui-code-block-string-fg: #c41a16;
-  --ui-code-block-number-fg: #1c00cf;
-  --ui-code-block-constant-fg: #9b2393;
-  --ui-code-block-function-fg: #326d74;
-  --ui-code-block-type-fg: #0b4f79;
-  --ui-code-block-tag-fg: #0f68a0;
-  --ui-code-block-attr-fg: #815f03;
-  --ui-code-block-property-fg: #326d74;
-  --ui-code-block-variable-fg: #326d74;
-  --ui-code-block-comment-fg: #5d6c79;
-  --ui-code-block-punctuation-fg: rgba(0, 0, 0, 0.7);
-  --ui-code-block-inserted-fg: #1b7530;
-  --ui-code-block-deleted-fg: #c41a16;
+  --ui-code-block-keyword-fg: oklch(49.44% 0.1958 331.08);
+  --ui-code-block-string-fg: oklch(52.47% 0.20185 28.56);
+  --ui-code-block-number-fg: oklch(39.332% 0.26266 267.91);
+  --ui-code-block-constant-fg: oklch(49.44% 0.1958 331.08);
+  --ui-code-block-function-fg: oklch(49.846% 0.06203 205.73);
+  --ui-code-block-type-fg: oklch(41.09% 0.0938 243.03);
+  --ui-code-block-tag-fg: oklch(49.829% 0.11725 243.99);
+  --ui-code-block-attr-fg: oklch(50.706% 0.10308 83.81);
+  --ui-code-block-property-fg: oklch(49.846% 0.06203 205.73);
+  --ui-code-block-variable-fg: oklch(49.846% 0.06203 205.73);
+  --ui-code-block-comment-fg: oklch(52.35% 0.0274 244.49);
+  --ui-code-block-punctuation-fg: oklch(0% 0 0 / 0.7);
+  --ui-code-block-inserted-fg: oklch(49.496% 0.13286 147.03);
+  --ui-code-block-deleted-fg: oklch(52.47% 0.20185 28.56);
   --ui-code-block-keyword-weight: var(--ui-weight-semibold);
   /* MarkdownPreview: borderless code pills, quotes as tinted boxes with an accent bar,
      Apple Intelligence: a breathing rainbow dot instead of a block caret. */
@@ -426,7 +426,7 @@
   --ui-markdown-preview-caret-h: 0.62em;
   --ui-markdown-preview-caret-gap: 4px;
   --ui-markdown-preview-caret-radius: 50%;
-  --ui-markdown-preview-caret-bg: conic-gradient(var(--ui-blue), var(--ui-purple), var(--ui-pink), var(--ui-amber), var(--ui-blue));
+  --ui-markdown-preview-caret-bg: conic-gradient(in srgb, var(--ui-blue), var(--ui-purple), var(--ui-pink), var(--ui-amber), var(--ui-blue));
   --ui-markdown-preview-caret-align: baseline;
   --ui-markdown-preview-caret-shadow: 0 0 10px color-mix(in srgb, var(--ui-purple) 60%, transparent);
   --ui-markdown-preview-caret-animation: ui-ai-breathe 1.2s var(--ui-ease) infinite;
@@ -434,11 +434,11 @@
   --ui-activity-feed-icon-size: 30px;
   --ui-activity-feed-icon-border: 0;
   --ui-activity-feed-icon-bg: initial;
-  --ui-activity-feed-icon-fg: #fff;
+  --ui-activity-feed-icon-fg: oklch(100% 0 0);
   --ui-activity-feed-icon-shadow: initial;
   --ui-activity-feed-alert-icon-border-color: currentcolor;
   --ui-activity-feed-alert-icon-bg: initial;
-  --ui-activity-feed-alert-icon-fg: #fff;
+  --ui-activity-feed-alert-icon-fg: oklch(100% 0 0);
   --ui-activity-feed-rail-bg: color-mix(in srgb, var(--ui-border-strong) 50%, transparent);
   --ui-activity-feed-detail-radius: var(--ui-radius-lg);
   --ui-activity-feed-detail-bg: var(--ui-elevated);
@@ -470,7 +470,7 @@
   --ui-chain-of-thought-badge-bg: var(--ui-hover);
   --ui-chain-of-thought-badge-icon-size: 13px;
   --ui-chain-of-thought-badge-bg-streaming: initial;
-  --ui-chain-of-thought-badge-fg-streaming: #fff;
+  --ui-chain-of-thought-badge-fg-streaming: oklch(100% 0 0);
   --ui-chain-of-thought-badge-shadow-streaming: 0 0 14px color-mix(in srgb, var(--ui-purple) 55%, transparent);
   --ui-chain-of-thought-badge-animation-streaming: ui-ai-rotate 2.4s linear infinite;
   --ui-chain-of-thought-steps-indent: 5px;
@@ -517,11 +517,11 @@
     0 12px 40px -12px color-mix(in srgb, var(--ui-purple) 45%, transparent);
   --ui-artifact-panel-icon-border: 0;
   --ui-artifact-panel-icon-radius: 10px;
-  --ui-artifact-panel-icon-bg: linear-gradient(135deg, var(--ui-blue), var(--ui-purple));
-  --ui-artifact-panel-icon-bg-code: linear-gradient(135deg, var(--ui-teal), var(--ui-blue));
-  --ui-artifact-panel-icon-fg: #fff;
+  --ui-artifact-panel-icon-bg: linear-gradient(135deg in srgb, var(--ui-blue), var(--ui-purple));
+  --ui-artifact-panel-icon-bg-code: linear-gradient(135deg in srgb, var(--ui-teal), var(--ui-blue));
+  --ui-artifact-panel-icon-fg: oklch(100% 0 0);
   --ui-artifact-panel-icon-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 1px 0 oklch(100% 0 0 / 0.4),
     0 4px 12px -4px color-mix(in srgb, var(--ui-purple) 60%, transparent);
   --ui-artifact-panel-type-tracking: 0;
   --ui-artifact-panel-version-weight: var(--ui-weight-medium);
@@ -549,25 +549,25 @@
   --ui-diff-review-expand-bg-hover: var(--ui-hover);
   /* [basic] */
   /* Avatar: bright rings, a soft tinted gradient behind initials (`initial`: Avatar.css), a frosted "+N". */
-  --ui-avatar-status-ring: rgba(255, 255, 255, 0.9);
+  --ui-avatar-status-ring: oklch(100% 0 0 / 0.9);
   --ui-avatar-fallback-bg: transparent;
   --ui-avatar-fallback-gradient: initial;
-  --ui-avatar-fallback-shadow: var(--ui-highlight), 0 2px 6px rgba(0, 0, 0, 0.12);
-  --ui-avatar-group-item-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9), 0 2px 6px rgba(0, 0, 0, 0.12);
+  --ui-avatar-fallback-shadow: var(--ui-highlight), 0 2px 6px oklch(0% 0 0 / 0.12);
+  --ui-avatar-group-item-shadow: 0 0 0 2px oklch(100% 0 0 / 0.9), 0 2px 6px oklch(0% 0 0 / 0.12);
   --ui-avatar-group-more-bg: var(--ui-bg);
   --ui-avatar-group-more-fg: var(--ui-fg);
   /* Badge: a touch of material on subtle badges, a hairline in their hue (`initial`: Badge.css). */
-  --ui-badge-solid-fg: #ffffff;
-  --ui-badge-solid-blue: color-mix(in srgb, var(--ui-blue) 84%, #000000);
-  --ui-badge-solid-red: color-mix(in srgb, var(--ui-red) 84%, #000000);
-  --ui-badge-solid-purple: color-mix(in srgb, var(--ui-purple) 84%, #000000);
-  --ui-badge-solid-pink: color-mix(in srgb, var(--ui-pink) 84%, #000000);
+  --ui-badge-solid-fg: oklch(100% 0 0);
+  --ui-badge-solid-blue: color-mix(in srgb, var(--ui-blue) 84%, oklch(0% 0 0));
+  --ui-badge-solid-red: color-mix(in srgb, var(--ui-red) 84%, oklch(0% 0 0));
+  --ui-badge-solid-purple: color-mix(in srgb, var(--ui-purple) 84%, oklch(0% 0 0));
+  --ui-badge-solid-pink: color-mix(in srgb, var(--ui-pink) 84%, oklch(0% 0 0));
   --ui-badge-subtle-shadow: initial;
   /* Button: a pressed scale, glossy solid fills with a glow in their own colour (`initial`: Button.css),
      frosted secondary buttons (the glass set: --ui-elevated hover, --ui-glass-border ring), tinted ghosts. */
   --ui-button-transform-active: scale(0.96);
   --ui-button-solid-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 55%);
-  --ui-button-solid-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  --ui-button-solid-highlight: inset 0 1px 0 oklch(100% 0 0 / 0.35);
   --ui-button-solid-glow: initial;
   --ui-button-secondary-field: ;
   --ui-button-secondary-glass: initial;
@@ -584,12 +584,12 @@
   --ui-button-group-item-bg-hover: var(--ui-hover);
   --ui-button-group-item-ring: transparent;
   /* ProgressBar: recessed track, glossy fill with a glow in its colour (`initial`: ProgressBar.css). */
-  --ui-progress-track-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
+  --ui-progress-track-shadow: inset 0 1px 2px oklch(0% 0 0 / 0.08);
   --ui-progress-fill-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0) 60%);
   --ui-progress-fill-glow: initial;
   /* Skeleton */
   --ui-skeleton-bg: var(--ui-surface-3);
-  --ui-skeleton-shine: rgba(255, 255, 255, 0.45);
+  --ui-skeleton-shine: oklch(100% 0 0 / 0.45);
   /* Tooltip: a small frosted card — light in light mode, dark in dark mode — with a hairline edge that a
      drop-shadow traces around the arrow, clipped where it joins the card (`initial`: Tooltip.css), and a
      denser arrow fill: outside the card (the backdrop root), the arrow cannot be frosted. */
@@ -598,7 +598,7 @@
   --ui-tooltip-arrow-filter:
     drop-shadow(0 0 0.5px color-mix(in srgb, var(--ui-border-strong) 100%, var(--ui-fg) 12%))
     drop-shadow(0 0 0.5px color-mix(in srgb, var(--ui-border-strong) 100%, var(--ui-fg) 12%))
-    drop-shadow(0 2px 2px rgba(0, 0, 0, 0.06));
+    drop-shadow(0 2px 2px oklch(0% 0 0 / 0.06));
   --ui-tooltip-arrow-clip: initial;
   --ui-tooltip-arrow-bg: rgb(from var(--ui-tooltip-bg) r g b / calc(alpha + 0.14));
   /* [charts] */
@@ -686,8 +686,8 @@
   --ui-treemap-value-mix: 12%;
   --ui-treemap-value-mix-range: 58%;
   --ui-treemap-tile-border-mix: 0%;
-  --ui-treemap-tile-border-base: color-mix(in srgb, #fff 35%, transparent);
-  --ui-treemap-tile-border-active: color-mix(in srgb, #fff 70%, transparent);
+  --ui-treemap-tile-border-base: color-mix(in srgb, oklch(100% 0 0) 35%, transparent);
+  --ui-treemap-tile-border-active: color-mix(in srgb, oklch(100% 0 0) 70%, transparent);
   --ui-treemap-group-mix: 10%;
   --ui-treemap-group-border-mix: 25%;
   --ui-treemap-group-border-base: transparent;
@@ -741,7 +741,7 @@
   --ui-product-filters-thumb-h: 22px;
   --ui-product-filters-thumb-border: 0;
   --ui-product-filters-thumb-radius: var(--ui-radius-full);
-  --ui-product-filters-thumb-bg: #fff;
+  --ui-product-filters-thumb-bg: oklch(100% 0 0);
   --ui-product-filters-thumb-shadow: var(--ui-shadow-sm), var(--ui-shadow-card);
   --ui-product-filters-thumb-shadow-focus: var(--ui-shadow-card);
   --ui-product-filters-thumb-transform-active: scale(1.12);
@@ -860,16 +860,16 @@
   /* Media player: a floating glass capsule over the picture, like AVKit. */
   --ui-media-player-radius: var(--ui-radius-xl);
   --ui-media-player-scrim: linear-gradient(to top, rgba(0, 0, 0, 0.36), transparent 45%);
-  --ui-media-player-bar-bg: rgba(28, 28, 30, 0.42);
+  --ui-media-player-bar-bg: oklch(22.73% 0.0038 286.09 / 0.42);
   --ui-media-player-bar-blur: blur(24px) saturate(1.8);
-  --ui-media-player-bar-border: rgba(255, 255, 255, 0.16);
+  --ui-media-player-bar-border: oklch(100% 0 0 / 0.16);
   --ui-media-player-bar-radius: 22px;
   --ui-media-player-bar-inset: 12px;
-  --ui-media-player-fg: #ffffff;
-  --ui-media-player-track: rgba(255, 255, 255, 0.3);
-  --ui-media-player-buffered: rgba(255, 255, 255, 0.5);
-  --ui-media-player-progress: #ffffff;
-  --ui-media-player-big-play-bg: rgba(40, 40, 42, 0.42);
+  --ui-media-player-fg: oklch(100% 0 0);
+  --ui-media-player-track: oklch(100% 0 0 / 0.3);
+  --ui-media-player-buffered: oklch(100% 0 0 / 0.5);
+  --ui-media-player-progress: oklch(100% 0 0);
+  --ui-media-player-big-play-bg: oklch(27.763% 0.00363 286.16 / 0.42);
   --ui-media-player-big-play-blur: blur(20px) saturate(1.8);
   /* EmptyState: a frosted fill inside the dashed outline; the icon is an accent app-icon tile whose radius
      scales with its size. */
@@ -877,7 +877,7 @@
   --ui-empty-state-icon-radius: 0px;
   --ui-empty-state-icon-radius-ratio: 0.3;
   --ui-empty-state-icon-bg: linear-gradient(160deg, color-mix(in srgb, var(--ui-accent) 65%, white), var(--ui-accent));
-  --ui-empty-state-icon-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 8px 20px -8px color-mix(in srgb, var(--ui-accent) 70%, transparent);
+  --ui-empty-state-icon-shadow: inset 0 1px 0 oklch(100% 0 0 / 0.45), 0 8px 20px -8px color-mix(in srgb, var(--ui-accent) 70%, transparent);
   --ui-empty-state-icon-fg: var(--ui-accent-fg);
   /* StatsCard: large bold figures, an accent icon tile, the delta as a tinted capsule, a glossy sparkline dot. */
   --ui-stats-card-gap: var(--ui-space-4);
@@ -885,7 +885,7 @@
   --ui-stats-card-label-size: var(--ui-text-md);
   --ui-stats-card-icon-size: 32px;
   --ui-stats-card-icon-bg: linear-gradient(160deg, color-mix(in srgb, var(--ui-accent) 70%, white), var(--ui-accent));
-  --ui-stats-card-icon-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 4px 12px -4px color-mix(in srgb, var(--ui-accent) 60%, transparent);
+  --ui-stats-card-icon-shadow: inset 0 1px 0 oklch(100% 0 0 / 0.4), 0 4px 12px -4px color-mix(in srgb, var(--ui-accent) 60%, transparent);
   --ui-stats-card-icon-fg: var(--ui-accent-fg);
   --ui-stats-card-value-size: var(--ui-text-3xl);
   --ui-stats-card-delta-padding: 2px 8px 2px 6px;
@@ -894,7 +894,7 @@
   --ui-stats-card-sparkline-w: 104px;
   --ui-stats-card-sparkline-h: 44px;
   --ui-stats-card-sparkline-dot-size: 8px;
-  --ui-stats-card-sparkline-dot-shadow: 0 0 0 2px rgba(255, 255, 255, 0.85), 0 1px 4px color-mix(in srgb, currentColor 60%, transparent);
+  --ui-stats-card-sparkline-dot-shadow: 0 0 0 2px oklch(100% 0 0 / 0.85), 0 1px 4px color-mix(in srgb, currentColor 60%, transparent);
   /* JSONViewer: a frosted panel with an Xcode-like palette; counters and "show more" are accent capsules. */
   --ui-json-viewer-bg: var(--ui-surface);
   --ui-json-viewer-shadow: var(--ui-highlight), var(--ui-shadow-card);
@@ -918,8 +918,8 @@
   --ui-tree-folder-fg: var(--ui-blue);
   --ui-tree-row-bg-selected-focus: var(--ui-accent);
   --ui-tree-row-fg-selected-focus: var(--ui-accent-fg);
-  --ui-tree-row-shadow-selected-focus: inset 0 1px 0 rgba(255, 255, 255, 0.25);
-  --ui-tree-row-shadow-selected-focus-visible: inset 0 1px 0 rgba(255, 255, 255, 0.25), var(--ui-focus-ring);
+  --ui-tree-row-shadow-selected-focus: inset 0 1px 0 oklch(100% 0 0 / 0.25);
+  --ui-tree-row-shadow-selected-focus-visible: inset 0 1px 0 oklch(100% 0 0 / 0.25), var(--ui-focus-ring);
   --ui-tree-icon-fg-selected-focus: currentcolor;
   --ui-tree-chevron-fg-selected-focus: currentcolor;
   /* KanbanBoard: frosted columns, glossy accent dots, cards that lift on hover (even when grabbed). */
@@ -962,9 +962,9 @@
   --ui-timeline-icon-border-tint: none;
   --ui-timeline-icon-fill: none;
   --ui-timeline-icon-gradient: 65%;
-  --ui-timeline-icon-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  --ui-timeline-icon-shadow: inset 0 1px 0 oklch(100% 0 0 / 0.4);
   --ui-timeline-icon-glow: 70%;
-  --ui-timeline-icon-fg: #fff;
+  --ui-timeline-icon-fg: oklch(100% 0 0);
   --ui-timeline-icon-default-border-color: currentcolor;
   --ui-timeline-title-leading: 24px;
   /* CalendarView: iOS Calendar — a large bold title, trailing day numbers, today in red, muted weekends,
@@ -981,7 +981,7 @@
   /* --ui-danger rather than system red (#ff3b30): white digits need 4.5:1. */
   --ui-calendar-view-today-bg: var(--ui-danger);
   --ui-calendar-view-today-shadow: 0 4px 10px -4px color-mix(in srgb, var(--ui-danger) 70%, transparent);
-  --ui-calendar-view-today-fg: #fff;
+  --ui-calendar-view-today-fg: oklch(100% 0 0);
   --ui-calendar-view-today-compact-fg: var(--ui-danger-text);
   --ui-calendar-view-weekend-fg: var(--ui-fg-muted);
   --ui-calendar-view-weekend-fg-pressed: var(--ui-fg-muted);
@@ -1009,7 +1009,7 @@
   --ui-data-table-row-selected-hover: color-mix(in srgb, var(--ui-accent) 22%, transparent);
   --ui-data-table-pin-bg: transparent;
   --ui-data-table-pin-tint: none;
-  --ui-data-table-pin-shadow: rgba(0, 0, 0, 0.08);
+  --ui-data-table-pin-shadow: oklch(0% 0 0 / 0.08);
   --ui-data-table-container-position: relative;
   --ui-data-table-container-isolation: isolate;
   --ui-data-table-container-bg: none;
@@ -1020,7 +1020,7 @@
   --ui-data-table-checkbox-border-width: 1.5px;
   --ui-data-table-checkbox-radius: 50%;
   --ui-data-table-checkbox-bg: color-mix(in srgb, var(--ui-bg) 60%, transparent);
-  --ui-data-table-checkbox-shadow-checked: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  --ui-data-table-checkbox-shadow-checked: inset 0 1px 0 oklch(100% 0 0 / 0.35);
   --ui-data-table-checkbox-shadow-checked-focus: var(--ui-data-table-checkbox-shadow-checked);
   --ui-data-table-checkbox-border-color-checked-hover: var(--ui-accent);
   /* [effects] */
@@ -1035,8 +1035,8 @@
   --ui-animated-border-glow: 0.75;
   --ui-shimmer-text-shine: var(--ui-accent);
   --ui-shimmer-text-sweep: var(--ui-accent);
-  --ui-spotlight-color: color-mix(in srgb, var(--ui-blue) 14%, #fff);
-  --ui-spotlight-color-2: color-mix(in srgb, var(--ui-pink) 14%, #fff);
+  --ui-spotlight-color: color-mix(in srgb, var(--ui-blue) 14%, oklch(100% 0 0));
+  --ui-spotlight-color-2: color-mix(in srgb, var(--ui-pink) 14%, oklch(100% 0 0));
   --ui-spotlight-shade: color-mix(in srgb, var(--ui-blue) 10%, transparent);
   --ui-meteors-color: var(--ui-accent);
   --ui-meteors-glow: color-mix(in srgb, var(--ui-accent) 55%, transparent);
@@ -1049,15 +1049,15 @@
   --ui-particles-glow: 0.45;
   --ui-magnetic-stiffness: 190;
   --ui-magnetic-damping: 13;
-  --ui-tilt-card-glare: rgba(255, 255, 255, 0.7);
+  --ui-tilt-card-glare: oklch(100% 0 0 / 0.7);
   --ui-ripple-fill: radial-gradient(closest-side, currentColor 30%, color-mix(in srgb, currentColor 45%, transparent) 75%, transparent);
   --ui-ripple-opacity: 0.24;
   /* GlassLens: Liquid Glass — a faint tint, saturated and brightened frost, a specular rim and (without
      refraction) an inner edge glow; the zoom lens is clear glass. */
-  --ui-glass-lens-tint: rgba(255, 255, 255, 0.3);
-  --ui-glass-lens-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.65), inset 0 -1px 1px rgba(255, 255, 255, 0.22), inset 0 0 16px rgba(255, 255, 255, 0.14), 0 16px 36px -12px rgba(16, 24, 64, 0.3), 0 2px 6px rgba(16, 24, 64, 0.08);
+  --ui-glass-lens-tint: oklch(100% 0 0 / 0.3);
+  --ui-glass-lens-shadow: inset 0 1px 1px oklch(100% 0 0 / 0.65), inset 0 -1px 1px oklch(100% 0 0 / 0.22), inset 0 0 16px oklch(100% 0 0 / 0.14), 0 16px 36px -12px oklch(22.93% 0.0766 270.65 / 0.3), 0 2px 6px oklch(22.93% 0.0766 270.65 / 0.08);
   --ui-glass-lens-zoom-shadow: var(--ui-glass-lens-shadow);
-  --ui-glass-lens-drag-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.7), inset 0 -1px 1px rgba(255, 255, 255, 0.25), inset 0 0 16px rgba(255, 255, 255, 0.16), 0 28px 48px -14px rgba(16, 24, 64, 0.38), 0 4px 10px rgba(16, 24, 64, 0.1);
+  --ui-glass-lens-drag-shadow: inset 0 1px 1px oklch(100% 0 0 / 0.7), inset 0 -1px 1px oklch(100% 0 0 / 0.25), inset 0 0 16px oklch(100% 0 0 / 0.16), 0 28px 48px -14px oklch(22.93% 0.0766 270.65 / 0.38), 0 4px 10px oklch(22.93% 0.0766 270.65 / 0.1);
   --ui-glass-lens-saturate: 1.8;
   --ui-glass-lens-zoom-saturate: 1.15;
   --ui-glass-lens-brightness: 1.04;
@@ -1069,23 +1069,23 @@
   /* CursorGlow: a specular highlight, a bright rim and a springy tilt. On pale glass a pure white rim
      disappears; a cool white keeps the edge light visible. */
   --ui-cursor-glow-tilt: 1;
-  --ui-cursor-glow-light: rgba(255, 255, 255, 0.55);
-  --ui-cursor-glow-edge: color-mix(in srgb, var(--ui-accent) 40%, #fff);
-  --ui-cursor-glow-falloff: rgba(20, 30, 70, 0.04);
+  --ui-cursor-glow-light: oklch(100% 0 0 / 0.55);
+  --ui-cursor-glow-edge: color-mix(in srgb, var(--ui-accent) 40%, oklch(100% 0 0));
+  --ui-cursor-glow-falloff: oklch(25.171% 0.07604 269.66 / 0.04);
   /* MorphingCapsule: frosted glass drops that merge, with a rim and a specular shine. */
   --ui-morphing-capsule-duration: var(--ui-duration-fluid);
-  --ui-morphing-capsule-fill: rgba(255, 255, 255, 0.4);
-  --ui-morphing-capsule-rim: rgba(255, 255, 255, 0.5);
-  --ui-morphing-capsule-shine: rgba(255, 255, 255, 0.95);
-  --ui-morphing-capsule-shadow: drop-shadow(0 10px 24px rgba(16, 24, 64, 0.18)) drop-shadow(0 1px 3px rgba(16, 24, 64, 0.1));
+  --ui-morphing-capsule-fill: oklch(100% 0 0 / 0.4);
+  --ui-morphing-capsule-rim: oklch(100% 0 0 / 0.5);
+  --ui-morphing-capsule-shine: oklch(100% 0 0 / 0.95);
+  --ui-morphing-capsule-shadow: drop-shadow(0 10px 24px oklch(22.93% 0.0766 270.65 / 0.18)) drop-shadow(0 1px 3px oklch(22.93% 0.0766 270.65 / 0.1));
   --ui-morphing-capsule-frost: blur(16px) saturate(1.9);
   /* FloatingTabBar: the iOS 26 tab bar — Liquid Glass capsules with a specular rim, an accent-tinted selection. */
   --ui-floating-tab-bar-duration: var(--ui-duration-fluid);
-  --ui-floating-tab-bar-bg: rgba(255, 255, 255, 0.46);
-  --ui-floating-tab-bar-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.7), inset 0 -1px 1px rgba(255, 255, 255, 0.25), 0 0 0 0.5px rgba(60, 60, 67, 0.12), 0 12px 32px -10px rgba(16, 24, 64, 0.28), 0 2px 6px rgba(16, 24, 64, 0.08);
+  --ui-floating-tab-bar-bg: oklch(100% 0 0 / 0.46);
+  --ui-floating-tab-bar-shadow: inset 0 1px 1px oklch(100% 0 0 / 0.7), inset 0 -1px 1px oklch(100% 0 0 / 0.25), 0 0 0 0.5px oklch(35.88% 0.012 285.78 / 0.12), 0 12px 32px -10px oklch(22.93% 0.0766 270.65 / 0.28), 0 2px 6px oklch(22.93% 0.0766 270.65 / 0.08);
   --ui-floating-tab-bar-frost: blur(20px) saturate(1.9) brightness(1.04);
-  --ui-floating-tab-bar-indicator-bg: rgba(120, 120, 128, 0.16);
-  --ui-floating-tab-bar-indicator-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), inset 0 0 0 0.5px rgba(255, 255, 255, 0.35);
+  --ui-floating-tab-bar-indicator-bg: oklch(57.534% 0.01214 286.01 / 0.16);
+  --ui-floating-tab-bar-indicator-shadow: inset 0 1px 0 oklch(100% 0 0 / 0.5), inset 0 0 0 0.5px oklch(100% 0 0 / 0.35);
   --ui-floating-tab-bar-fg: var(--ui-fg);
   --ui-floating-tab-bar-rim-content: '';
   --ui-floating-tab-bar-rim-opacity: 1;
@@ -1107,7 +1107,7 @@
   --ui-alert-icon-radius: 50%;
   --ui-alert-icon-bg: initial;
   --ui-alert-icon-shadow: initial;
-  --ui-alert-icon-fg: #fff;
+  --ui-alert-icon-fg: oklch(100% 0 0);
   --ui-alert-title-fg: var(--ui-fg);
   --ui-alert-body-fg: var(--ui-fg-muted);
   --ui-alert-content-align: center;
@@ -1176,7 +1176,7 @@
   --ui-loading-overlay-panel-fg: var(--ui-fg);
   --ui-loading-overlay-panel-animation: ui-pop-in var(--ui-duration-slow) var(--ui-ease-spring);
   /* NotificationCenter: a segmented filter capsule, accent app-icon glyphs, the EmptyState sm tile. */
-  --ui-notification-center-badge-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.7);
+  --ui-notification-center-badge-shadow: 0 0 0 1.5px oklch(100% 0 0 / 0.7);
   --ui-notification-center-header-pad-start: var(--ui-space-5);
   --ui-notification-center-title-size: var(--ui-text-lg);
   --ui-notification-center-tabs-margin: var(--ui-space-1) var(--ui-space-4) var(--ui-space-2);
@@ -1190,11 +1190,11 @@
   --ui-notification-center-list-padding: 0 var(--ui-space-2) var(--ui-space-2);
   --ui-notification-center-icon-radius: var(--ui-radius-xs);
   --ui-notification-center-icon-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0) 60%), var(--ui-accent);
-  --ui-notification-center-icon-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  --ui-notification-center-icon-shadow: inset 0 1px 0 oklch(100% 0 0 / 0.35);
   --ui-notification-center-icon-fg: var(--ui-accent-fg);
   --ui-notification-center-empty-icon-radius: calc(36px * 0.3);
   --ui-notification-center-empty-icon-bg: linear-gradient(160deg, color-mix(in srgb, var(--ui-accent) 65%, white), var(--ui-accent));
-  --ui-notification-center-empty-icon-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 8px 20px -8px color-mix(in srgb, var(--ui-accent) 70%, transparent);
+  --ui-notification-center-empty-icon-shadow: inset 0 1px 0 oklch(100% 0 0 / 0.45), 0 8px 20px -8px color-mix(in srgb, var(--ui-accent) 70%, transparent);
   --ui-notification-center-empty-icon-fg: var(--ui-accent-fg);
   --ui-notification-center-footer-border-color: var(--ui-border-strong);
   /* Popover: no arrow; the panel grows out of its trigger, like iOS 26 (a backdrop root, the arrow would
@@ -1215,7 +1215,7 @@
   --ui-toast-icon-radius: var(--ui-radius-sm);
   --ui-toast-icon-bg: initial;
   --ui-toast-icon-shadow: initial;
-  --ui-toast-icon-fg: #fff;
+  --ui-toast-icon-fg: oklch(100% 0 0);
   --ui-toast-icon-glyph-size: 20px;
   --ui-toast-loading-color: var(--ui-gray);
   --ui-toast-title-tracking: -0.01em;
@@ -1270,20 +1270,20 @@
   --ui-switch-track-shadow: inset 0 0.5px 1px color-mix(in srgb, var(--ui-fg) 8%, transparent);
   --ui-switch-track-bg-hover: color-mix(in srgb, var(--ui-surface-3) 100%, var(--ui-fg-faint) 12%);
   --ui-switch-track-bg-checked: var(--ui-success);
-  --ui-switch-track-shadow-checked: inset 0 0.5px 1px rgba(0, 0, 0, 0.06);
+  --ui-switch-track-shadow-checked: inset 0 0.5px 1px oklch(0% 0 0 / 0.06);
   --ui-switch-knob-shadow:
-    0 0.5px 1px rgba(0, 0, 0, 0.12),
-    0 3px 8px -2px rgba(0, 0, 0, 0.18);
+    0 0.5px 1px oklch(0% 0 0 / 0.12),
+    0 3px 8px -2px oklch(0% 0 0 / 0.18);
   --ui-switch-knob-transition:
     inset-inline-start var(--ui-duration) var(--ui-ease-spring),
     width var(--ui-duration) var(--ui-ease-spring),
     transform var(--ui-duration) var(--ui-ease-spring),
     background-color var(--ui-duration-fast) var(--ui-ease);
-  --ui-switch-knob-bg-active: rgba(255, 255, 255, 0.5);
+  --ui-switch-knob-bg-active: oklch(100% 0 0 / 0.5);
   --ui-switch-knob-shadow-active:
-    inset 0 1px 0 rgba(255, 255, 255, 0.95),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.6),
-    0 4px 14px -4px rgba(0, 0, 0, 0.3);
+    inset 0 1px 0 oklch(100% 0 0 / 0.95),
+    inset 0 0 0 1px oklch(100% 0 0 / 0.6),
+    0 4px 14px -4px oklch(0% 0 0 / 0.3);
   --ui-switch-knob-transform-active: scale(1.18);
   /* Slider: iOS 26 proportions — 6px capsule track, 38×24 white capsule knob that turns to glass while dragged.
      A hairline edge keeps the pale track visible on light frosted surfaces. */
@@ -1298,11 +1298,11 @@
   --ui-slider-thumb-shadow: 0 0 0 0.5px color-mix(in srgb, var(--ui-fg) 6%, transparent), var(--ui-shadow-sm), var(--ui-shadow-card);
   --ui-slider-thumb-shadow-hover: var(--ui-slider-thumb-shadow);
   --ui-slider-thumb-shadow-dragging:
-    inset 0 1px 0 rgba(255, 255, 255, 0.95),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.6),
+    inset 0 1px 0 oklch(100% 0 0 / 0.95),
+    inset 0 0 0 1px oklch(100% 0 0 / 0.6),
     var(--ui-shadow-popover);
   --ui-slider-thumb-shadow-focus: var(--ui-shadow-sm), var(--ui-focus-ring);
-  --ui-slider-thumb-bg-dragging: rgba(255, 255, 255, 0.55);
+  --ui-slider-thumb-bg-dragging: oklch(100% 0 0 / 0.55);
   --ui-slider-thumb-scale-dragging: 1.25;
   --ui-slider-value-offset: 10px;
   --ui-slider-value-padding: 4px 9px;
@@ -1348,9 +1348,9 @@
   --ui-calendar-day-today-dot: none;
   --ui-calendar-day-selected-weight: var(--ui-weight-semibold);
   --ui-calendar-day-selected-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 1px 0 oklch(100% 0 0 / 0.35),
     0 6px 14px -6px color-mix(in srgb, var(--ui-accent) 75%, transparent);
-  --ui-calendar-day-selected-shadow-focus: inset 0 1px 0 rgba(255, 255, 255, 0.35), var(--ui-focus-ring);
+  --ui-calendar-day-selected-shadow-focus: inset 0 1px 0 oklch(100% 0 0 / 0.35), var(--ui-focus-ring);
   --ui-calendar-day-selected-animation: ui-calendar-select var(--ui-duration) var(--ui-ease-spring);
   --ui-calendar-day-today-fg-disabled: var(--ui-accent-text);
   --ui-calendar-day-selected-fg-disabled: var(--ui-primary-fg);
@@ -1362,7 +1362,7 @@
   --ui-date-range-picker-preset-bg-pressed: linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 60%), var(--ui-accent);
   --ui-date-range-picker-preset-bg-pressed-hover: var(--ui-date-range-picker-preset-bg-pressed);
   --ui-date-range-picker-preset-fg-pressed: var(--ui-accent-fg);
-  --ui-date-range-picker-preset-shadow-pressed: inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  --ui-date-range-picker-preset-shadow-pressed: inset 0 1px 0 oklch(100% 0 0 / 0.3);
   --ui-date-range-picker-preset-shadow-pressed-focus: var(--ui-date-range-picker-preset-shadow-pressed);
   --ui-date-range-picker-footer-padding: var(--ui-space-3);
   /* PickerTrigger: the rim stays without a ring while focus came from the pointer; the ring is not red. */
@@ -1376,7 +1376,7 @@
   --ui-color-picker-thumb-shadow:
     0 0 0 0.5px var(--ui-border-strong),
     var(--ui-shadow-sm),
-    inset 0 1px 1px rgba(255, 255, 255, 0.5);
+    inset 0 1px 1px oklch(100% 0 0 / 0.5);
   --ui-color-picker-thumb-shadow-focus: 0 0 0 0.5px var(--ui-border-strong), var(--ui-focus-ring);
   --ui-color-picker-slider-h: 16px;
   --ui-color-picker-swatch-radius: var(--ui-radius-full);
@@ -1390,7 +1390,7 @@
   --ui-file-uploader-icon-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0) 60%), var(--ui-accent);
   --ui-file-uploader-icon-fg: var(--ui-accent-fg);
   --ui-file-uploader-icon-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 1px 0 oklch(100% 0 0 / 0.35),
     0 8px 20px -8px color-mix(in srgb, var(--ui-accent) 80%, transparent);
   --ui-file-uploader-icon-fg-dragging: var(--ui-accent-fg);
   --ui-file-uploader-icon-transform-dragging: translateY(-6px) scale(1.12);
@@ -1455,7 +1455,7 @@
   --ui-time-picker-option-h: 36px;
   --ui-time-picker-option-radius: var(--ui-radius-full);
   --ui-time-picker-option-size: var(--ui-text-lg);
-  --ui-time-picker-option-selected-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  --ui-time-picker-option-selected-shadow: inset 0 1px 0 oklch(100% 0 0 / 0.3);
   /* WheelPicker: row height (the label size follows it). */
   --ui-wheel-picker-item-h: 36px;
   /* [layout] */
@@ -1535,7 +1535,7 @@
   --ui-hero-backdrop-filter: blur(40px) saturate(130%);
   --ui-hero-backdrop-animation: ui-hero-aurora 24s ease-in-out infinite alternate;
   --ui-hero-backdrop-glow-display: none;
-  --ui-hero-highlight-bg: linear-gradient(100deg, var(--ui-blue), var(--ui-purple) 40%, var(--ui-pink) 70%, var(--ui-amber));
+  --ui-hero-highlight-bg: linear-gradient(100deg in srgb, var(--ui-blue), var(--ui-purple) 40%, var(--ui-pink) 70%, var(--ui-amber));
   --ui-hero-eyebrow-bg-hover: var(--ui-elevated);
   --ui-hero-visual-shadow: var(--ui-highlight), var(--ui-shadow-modal);
   /* ComparisonTable: frosted card (material on ::before, so sticky cells can still blur), accent highlight */
@@ -1587,11 +1587,11 @@
   --ui-cta-section-card-radius: calc(var(--ui-radius-xl) + 8px);
   --ui-cta-section-inverted-bg: color-mix(in srgb, var(--ui-fg) 84%, transparent);
   --ui-cta-section-inverted-border-color: color-mix(in srgb, var(--ui-fg-inverse) 26%, transparent);
-  --ui-cta-section-gradient-border-color: rgba(255, 255, 255, 0.35);
+  --ui-cta-section-gradient-border-color: oklch(100% 0 0 / 0.35);
   /* The mesh stays deep enough for white text: a lighter teal corner plus the top sheen left the
      description near 2.5:1. A soft tinted text-shadow keeps text legible over the bright spots. */
   --ui-cta-section-gradient-bg: radial-gradient(55% 85% at 0% 0%, color-mix(in srgb, var(--ui-teal) 55%, transparent), transparent 65%), radial-gradient(55% 85% at 100% 0%, color-mix(in srgb, var(--ui-pink) 70%, transparent), transparent 65%), radial-gradient(70% 100% at 90% 100%, color-mix(in srgb, var(--ui-amber) 50%, transparent), transparent 60%), linear-gradient(135deg, color-mix(in srgb, var(--ui-blue) 88%, #000), color-mix(in srgb, var(--ui-purple) 88%, #000) 70%);
-  --ui-cta-section-gradient-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 32px 80px -32px color-mix(in srgb, var(--ui-purple) 70%, transparent);
+  --ui-cta-section-gradient-shadow: inset 0 1px 0 oklch(100% 0 0 / 0.5), 0 32px 80px -32px color-mix(in srgb, var(--ui-purple) 70%, transparent);
   --ui-cta-section-gradient-fg-muted-mix: 90%;
   --ui-cta-section-gradient-text-shadow: 0 1px 12px color-mix(in srgb, var(--ui-purple) 45%, transparent);
   --ui-cta-section-backdrop-bg: radial-gradient(30% 40% at 15% 20%, color-mix(in srgb, var(--ui-blue) 34%, transparent), transparent 70%), radial-gradient(28% 38% at 72% 12%, color-mix(in srgb, var(--ui-purple) 28%, transparent), transparent 70%), radial-gradient(32% 42% at 85% 82%, color-mix(in srgb, var(--ui-pink) 28%, transparent), transparent 70%);
@@ -1635,7 +1635,7 @@
   --ui-feature-grid-icon-size: 44px;
   --ui-feature-grid-icon-glyph-size: 22px;
   --ui-feature-grid-icon-bg: initial;
-  --ui-feature-grid-icon-fg: #fff;
+  --ui-feature-grid-icon-fg: oklch(100% 0 0);
   --ui-feature-grid-icon-shadow: initial;
   --ui-feature-grid-title-size: calc(var(--ui-text-lg) + 1px);
   --ui-feature-grid-frame-gap: var(--ui-space-4);
@@ -1668,7 +1668,7 @@
   --ui-breadcrumbs-ellipsis-padding: 0 10px;
   /* CommandPalette: shortcut keys sit in the accent-filled highlighted row. */
   --ui-command-palette-kbd-highlight-border-color: transparent;
-  --ui-command-palette-kbd-highlight-bg: rgba(255, 255, 255, 0.22);
+  --ui-command-palette-kbd-highlight-bg: oklch(0% 0 0 / 0.16);
   --ui-command-palette-kbd-highlight-fg: currentcolor;
   /* Navbar: a floating capsule bar; the active link is a raised pill. */
   --ui-navbar-padding: var(--ui-space-3);
@@ -1703,7 +1703,7 @@
   --ui-pagination-item-current-bg: var(--ui-accent) linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 60%);
   --ui-pagination-item-current-fg: var(--ui-accent-fg);
   --ui-pagination-item-current-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 1px 0 oklch(100% 0 0 / 0.35),
     0 4px 12px -4px color-mix(in srgb, var(--ui-accent) 70%, transparent);
   --ui-pagination-step-bg: transparent;
   --ui-pagination-step-shadow: none;
@@ -1727,13 +1727,13 @@
   --ui-sidebar-item-active-bg: var(--ui-accent) linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0) 60%);
   --ui-sidebar-item-active-fg: var(--ui-accent-fg);
   --ui-sidebar-item-active-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 1px 0 oklch(100% 0 0 / 0.3),
     0 6px 16px -8px color-mix(in srgb, var(--ui-accent) 80%, transparent);
   --ui-sidebar-item-active-bg-hover: var(--ui-sidebar-item-active-bg);
   --ui-sidebar-item-active-fg-hover: var(--ui-accent-fg);
   --ui-sidebar-item-active-shadow-focus: var(--ui-sidebar-item-active-shadow);
   --ui-sidebar-item-active-chevron-fg: currentcolor;
-  --ui-sidebar-item-active-badge-bg: rgba(255, 255, 255, 0.24);
+  --ui-sidebar-item-active-badge-bg: oklch(100% 0 0 / 0.24);
   --ui-sidebar-item-active-badge-fg: currentcolor;
   --ui-sidebar-dot-ring: var(--ui-elevated);
   /* Stepper: frosted round indicators, accent progress. */
@@ -1743,13 +1743,13 @@
   --ui-stepper-connector-bg: var(--ui-surface-3);
   --ui-stepper-connector-bg-passed: var(--ui-accent);
   --ui-stepper-indicator-complete-bg: var(--ui-accent) linear-gradient(180deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0) 60%);
-  --ui-stepper-indicator-complete-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 4px 12px -4px color-mix(in srgb, var(--ui-accent) 70%, transparent);
+  --ui-stepper-indicator-complete-shadow: inset 0 1px 0 oklch(100% 0 0 / 0.35), 0 4px 12px -4px color-mix(in srgb, var(--ui-accent) 70%, transparent);
   --ui-stepper-indicator-current-shadow:
     var(--ui-highlight),
     inset 0 0 0 2px var(--ui-accent),
     0 0 0 5px var(--ui-accent-soft);
   --ui-stepper-indicator-error-bg: var(--ui-danger) linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 60%);
-  --ui-stepper-indicator-error-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 4px 12px -4px color-mix(in srgb, var(--ui-danger) 70%, transparent);
+  --ui-stepper-indicator-error-shadow: inset 0 1px 0 oklch(100% 0 0 / 0.3), 0 4px 12px -4px color-mix(in srgb, var(--ui-danger) 70%, transparent);
   /* Tabs: underline becomes the iOS 26 tab bar — a frosted capsule track (its scrolled edges veiled
      instead of masked, which would erase its rounded end) with a tinted glass lens under the active tab;
      pills: no track, the active tab is a solid accent capsule. */
@@ -1775,12 +1775,12 @@
   --ui-tabs-underline-bar-shadow: var(--ui-highlight);
   --ui-tabs-pills-tab-padding-x: 16px;
   --ui-tabs-pills-tab-active-fg: var(--ui-accent-fg);
-  --ui-tabs-pills-active-badge-bg: rgba(255, 255, 255, 0.24);
+  --ui-tabs-pills-active-badge-bg: oklch(100% 0 0 / 0.24);
   --ui-tabs-pills-active-badge-fg: currentcolor;
   --ui-tabs-pills-indicator-radius: var(--ui-radius-full);
   --ui-tabs-pills-indicator-bg: var(--ui-accent) linear-gradient(180deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0) 60%);
   --ui-tabs-pills-indicator-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 1px 0 oklch(100% 0 0 / 0.35),
     0 6px 16px -6px color-mix(in srgb, var(--ui-accent) 70%, transparent);
   /* SegmentedControl: iOS 26 — recessed capsule track, raised glass thumb */
   --ui-segmented-control-bg: var(--ui-surface-3);
@@ -1805,16 +1805,16 @@
     radial-gradient(900px 700px at 70% 100%, #b6ecdc 0%, transparent 60%),
     linear-gradient(150deg, #dfe7fb 0%, #ece3f6 55%, #f8e9e1 100%);
   --ui-node-canvas-label-font: var(--ui-font-sans);
-  --ui-node-canvas-wire-1: #7e57c2;
-  --ui-node-canvas-wire-2: #a87b00;
-  --ui-node-canvas-wire-3: #d96200;
-  --ui-node-canvas-wire-4: #d81b60;
-  --ui-node-canvas-wire-5: #1e88e5;
-  --ui-node-canvas-wire-6: #e53935;
-  --ui-node-canvas-wire-7: #2e7d32;
-  --ui-node-canvas-wire-8: #00838f;
-  --ui-node-canvas-wire-9: #558b2f;
-  --ui-node-canvas-wire-10: #3949ab;
+  --ui-node-canvas-wire-1: oklch(54.95% 0.1615 297.66);
+  --ui-node-canvas-wire-2: oklch(61.129% 0.12574 82.81);
+  --ui-node-canvas-wire-3: oklch(63.303% 0.17132 48.41);
+  --ui-node-canvas-wire-4: oklch(57.374% 0.21777 7.85);
+  --ui-node-canvas-wire-5: oklch(61.788% 0.16678 250.87);
+  --ui-node-canvas-wire-6: oklch(60.83% 0.209 27.03);
+  --ui-node-canvas-wire-7: oklch(52.343% 0.13466 144.17);
+  --ui-node-canvas-wire-8: oklch(55.706% 0.09532 206.08);
+  --ui-node-canvas-wire-9: oklch(57.896% 0.1366 134.66);
+  --ui-node-canvas-wire-10: oklch(45.11% 0.157 271.6);
   /* [productivity] */
   /* BulkActionBar: a frosted capsule. */
   --ui-bulk-action-bar-bg: var(--ui-elevated);
@@ -1848,7 +1848,7 @@
   --ui-data-grid-container-frost-content: '';
   --ui-data-grid-pin-bg: transparent;
   --ui-data-grid-pin-row-tint: none;
-  --ui-data-grid-pin-shadow: rgba(0, 0, 0, 0.08);
+  --ui-data-grid-pin-shadow: oklch(0% 0 0 / 0.08);
   --ui-data-grid-pin-bg-scrolled: color-mix(in srgb, var(--ui-elevated) 82%, transparent);
   --ui-data-grid-pin-frost-layer: initial;
   --ui-data-grid-pin-backdrop-scrolled: blur(16px) saturate(1.6);
@@ -1862,7 +1862,7 @@
   --ui-data-grid-check-radius: 50%;
   --ui-data-grid-bool-bg: color-mix(in srgb, var(--ui-bg) 60%, transparent);
   --ui-data-grid-checkbox-bg: color-mix(in srgb, var(--ui-bg) 60%, transparent);
-  --ui-data-grid-check-shadow-checked: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  --ui-data-grid-check-shadow-checked: inset 0 1px 0 oklch(100% 0 0 / 0.35);
   --ui-data-grid-check-border-color-checked-hover: var(--ui-primary);
   /* RichTextEditor (.ui-rte): a frosted card with an accent focus halo, accent-tinted active tools and quote
      rules, translucent code wells, a capsule selection toolbar; slash-menu icons tint with the highlighted row. */
@@ -1893,7 +1893,7 @@
   --ui-scheduler-head-bg: color-mix(in srgb, var(--ui-elevated) 72%, transparent);
   --ui-scheduler-sticky-bg: linear-gradient(var(--ui-elevated), var(--ui-elevated)), linear-gradient(var(--ui-bg), var(--ui-bg));
   --ui-scheduler-today-bg: var(--ui-danger);
-  --ui-scheduler-today-fg: #fff;
+  --ui-scheduler-today-fg: oklch(100% 0 0);
   --ui-scheduler-today-shadow: 0 4px 10px -4px color-mix(in srgb, var(--ui-danger) 70%, transparent);
   --ui-scheduler-today-weekday-fg: var(--ui-danger-text);
   --ui-scheduler-off-bg: color-mix(in srgb, var(--ui-fg) 4%, transparent);
@@ -1931,148 +1931,148 @@
 [data-theme='glass'][data-mode='dark'] {
   color-scheme: dark;
 
-  --ui-gray-100: #1a1a1a;
-  --ui-gray-200: #1f1f1f;
-  --ui-gray-300: #292929;
-  --ui-gray-400: #2e2e2e;
-  --ui-gray-500: #454545;
-  --ui-gray-600: #878787;
-  --ui-gray-700: #8f8f8f;
-  --ui-gray-800: #7d7d7d;
-  --ui-gray-900: #a1a1a1;
-  --ui-gray-1000: #ededed;
-  --ui-gray-alpha-100: rgba(255, 255, 255, 0.06);
-  --ui-gray-alpha-200: rgba(255, 255, 255, 0.09);
-  --ui-gray-alpha-300: rgba(255, 255, 255, 0.13);
-  --ui-gray-alpha-400: rgba(255, 255, 255, 0.14);
-  --ui-gray-alpha-500: rgba(255, 255, 255, 0.24);
-  --ui-gray-alpha-600: rgba(255, 255, 255, 0.51);
-  --ui-gray-alpha-700: rgba(255, 255, 255, 0.54);
-  --ui-gray-alpha-800: rgba(255, 255, 255, 0.47);
-  --ui-gray-alpha-900: rgba(255, 255, 255, 0.61);
-  --ui-gray-alpha-1000: rgba(255, 255, 255, 0.92);
+  --ui-gray-100: oklch(21.78% 0 0);
+  --ui-gray-200: oklch(23.93% 0 0);
+  --ui-gray-300: oklch(28.09% 0 0);
+  --ui-gray-400: oklch(30.12% 0 0);
+  --ui-gray-500: oklch(39.04% 0 0);
+  --ui-gray-600: oklch(62.34% 0 0);
+  --ui-gray-700: oklch(65% 0 0);
+  --ui-gray-800: oklch(58.97% 0 0);
+  --ui-gray-900: oklch(70.9% 0 0);
+  --ui-gray-1000: oklch(94.61% 0 0);
+  --ui-gray-alpha-100: oklch(100% 0 0 / 0.06);
+  --ui-gray-alpha-200: oklch(100% 0 0 / 0.09);
+  --ui-gray-alpha-300: oklch(100% 0 0 / 0.13);
+  --ui-gray-alpha-400: oklch(100% 0 0 / 0.14);
+  --ui-gray-alpha-500: oklch(100% 0 0 / 0.24);
+  --ui-gray-alpha-600: oklch(100% 0 0 / 0.51);
+  --ui-gray-alpha-700: oklch(100% 0 0 / 0.54);
+  --ui-gray-alpha-800: oklch(100% 0 0 / 0.47);
+  --ui-gray-alpha-900: oklch(100% 0 0 / 0.61);
+  --ui-gray-alpha-1000: oklch(100% 0 0 / 0.92);
 
   --ui-page-bg:
     radial-gradient(1100px 800px at 10% 0%, #3b1d6e 0%, transparent 55%),
     radial-gradient(1000px 700px at 95% 5%, #0f3b78 0%, transparent 55%),
     radial-gradient(900px 700px at 75% 100%, #0d5248 0%, transparent 55%),
     radial-gradient(800px 600px at 0% 100%, #5a1640 0%, transparent 55%),
-    #07070c;
+    oklch(13.14% 0.0118 284.67);
   /* Dark glass dims what it refracts (brightness < 1) so white labels stay legible over bright tints. */
-  --ui-glass-tint: rgb(38, 38, 44);
+  --ui-glass-tint: oklch(27.11% 0.011 285.64);
   --ui-glass-opacity: 0.48;
   --ui-glass-brightness: 0.9;
   /* --ui-bg, --ui-surface and --ui-elevated follow from the material above. */
-  --ui-surface-2: rgba(255, 255, 255, 0.08);
-  --ui-surface-3: rgba(120, 120, 128, 0.32);
-  --ui-hover: rgba(255, 255, 255, 0.08);
-  --ui-active: rgba(255, 255, 255, 0.14);
-  --ui-overlay: rgba(0, 0, 0, 0.36);
-  --ui-tooltip-bg: rgba(50, 50, 56, 0.8);
-  --ui-tooltip-fg: #f5f5f7;
+  --ui-surface-2: oklch(100% 0 0 / 0.08);
+  --ui-surface-3: oklch(57.534% 0.01214 286.01 / 0.32);
+  --ui-hover: oklch(100% 0 0 / 0.08);
+  --ui-active: oklch(100% 0 0 / 0.14);
+  --ui-overlay: oklch(0% 0 0 / 0.36);
+  --ui-tooltip-bg: oklch(31.95% 0.0106 285.79 / 0.8);
+  --ui-tooltip-fg: oklch(97.071% 0.00265 286.35);
   --ui-tooltip-shadow:
     var(--ui-highlight),
-    0 0 0 0.5px rgba(255, 255, 255, 0.12),
-    0 10px 28px -6px rgba(0, 0, 0, 0.55);
+    0 0 0 0.5px oklch(100% 0 0 / 0.12),
+    0 10px 28px -6px oklch(0% 0 0 / 0.55);
 
-  --ui-border: rgba(255, 255, 255, 0.14);
-  --ui-border-strong: rgba(255, 255, 255, 0.26);
-  --ui-border-field: rgba(255, 255, 255, 0.45);
-  --ui-field-border-hover: rgba(255, 255, 255, 0.48);
-  --ui-divider: rgba(255, 255, 255, 0.14);
+  --ui-border: oklch(100% 0 0 / 0.14);
+  --ui-border-strong: oklch(100% 0 0 / 0.26);
+  --ui-border-field: oklch(100% 0 0 / 0.45);
+  --ui-field-border-hover: oklch(100% 0 0 / 0.48);
+  --ui-divider: oklch(100% 0 0 / 0.14);
   --ui-field-bg: var(--ui-bg);
 
-  --ui-fg: #f5f5f7;
+  --ui-fg: oklch(97.071% 0.00265 286.35);
   /* Every text tier keeps 4.5:1 straight on the lightest page tint (#0d5248) and on every material; faint is non-text only. */
-  --ui-fg-muted: rgba(235, 235, 245, 0.8);
-  --ui-fg-subtle: rgba(235, 235, 245, 0.7);
-  --ui-fg-faint: rgba(235, 235, 245, 0.45);
-  --ui-fg-disabled: rgba(235, 235, 245, 0.28);
-  --ui-fg-inverse: #000000;
+  --ui-fg-muted: oklch(94.297% 0.01339 286.14 / 0.86);
+  --ui-fg-subtle: oklch(94.297% 0.01339 286.14 / 0.8);
+  --ui-fg-faint: oklch(94.297% 0.01339 286.14 / 0.45);
+  --ui-fg-disabled: oklch(94.297% 0.01339 286.14 / 0.28);
+  --ui-fg-inverse: oklch(0% 0 0);
 
-  --ui-accent: #0071e3;
-  --ui-accent-hover: #0066cc;
-  --ui-accent-fg: #ffffff;
-  --ui-accent-soft: rgba(10, 132, 255, 0.24);
-  --ui-accent-text: #85c1ff;
+  --ui-accent: oklch(56.292% 0.19333 256.156);
+  --ui-accent-hover: oklch(52.2% 0.1771 255.83);
+  --ui-accent-fg: oklch(100% 0 0);
+  --ui-accent-soft: oklch(62.425% 0.20558 255.486 / 0.24);
+  --ui-accent-text: oklch(79.38% 0.10834 250.11);
 
-  --ui-primary: #0071e3;
-  --ui-primary-hover: #0066cc;
-  --ui-primary-fg: #ffffff;
+  --ui-primary: oklch(56.292% 0.19333 256.156);
+  --ui-primary-hover: oklch(52.2% 0.1771 255.83);
+  --ui-primary-fg: oklch(100% 0 0);
 
-  --ui-success: #30d158;
-  --ui-success-soft: rgba(48, 209, 88, 0.2);
-  --ui-success-text: #4ee07a;
-  --ui-warning: #ff9f0a;
-  --ui-warning-soft: rgba(255, 159, 10, 0.2);
-  --ui-warning-text: #ffb340;
-  --ui-danger: #dc3229;
-  --ui-danger-hover: #c8251d;
-  --ui-danger-soft: rgba(255, 69, 58, 0.2);
-  --ui-danger-text: #ffa19b;
-  --ui-info: #0a84ff;
-  --ui-info-soft: rgba(10, 132, 255, 0.22);
-  --ui-info-text: #85c1ff;
+  --ui-success: oklch(75.555% 0.20825 146.984);
+  --ui-success-soft: oklch(75.555% 0.20825 146.984 / 0.2);
+  --ui-success-text: oklch(80.541% 0.18856 149.8);
+  --ui-warning: oklch(78.237% 0.17106 67.22);
+  --ui-warning-soft: oklch(78.237% 0.17106 67.22 / 0.2);
+  --ui-warning-text: oklch(82.029% 0.15236 73.25);
+  --ui-danger: oklch(58.567% 0.20716 28.515);
+  --ui-danger-hover: oklch(53.914% 0.19873 28.8);
+  --ui-danger-soft: oklch(66.33% 0.2236 28.29 / 0.2);
+  --ui-danger-text: oklch(80.2% 0.1129 23.84);
+  --ui-info: oklch(62.425% 0.20558 255.486);
+  --ui-info-soft: oklch(62.425% 0.20558 255.486 / 0.22);
+  --ui-info-text: oklch(79.38% 0.10834 250.11);
 
-  --ui-gray: #98989d;
-  --ui-blue: #0a84ff;
-  --ui-green: #30d158;
-  --ui-amber: #ff9f0a;
-  --ui-red: #ff453a;
-  --ui-purple: #bf5af2;
-  --ui-pink: #ff375f;
-  --ui-teal: #40c8e0;
+  --ui-gray: oklch(68.12% 0.0073 286.21);
+  --ui-blue: oklch(62.425% 0.20558 255.486);
+  --ui-green: oklch(75.555% 0.20825 146.984);
+  --ui-amber: oklch(78.237% 0.17106 67.22);
+  --ui-red: oklch(66.33% 0.2236 28.29);
+  --ui-purple: oklch(65.605% 0.22741 312.42);
+  --ui-pink: oklch(65.77% 0.2317 16.02);
+  --ui-teal: oklch(77.062% 0.11808 211.98);
 
-  --ui-chart-1: #0a84ff;
-  --ui-chart-2: #bf5af2;
-  --ui-chart-3: #ff375f;
-  --ui-chart-4: #ff9f0a;
-  --ui-chart-5: #40c8e0;
-  --ui-chart-6: #30d158;
-  --ui-chart-7: #98989d;
-  --ui-chart-8: #7d7aff;
-  --ui-chart-grid: rgba(255, 255, 255, 0.1);
-  --ui-chart-axis: rgba(235, 235, 245, 0.56);
+  --ui-chart-1: oklch(62.425% 0.20558 255.486);
+  --ui-chart-2: oklch(65.605% 0.22741 312.42);
+  --ui-chart-3: oklch(65.77% 0.2317 16.02);
+  --ui-chart-4: oklch(78.237% 0.17106 67.22);
+  --ui-chart-5: oklch(77.062% 0.11808 211.98);
+  --ui-chart-6: oklch(75.555% 0.20825 146.984);
+  --ui-chart-7: oklch(68.12% 0.0073 286.21);
+  --ui-chart-8: oklch(64.85% 0.1921 280.62);
+  --ui-chart-grid: oklch(100% 0 0 / 0.1);
+  --ui-chart-axis: var(--ui-fg-subtle);
 
-  --ui-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3), 0 2px 6px -2px rgba(0, 0, 0, 0.3);
-  --ui-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 12px -4px rgba(0, 0, 0, 0.3), 0 16px 40px -12px rgba(0, 0, 0, 0.45);
-  --ui-shadow-popover: 0 2px 8px rgba(0, 0, 0, 0.3), 0 12px 28px -8px rgba(0, 0, 0, 0.45), 0 32px 64px -24px rgba(0, 0, 0, 0.55);
-  --ui-shadow-modal: 0 4px 12px rgba(0, 0, 0, 0.35), 0 24px 56px -12px rgba(0, 0, 0, 0.55), 0 48px 96px -32px rgba(0, 0, 0, 0.65);
+  --ui-shadow-sm: 0 1px 2px oklch(0% 0 0 / 0.3), 0 2px 6px -2px oklch(0% 0 0 / 0.3);
+  --ui-shadow-card: 0 1px 2px oklch(0% 0 0 / 0.3), 0 4px 12px -4px oklch(0% 0 0 / 0.3), 0 16px 40px -12px oklch(0% 0 0 / 0.45);
+  --ui-shadow-popover: 0 2px 8px oklch(0% 0 0 / 0.3), 0 12px 28px -8px oklch(0% 0 0 / 0.45), 0 32px 64px -24px oklch(0% 0 0 / 0.55);
+  --ui-shadow-modal: 0 4px 12px oklch(0% 0 0 / 0.35), 0 24px 56px -12px oklch(0% 0 0 / 0.55), 0 48px 96px -32px oklch(0% 0 0 / 0.65);
   --ui-focus-color: color-mix(in srgb, var(--ui-accent-text) 90%, transparent);
-  --ui-focus-ring: 0 0 0 2px rgba(20, 20, 24, 0.9), 0 0 0 4.5px var(--ui-focus-color);
-  --ui-focus-ring-invalid: 0 0 0 2px rgba(20, 20, 24, 0.9), 0 0 0 4.5px color-mix(in srgb, var(--ui-danger-text) 85%, transparent);
+  --ui-focus-ring: 0 0 0 2px oklch(19.31% 0.008 285.63 / 0.9), 0 0 0 4.5px var(--ui-focus-color);
+  --ui-focus-ring-invalid: 0 0 0 2px oklch(19.31% 0.008 285.63 / 0.9), 0 0 0 4.5px color-mix(in srgb, var(--ui-danger-text) 85%, transparent);
 
-  --ui-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.24), inset 0 -1px 0 rgba(255, 255, 255, 0.06), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
-  --ui-sheen: inset 0 20px 32px -28px rgba(255, 255, 255, 0.16);
-  --ui-glass-border: rgba(255, 255, 255, 0.16);
+  --ui-highlight: inset 0 1px 0 oklch(100% 0 0 / 0.24), inset 0 -1px 0 oklch(100% 0 0 / 0.06), inset 0 0 0 1px oklch(100% 0 0 / 0.08);
+  --ui-sheen: inset 0 20px 32px -28px oklch(100% 0 0 / 0.16);
+  --ui-glass-border: oklch(100% 0 0 / 0.16);
 
   /* [roles · dark] */
 
   /* ── Component tokens: --ui-<component>-<property>, one value per theme file ── */
   /* AI assistant components */
-  --ui-voice-orb-base: #170d26;
+  --ui-voice-orb-base: oklch(18.78% 0.0501 300.08);
   --ui-voice-orb-glow: color-mix(in srgb, var(--ui-purple) 52%, transparent);
-  --ui-voice-orb-shine: rgba(255, 255, 255, 0.34);
+  --ui-voice-orb-shine: oklch(100% 0 0 / 0.34);
   /* [ai · dark] */
   /* CodeBlock: Xcode "Default (Dark)" */
-  --ui-code-block-keyword-fg: #fc5fa3;
-  --ui-code-block-string-fg: #fc6a5d;
-  --ui-code-block-number-fg: #d0bf69;
-  --ui-code-block-constant-fg: #fc5fa3;
-  --ui-code-block-function-fg: #67b7a4;
-  --ui-code-block-type-fg: #5dd8ff;
-  --ui-code-block-tag-fg: #41a1c0;
-  --ui-code-block-attr-fg: #c88d5c;
-  --ui-code-block-property-fg: #67b7a4;
-  --ui-code-block-variable-fg: #67b7a4;
-  --ui-code-block-comment-fg: #7f8c98;
-  --ui-code-block-punctuation-fg: rgba(255, 255, 255, 0.72);
-  --ui-code-block-inserted-fg: #67d17a;
-  --ui-code-block-deleted-fg: #fc6a5d;
+  --ui-code-block-keyword-fg: oklch(74.5% 0.2007 356.67);
+  --ui-code-block-string-fg: oklch(74% 0.1811 27.72);
+  --ui-code-block-number-fg: oklch(80.07% 0.1089 98.39);
+  --ui-code-block-constant-fg: oklch(74.5% 0.2007 356.67);
+  --ui-code-block-function-fg: oklch(72.26% 0.0843 176.67);
+  --ui-code-block-type-fg: oklch(82.78% 0.1212 222.16);
+  --ui-code-block-tag-fg: oklch(70.5% 0.09958 222.78);
+  --ui-code-block-attr-fg: oklch(71.8% 0.09693 59.92);
+  --ui-code-block-property-fg: oklch(72.26% 0.0843 176.67);
+  --ui-code-block-variable-fg: oklch(72.26% 0.0843 176.67);
+  --ui-code-block-comment-fg: oklch(71% 0.02356 246.02);
+  --ui-code-block-punctuation-fg: oklch(100% 0 0 / 0.72);
+  --ui-code-block-inserted-fg: oklch(77.626% 0.15732 147.78);
+  --ui-code-block-deleted-fg: oklch(74% 0.1811 27.72);
   /* [basic · dark] */
   /* Avatar */
-  --ui-avatar-status-ring: #1c1c1e;
-  --ui-avatar-group-item-shadow: 0 0 0 2px rgba(28, 28, 32, 0.95), 0 2px 6px rgba(0, 0, 0, 0.3);
+  --ui-avatar-status-ring: oklch(22.73% 0.0038 286.09);
+  --ui-avatar-group-item-shadow: 0 0 0 2px oklch(22.816% 0.00766 285.78 / 0.95), 0 2px 6px oklch(0% 0 0 / 0.3);
   /* Badge: dark ink on solid fills (`initial`: Badge.css), hues not deepened */
   --ui-badge-solid-fg: initial;
   --ui-badge-solid-blue: var(--ui-blue);
@@ -2080,12 +2080,12 @@
   --ui-badge-solid-purple: var(--ui-purple);
   --ui-badge-solid-pink: var(--ui-pink);
   /* Skeleton */
-  --ui-skeleton-shine: rgba(255, 255, 255, 0.1);
+  --ui-skeleton-shine: oklch(100% 0 0 / 0.1);
   /* Tooltip */
   --ui-tooltip-arrow-filter:
-    drop-shadow(0 0 0.5px rgba(255, 255, 255, 0.2))
-    drop-shadow(0 0 0.5px rgba(255, 255, 255, 0.2))
-    drop-shadow(0 2px 2px rgba(0, 0, 0, 0.06));
+    drop-shadow(0 0 0.5px oklch(100% 0 0 / 0.2))
+    drop-shadow(0 0 0.5px oklch(100% 0 0 / 0.2))
+    drop-shadow(0 2px 2px oklch(0% 0 0 / 0.06));
   /* [charts · dark] */
   /* AnalyticsFilterBar */
   --ui-analytics-filter-bar-segment-selected-bg: var(--ui-active);
@@ -2093,47 +2093,47 @@
   --ui-treemap-value-mix: 14%;
   --ui-treemap-value-mix-range: 66%;
   --ui-treemap-group-border-mix: 0%;
-  --ui-treemap-group-border-base: color-mix(in srgb, #fff 18%, transparent);
+  --ui-treemap-group-border-base: color-mix(in srgb, oklch(100% 0 0) 18%, transparent);
   --ui-treemap-group-border-mix-hover: 60%;
   --ui-treemap-group-border-base-hover: var(--ui-border);
   /* [commerce · dark] */
   /* [data-display · dark] */
   /* StatsCard: a dark ring and a brighter glow around the sparkline dot. */
-  --ui-stats-card-sparkline-dot-shadow: 0 0 0 2px rgba(0, 0, 0, 0.45), 0 0 8px color-mix(in srgb, currentColor 70%, transparent);
+  --ui-stats-card-sparkline-dot-shadow: 0 0 0 2px oklch(0% 0 0 / 0.45), 0 0 8px color-mix(in srgb, currentColor 70%, transparent);
   /* DataTable: a deeper edge shadow on the pinned column. */
-  --ui-data-table-pin-shadow: rgba(0, 0, 0, 0.4);
+  --ui-data-table-pin-shadow: oklch(0% 0 0 / 0.4);
   /* [effects · dark] */
   --ui-aurora-background-opacity: 0.85;
   --ui-aurora-background-blend: plus-lighter;
-  --ui-animated-border-beam: #ffffff;
+  --ui-animated-border-beam: oklch(100% 0 0);
   --ui-animated-border-tail: var(--ui-purple);
-  --ui-shimmer-text-shine: #ffffff;
+  --ui-shimmer-text-shine: oklch(100% 0 0);
   --ui-shimmer-text-sweep: var(--ui-accent-text);
   --ui-spotlight-color: color-mix(in srgb, var(--ui-blue) 38%, transparent);
   --ui-spotlight-color-2: color-mix(in srgb, var(--ui-pink) 30%, transparent);
-  --ui-spotlight-shade: rgba(0, 0, 0, 0.18);
-  --ui-meteors-color: #ffffff;
+  --ui-spotlight-shade: oklch(0% 0 0 / 0.18);
+  --ui-meteors-color: oklch(100% 0 0);
   --ui-meteors-glow: color-mix(in srgb, var(--ui-accent-text) 80%, transparent);
-  --ui-background-pattern-color: rgba(255, 255, 255, 0.1);
+  --ui-background-pattern-color: oklch(100% 0 0 / 0.1);
   --ui-particles-color: var(--ui-accent-text);
   --ui-particles-glow: 0.9;
-  --ui-tilt-card-glare: rgba(255, 255, 255, 0.22);
+  --ui-tilt-card-glare: oklch(100% 0 0 / 0.22);
   /* GlassLens, CursorGlow, MorphingCapsule, FloatingTabBar: darker glass, dimmer highlights. */
-  --ui-glass-lens-tint: rgba(28, 28, 34, 0.32);
-  --ui-glass-lens-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.28), inset 0 -1px 1px rgba(255, 255, 255, 0.1), inset 0 0 16px rgba(255, 255, 255, 0.06), 0 18px 40px -12px rgba(0, 0, 0, 0.6), 0 2px 6px rgba(0, 0, 0, 0.3);
+  --ui-glass-lens-tint: oklch(22.91% 0.0115 285.46 / 0.32);
+  --ui-glass-lens-shadow: inset 0 1px 1px oklch(100% 0 0 / 0.28), inset 0 -1px 1px oklch(100% 0 0 / 0.1), inset 0 0 16px oklch(100% 0 0 / 0.06), 0 18px 40px -12px oklch(0% 0 0 / 0.6), 0 2px 6px oklch(0% 0 0 / 0.3);
   --ui-glass-lens-rim-opacity: 0.55;
   --ui-glass-lens-edge-opacity: 0.5;
-  --ui-cursor-glow-light: rgba(255, 255, 255, 0.12);
-  --ui-cursor-glow-edge: rgba(255, 255, 255, 0.75);
-  --ui-cursor-glow-falloff: rgba(0, 0, 0, 0.08);
-  --ui-morphing-capsule-fill: rgba(44, 44, 50, 0.5);
-  --ui-morphing-capsule-rim: rgba(255, 255, 255, 0.16);
-  --ui-morphing-capsule-shine: rgba(255, 255, 255, 0.4);
-  --ui-morphing-capsule-shadow: drop-shadow(0 12px 28px rgba(0, 0, 0, 0.45)) drop-shadow(0 1px 3px rgba(0, 0, 0, 0.3));
-  --ui-floating-tab-bar-bg: rgba(36, 36, 42, 0.5);
-  --ui-floating-tab-bar-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.22), inset 0 -1px 1px rgba(255, 255, 255, 0.06), 0 0 0 0.5px rgba(255, 255, 255, 0.1), 0 14px 36px -10px rgba(0, 0, 0, 0.6);
-  --ui-floating-tab-bar-indicator-bg: rgba(255, 255, 255, 0.12);
-  --ui-floating-tab-bar-indicator-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  --ui-cursor-glow-light: oklch(100% 0 0 / 0.12);
+  --ui-cursor-glow-edge: oklch(100% 0 0 / 0.75);
+  --ui-cursor-glow-falloff: oklch(0% 0 0 / 0.08);
+  --ui-morphing-capsule-fill: oklch(29.55% 0.0108 285.72 / 0.5);
+  --ui-morphing-capsule-rim: oklch(100% 0 0 / 0.16);
+  --ui-morphing-capsule-shine: oklch(100% 0 0 / 0.4);
+  --ui-morphing-capsule-shadow: drop-shadow(0 12px 28px oklch(0% 0 0 / 0.45)) drop-shadow(0 1px 3px oklch(0% 0 0 / 0.3));
+  --ui-floating-tab-bar-bg: oklch(26.28% 0.0111 285.61 / 0.5);
+  --ui-floating-tab-bar-shadow: inset 0 1px 1px oklch(100% 0 0 / 0.22), inset 0 -1px 1px oklch(100% 0 0 / 0.06), 0 0 0 0.5px oklch(100% 0 0 / 0.1), 0 14px 36px -10px oklch(0% 0 0 / 0.6);
+  --ui-floating-tab-bar-indicator-bg: oklch(100% 0 0 / 0.12);
+  --ui-floating-tab-bar-indicator-shadow: inset 0 1px 0 oklch(100% 0 0 / 0.18);
   --ui-floating-tab-bar-rim-opacity: 0.5;
   /* [feedback · dark] */
   /* [forms · dark] */
@@ -2145,10 +2145,10 @@
   --ui-cta-section-dark: var(--ui-fg-inverse);
   --ui-cta-section-inverted-bg: color-mix(in srgb, var(--ui-fg) 94%, transparent);
   /* PricingTable */
-  --ui-pricing-table-thumb-bg: rgba(255, 255, 255, 0.18);
+  --ui-pricing-table-thumb-bg: oklch(100% 0 0 / 0.18);
   /* [navigation · dark] */
   /* SegmentedControl */
-  --ui-segmented-control-thumb-bg: rgba(255, 255, 255, 0.2);
+  --ui-segmented-control-thumb-bg: oklch(100% 0 0 / 0.2);
   --ui-segmented-control-thumb-shadow: var(--ui-highlight), var(--ui-shadow-sm);
   /* [node-editor · dark] */
   --ui-node-canvas-bg:
@@ -2157,19 +2157,19 @@
     radial-gradient(1000px 700px at 75% 100%, #0b5560 0%, transparent 60%),
     radial-gradient(700px 500px at 0% 100%, #5b1a4f 0%, transparent 55%),
     linear-gradient(180deg, #080a16 0%, #05060d 100%);
-  --ui-node-canvas-wire-1: #b39ddb;
-  --ui-node-canvas-wire-2: #ffd54f;
-  --ui-node-canvas-wire-3: #ffb74d;
-  --ui-node-canvas-wire-4: #f48fb1;
-  --ui-node-canvas-wire-5: #64b5f6;
-  --ui-node-canvas-wire-6: #ef5350;
-  --ui-node-canvas-wire-7: #81c784;
-  --ui-node-canvas-wire-8: #4dd0e1;
-  --ui-node-canvas-wire-9: #aed581;
-  --ui-node-canvas-wire-10: #9fa8da;
+  --ui-node-canvas-wire-1: oklch(73.735% 0.09094 300.46);
+  --ui-node-canvas-wire-2: oklch(88.591% 0.15386 91.23);
+  --ui-node-canvas-wire-3: oklch(82.867% 0.14524 73.54);
+  --ui-node-canvas-wire-4: oklch(76.57% 0.1276 358.96);
+  --ui-node-canvas-wire-5: oklch(74.82% 0.12345 244.75);
+  --ui-node-canvas-wire-6: oklch(65.392% 0.19257 25.14);
+  --ui-node-canvas-wire-7: oklch(76.6% 0.1179 145.3);
+  --ui-node-canvas-wire-8: oklch(79.311% 0.11448 207.31);
+  --ui-node-canvas-wire-9: oklch(82.53% 0.1181 129);
+  --ui-node-canvas-wire-10: oklch(74.234% 0.07296 276.54);
   /* [productivity · dark] */
   /* DataGrid: a deeper edge shadow on pinned columns. */
-  --ui-data-grid-pin-shadow: rgba(0, 0, 0, 0.45);
+  --ui-data-grid-pin-shadow: oklch(0% 0 0 / 0.45);
   /* Scheduler: denser event tints, lighter ink. */
   --ui-scheduler-event-fill-mix: 30%;
   --ui-scheduler-event-fill-mix-hover: 40%;
@@ -2181,28 +2181,28 @@
 @media (prefers-contrast: more) {
   [data-theme='glass']:not([data-mode='dark']) {
     --ui-glass-opacity: 0.8;
-    --ui-glass-border: rgba(60, 60, 67, 0.42);
-    --ui-border-strong: rgba(60, 60, 67, 0.5);
-    --ui-border-field: rgba(60, 60, 67, 0.72);
+    --ui-glass-border: oklch(35.88% 0.012 285.78 / 0.42);
+    --ui-border-strong: oklch(35.88% 0.012 285.78 / 0.5);
+    --ui-border-field: oklch(35.88% 0.012 285.78 / 0.72);
     --ui-field-border-hover: var(--ui-fg-subtle);
-    --ui-divider: rgba(60, 60, 67, 0.3);
-    --ui-fg-muted: #36363b;
-    --ui-fg-subtle: #45454b;
-    --ui-fg-faint: #6c6c71;
+    --ui-divider: oklch(35.88% 0.012 285.78 / 0.3);
+    --ui-fg-muted: oklch(33.48% 0.0087 285.92);
+    --ui-fg-subtle: oklch(39.26% 0.01 285.93);
+    --ui-fg-faint: oklch(53.3% 0.0077 286.13);
     --ui-focus-color: var(--ui-accent);
   }
 
   [data-theme='glass'][data-mode='dark'] {
     --ui-glass-opacity: 0.8;
-    --ui-glass-border: rgba(255, 255, 255, 0.42);
-    --ui-border: rgba(255, 255, 255, 0.3);
-    --ui-border-strong: rgba(255, 255, 255, 0.5);
-    --ui-border-field: rgba(255, 255, 255, 0.56);
+    --ui-glass-border: oklch(100% 0 0 / 0.42);
+    --ui-border: oklch(100% 0 0 / 0.3);
+    --ui-border-strong: oklch(100% 0 0 / 0.5);
+    --ui-border-field: oklch(100% 0 0 / 0.56);
     --ui-field-border-hover: var(--ui-fg-subtle);
-    --ui-divider: rgba(255, 255, 255, 0.3);
-    --ui-fg-muted: #dcdce2;
-    --ui-fg-subtle: #c9c9cf;
-    --ui-fg-faint: #a3a3a8;
+    --ui-divider: oklch(100% 0 0 / 0.3);
+    --ui-fg-muted: oklch(89.623% 0.00812 286.23);
+    --ui-fg-subtle: oklch(83.768% 0.00826 286.22);
+    --ui-fg-faint: oklch(71.701% 0.00716 286.22);
     --ui-focus-color: var(--ui-accent-text);
   }
 }
@@ -2211,30 +2211,30 @@
    Solid materials, no backdrop blur; edges carry the separation the frost used to. */
 @media (prefers-reduced-transparency: reduce) {
   [data-theme='glass']:not([data-mode='dark']) {
-    --ui-bg: #ffffff;
-    --ui-surface: #ffffff;
-    --ui-surface-2: #f2f2f7;
-    --ui-elevated: #ffffff;
-    --ui-field-bg: #ffffff;
-    --ui-tooltip-bg: #ffffff;
-    --ui-overlay: rgba(0, 0, 0, 0.32);
-    --ui-glass-border: rgba(60, 60, 67, 0.16);
-    --ui-sheen: 0 0 #0000;
+    --ui-bg: oklch(100% 0 0);
+    --ui-surface: oklch(100% 0 0);
+    --ui-surface-2: oklch(96.257% 0.00665 286.27);
+    --ui-elevated: oklch(100% 0 0);
+    --ui-field-bg: oklch(100% 0 0);
+    --ui-tooltip-bg: oklch(100% 0 0);
+    --ui-overlay: oklch(0% 0 0 / 0.32);
+    --ui-glass-border: oklch(35.88% 0.012 285.78 / 0.16);
+    --ui-sheen: 0 0 oklch(0% 0 0 / 0);
     /* Effects turn solid; in dark mode they keep their translucent fill. */
     --ui-morphing-capsule-fill: Canvas;
     --ui-floating-tab-bar-bg: Canvas;
   }
 
   [data-theme='glass'][data-mode='dark'] {
-    --ui-bg: #1c1c1e;
-    --ui-surface: #1c1c1e;
-    --ui-surface-2: #2c2c2e;
-    --ui-elevated: #2c2c2e;
-    --ui-field-bg: #1c1c1e;
-    --ui-tooltip-bg: #3a3a3c;
-    --ui-overlay: rgba(0, 0, 0, 0.6);
-    --ui-glass-border: rgba(255, 255, 255, 0.14);
-    --ui-sheen: 0 0 #0000;
+    --ui-bg: oklch(22.73% 0.0038 286.09);
+    --ui-surface: oklch(22.73% 0.0038 286.09);
+    --ui-surface-2: oklch(29.39% 0.0036 286.18);
+    --ui-elevated: oklch(29.39% 0.0036 286.18);
+    --ui-field-bg: oklch(22.73% 0.0038 286.09);
+    --ui-tooltip-bg: oklch(34.92% 0.0034 286.22);
+    --ui-overlay: oklch(0% 0 0 / 0.6);
+    --ui-glass-border: oklch(100% 0 0 / 0.14);
+    --ui-sheen: 0 0 oklch(0% 0 0 / 0);
   }
 
   [data-theme='glass'] {

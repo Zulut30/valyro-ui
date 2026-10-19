@@ -1,10 +1,14 @@
 'use client';
 
-import { useEffect, useRef, type ComponentPropsWithRef, type ReactNode } from 'react';
+import { useState, type ComponentPropsWithRef, type ReactNode } from 'react';
 import { CheckIcon, XIcon } from '../icons';
-import { animateSpring, cx, mergeRefs, useControllableState } from '../primitives';
+import { cx } from '../primitives';
+import { collectionPart, partsOf } from '../primitives/compound';
+import { useStepper, type StepState } from './useStepper';
 import './Stepper.css';
 import { withRef } from '../primitives/react-compat';
+
+export type { StepState } from './useStepper';
 
 export interface StepperStep {
   title: ReactNode;
@@ -13,11 +17,11 @@ export interface StepperStep {
   error?: boolean;
 }
 
-export type StepState = 'complete' | 'current' | 'upcoming' | 'error';
-
 export interface StepperProps extends Omit<ComponentPropsWithRef<'ol'>, 'defaultValue' | 'onChange'> {
-  /** Steps in order; their state follows from `value` unless marked as failed. */
-  steps: StepperStep[];
+  /** Steps in order; their state follows from `value` unless marked as failed. Or compose them as `Stepper.Step` children. */
+  steps?: StepperStep[];
+  /** The compound form instead of `steps`: `Stepper.Step` elements. */
+  children?: ReactNode;
   /** Index of the current step. */
   value?: number;
   defaultValue?: number;
@@ -39,8 +43,14 @@ export const defaultStepperLabels: StepperLabels = {
   error: 'error',
 };
 
+export type StepperStepPartProps = StepperStep;
+
+/** A step of the compound form (`Stepper.Step`). */
+export const StepperStepPart = collectionPart<StepperStepPartProps>('Stepper.Step');
+
 export const Stepper = withRef(function Stepper({
-  steps,
+  steps: stepsProp,
+  children,
   value,
   defaultValue = 0,
   onValueChange,
@@ -51,40 +61,25 @@ export const Stepper = withRef(function Stepper({
   ref,
   ...rest
 }: StepperProps) {
-  const [current, setCurrent] = useControllableState({ value, defaultValue, onChange: onValueChange });
-  const listRef = useRef<HTMLOListElement>(null);
-  // The clicked step becomes the current one, rendered without a button: hand focus to it instead of <body>.
-  const focusCurrent = useRef(false);
-  // Steps that just completed (not the ones complete on mount) pop their check in with a spring.
-  const previous = useRef(current);
-  useEffect(() => {
-    const from = previous.current;
-    previous.current = current;
-    for (let index = from; index < current; index++) {
-      const check = listRef.current?.children[index]?.querySelector('.ui-stepper__indicator > svg');
-      if (check) animateSpring(check, [{ opacity: 0, transform: 'scale(0.4)' }, { opacity: 1, transform: 'none' }], 'bouncy');
-    }
-    if (!focusCurrent.current) return;
-    focusCurrent.current = false;
-    listRef.current?.querySelectorAll<HTMLElement>(':scope > li > .ui-stepper__trigger')[current]?.focus();
-  }, [current]);
+  const steps = stepsProp ?? partsOf<StepperStepPartProps>(children, StepperStepPart).map(({ props }) => props);
+  // The current step, the step states and going back come from the headless hook.
+  const stepper = useStepper({ steps, value, defaultValue, onValueChange, clickable });
+  const current = stepper.value;
+  // A step completed after mount pops its check in (data-ui-enter, no JavaScript): the steps below the
+  // lowest one reached so far have been complete all along and keep a still check.
+  const [settled, setSettled] = useState(current);
+  if (current < settled) setSettled(current);
   const labels = { ...defaultStepperLabels, ...labelOverrides };
 
   return (
-    <ol {...rest} ref={mergeRefs(listRef, ref)} className={cx('ui-stepper', className)} data-orientation={orientation}>
+    <ol {...rest} ref={ref} className={cx('ui-stepper', className)} data-orientation={orientation}>
       {steps.map((step, index) => {
-        const state: StepState = step.error
-          ? 'error'
-          : index < current
-            ? 'complete'
-            : index === current
-              ? 'current'
-              : 'upcoming';
+        const state = stepper.getStepState(index);
         const body = (
           <>
             <span className="ui-stepper__indicator" aria-hidden="true">
               {state === 'complete' ? (
-                <CheckIcon size={14} strokeWidth={2.5} />
+                <CheckIcon size={14} strokeWidth={2.5} data-ui-enter={index >= settled ? 'pop' : undefined} />
               ) : state === 'error' ? (
                 <XIcon size={14} strokeWidth={2.5} />
               ) : (
@@ -99,26 +94,13 @@ export const Stepper = withRef(function Stepper({
           </>
         );
         return (
-          <li
-            key={index}
-            className="ui-stepper__step"
-            data-state={state}
-            data-passed={index < current || undefined}
-            aria-current={index === current ? 'step' : undefined}
-          >
-            {clickable && index < current ? (
-              <button
-                type="button"
-                className="ui-stepper__trigger"
-                onClick={() => {
-                  focusCurrent.current = true;
-                  setCurrent(index);
-                }}
-              >
+          <li key={index} className="ui-stepper__step" {...stepper.getStepProps(index)}>
+            {stepper.isClickable(index) ? (
+              <button className="ui-stepper__trigger" {...stepper.getTriggerProps(index)} type="button">
                 {body}
               </button>
             ) : (
-              <div className="ui-stepper__trigger" tabIndex={index === current ? -1 : undefined}>
+              <div className="ui-stepper__trigger" {...stepper.getTriggerProps(index)}>
                 {body}
               </div>
             )}
@@ -128,4 +110,4 @@ export const Stepper = withRef(function Stepper({
       })}
     </ol>
   );
-});
+}, { Step: StepperStepPart });

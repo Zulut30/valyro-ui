@@ -69,6 +69,12 @@
   font-weight: var(--ui-weight-medium);
 }
 
+.ui-tree__row[data-disabled] {
+  cursor: not-allowed;
+  opacity: var(--ui-disabled-opacity, 0.5);
+  background: none;
+}
+
 /* Selection pill (Windows 11), visible only when the theme sets --ui-active-indicator. */
 .ui-tree__row[data-selected]::before {
   content: '';

@@ -17,6 +17,7 @@ import { useLocale } from '../theme/ThemeProvider';
 import { Calendar, DEFAULT_CALENDAR_LABELS, type CalendarLabels } from './Calendar';
 import { FormValue, toISODate, useMissingValue } from './form-value';
 import { PickerTrigger, type FieldSize } from './PickerTrigger';
+import { useFormReset } from '../forms/form-reset';
 import './DatePicker.css';
 import { withRef, useId } from '../primitives/react-compat';
 
@@ -90,6 +91,8 @@ export const DatePicker = withRef(function DatePicker({
   const [open, setOpen] = useControllableState({ value: openProp, defaultValue: defaultOpen, onChange: onOpenChange });
   const triggerRef = useRef<HTMLButtonElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
+  // A form reset brings the uncontrolled value back to its default (forms/form-reset.ts).
+  useFormReset(triggerRef, () => setDate(defaultValue), value === undefined);
   const dialogId = useId();
   // Focus returns to the trigger only on Escape or a pick, never after a click elsewhere.
   useFocusTrap(popoverRef, open, { restoreFocus: false });

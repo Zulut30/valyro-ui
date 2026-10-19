@@ -9,11 +9,6 @@ export type TimelineStatus = 'default' | 'success' | 'warning' | 'danger' | 'acc
 
 export type TimelineProps = ComponentPropsWithRef<'ol'>;
 
-/** Vertical list of events; children are `TimelineItem`s. */
-export const Timeline = withRef(function Timeline({ className, ...rest }: TimelineProps) {
-  return <ol className={cx('ui-timeline', className)} {...rest} />;
-});
-
 export interface TimelineItemProps extends Omit<ComponentPropsWithRef<'li'>, 'title'> {
   title: ReactNode;
   description?: ReactNode;
@@ -65,3 +60,8 @@ export const TimelineItem = withRef(function TimelineItem({
     </li>
   );
 });
+
+/** Vertical list of events; children are `TimelineItem`s (`Timeline.Item`). */
+export const Timeline = withRef(function Timeline({ className, ...rest }: TimelineProps) {
+  return <ol className={cx('ui-timeline', className)} {...rest} />;
+}, { Item: TimelineItem });

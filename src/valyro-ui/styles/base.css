@@ -60,6 +60,8 @@ html[data-theme] ::selection {
   align-items: center;
   gap: var(--ui-space-2);
   width: 100%;
+  /* A grid or flex item narrower than the input's intrinsic width (phones) shrinks instead of overflowing. */
+  min-width: 0;
   min-height: var(--ui-control-h-md);
   padding: 0 var(--ui-space-3);
   background: var(--ui-field-bg);
@@ -217,6 +219,13 @@ html[data-theme] ::selection {
 .ui-menu-item[data-danger='true']:is(:focus-visible, [data-highlighted='true']):not([aria-disabled='true'], :disabled) {
   background: var(--ui-menu-danger-highlight-bg);
   color: var(--ui-menu-danger-highlight-fg);
+}
+
+/* Touch: rows of menus and lists reach the kit's 44px tap size in themes with denser rows. */
+@media (pointer: coarse) {
+  .ui-menu-item {
+    min-height: max(var(--ui-menu-item-h), 44px);
+  }
 }
 
 /* Last so it wins over every hover/highlight rule above. */

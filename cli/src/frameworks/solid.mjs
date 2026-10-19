@@ -10,5 +10,6 @@ export default {
     label: 'Solid',
     css: ['src/index.tsx', "import 'valyro-ui/styles.css';"],
     theme: ['index.html', '<html lang="en" {attrs}>'],
+    note: "Remove the template's import './index.css' (and App.css): its :root letter-spacing and #root centering are inherited by every component.",
   },
 };

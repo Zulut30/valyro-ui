@@ -186,7 +186,7 @@
   bottom: calc(100% + var(--_size, 32px) * 0.3 + 6px);
   left: 0;
   z-index: 101;
-  padding: 4px 8px;
+  padding: var(--ui-space-1) var(--ui-space-2);
   border-radius: var(--ui-radius-sm);
   background: var(--ui-tooltip-bg);
   box-shadow: var(--ui-tooltip-shadow);
@@ -204,7 +204,9 @@
     scale calc(var(--ui-duration-slow) * 1.36) var(--ui-spring-snappy);
 }
 
+/* Hoverable while shown: the pointer may rest on it (AvatarGroup keeps it open, WCAG 1.4.13). */
 .ui-avatar-group__tip[data-visible] {
+  pointer-events: auto;
   opacity: 1;
   translate: calc(var(--_x) - 50%) 0;
   scale: 1;

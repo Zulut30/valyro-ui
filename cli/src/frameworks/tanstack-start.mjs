@@ -17,5 +17,7 @@ export default {
     // Stylesheets are linked from head() so SSR puts them in <head> before the app's own CSS.
     cssImport: (base, file, index) => `import ${cssVar(index)} from '${base}/${file}?url';`,
     headLink: (index) => `{ rel: 'stylesheet', href: ${cssVar(index)} }`,
+    note: () =>
+      "TanStack Start: in src/styles.css keep only the reset (box-sizing, body margin): the template's body font-family and main rule override the theme font and the page layout.",
   },
 };

@@ -98,7 +98,7 @@
   content: var(--ui-navbar-link-underline-content);
   position: absolute;
   inset-inline: 10px;
-  bottom: calc((32px - var(--_bar-h)) / 2);
+  bottom: calc((var(--ui-navbar-link-h) - var(--_bar-h)) / 2);
   height: 2px;
   border-radius: 2px 2px 0 0;
   background: var(--ui-fg);
@@ -130,7 +130,7 @@
   content: var(--ui-navbar-link-underline-content);
   position: absolute;
   inset-inline: 10px;
-  bottom: calc((32px - var(--_bar-h)) / 2);
+  bottom: calc((var(--ui-navbar-link-h) - var(--_bar-h)) / 2);
   height: 2px;
   border-radius: 2px 2px 0 0;
   background: var(--ui-fg);
@@ -191,6 +191,20 @@
 
   .ui-navbar .ui-navbar__toggle {
     display: inline-flex;
+  }
+}
+
+/* Touch (a tablet wide enough for the inline links): each link takes taps over the kit's 44px target.
+   ::before, because ::after draws the underline. */
+@media (pointer: coarse) {
+  .ui-navbar__nav .ui-navbar__link::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: max(100%, 44px);
+    translate: 0 -50%;
   }
 }
 

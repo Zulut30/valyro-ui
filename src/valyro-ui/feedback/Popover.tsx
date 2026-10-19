@@ -1,28 +1,20 @@
 'use client';
 
-import { useEffect, useRef, type ComponentPropsWithRef, type KeyboardEvent, type ReactElement, type ReactNode, type Ref, type RefObject } from 'react';
-import {
-  clamp,
-  composeHandlers,
-  cx,
-  Floating,
-  getTabbables,
-  mergeRefs,
-  Slot,
-  useControllableState,
-  type FloatingProps,
-} from '../primitives';
+import { isValidElement, useRef, type ComponentPropsWithRef, type ReactElement, type ReactNode, type Ref, type RefObject } from 'react';
+import { clamp, composeHandlers, cx, Floating, mergeRefs, Slot, type FloatingProps } from '../primitives';
 import { collectionPart, partsOf, propsOf } from '../primitives/compound';
 import { tokenNumber, useThemeTokens } from '../theme/useThemeTokens';
+import { usePopover } from './usePopover';
 import './Popover.css';
-import { getElementRef, withRef, useId, useLayoutEffect } from '../primitives/react-compat';
+import { getElementRef, withRef, useLayoutEffect } from '../primitives/react-compat';
 
 export interface PopoverProps extends Omit<FloatingProps, 'open' | 'anchorRef' | 'onDismiss' | 'children'> {
   /** A single element (usually a button); it toggles the popover on click. Or `Popover.Trigger` in the children. */
   trigger?: ReactElement;
   /**
    * Content of the panel (a non-modal `dialog`); Tab past its end returns focus to the page after the trigger. In the
-   * compound form, a `Popover.Trigger` and a `Popover.Content` instead.
+   * compound form, a `Popover.Trigger` and a `Popover.Content` instead. The trigger names the dialog unless it gets
+   * an `aria-label`, or an `aria-labelledby` pointing at a heading inside.
    */
   children: ReactNode;
   open?: boolean;
@@ -126,86 +118,34 @@ export const Popover = withRef(function Popover({
   const contentPart = triggerPart ? partsOf<PopoverContentProps>(childrenProp, PopoverContent)[0] : undefined;
   const trigger = triggerProp ?? triggerPart?.props.children;
   const children = triggerPart ? contentPart?.props.children : childrenProp;
-  const contentProps = propsOf(contentPart);
-  const [open, setOpen] = useControllableState({ value: openProp, defaultValue: defaultOpen, onChange: onOpenChange });
-  const triggerRef = useRef<HTMLElement>(null);
+  const { id: _contentId, ...contentProps } = propsOf(contentPart);
+  // The open state, the ids and the name, the focus moves and Tab past the panel come from the headless hook;
+  // Floating positions the panel and dismisses it.
+  const triggerOwnId = isValidElement<{ id?: string }>(trigger) ? trigger.props.id : undefined;
+  const popover = usePopover({ open: openProp, defaultOpen, onOpenChange, id, triggerId: triggerOwnId, floating: false });
+  const { open, triggerRef, contentRef } = popover;
   // Read on the trigger, which exists before the panel opens.
   const tokens = useThemeTokens(triggerRef, { '--ui-popover-arrow': '1' });
   const arrow = arrowProp && tokenNumber(tokens['--ui-popover-arrow'], 1) > 0;
-  const contentRef = useRef<HTMLDivElement>(null);
   const arrowRef = useRef<HTMLSpanElement>(null);
-  const autoId = useId();
-  const contentId = id ?? autoId;
 
   useArrowPosition(open && arrow, triggerRef, contentRef, arrowRef);
 
-  // A popover rendered already open (`defaultOpen`, or `open` from the start) does not pull focus from the page on
-  // load; focus moves into it once it is opened afterwards.
-  const openOnMount = useRef(open);
-  useEffect(() => {
-    if (!open) openOnMount.current = false;
-  }, [open]);
-
-  useEffect(() => {
-    if (!open || openOnMount.current) return;
-    // Wait a frame: Floating keeps the content hidden until it has been positioned.
-    const frame = requestAnimationFrame(() => {
-      const content = contentRef.current;
-      if (content) (getTabbables(content)[0] ?? content).focus({ preventScroll: true });
-    });
-    return () => {
-      cancelAnimationFrame(frame);
-      // Only pull focus back when it was inside, so an outside click keeps its own target focused.
-      const content = contentRef.current;
-      if (content?.contains(document.activeElement)) triggerRef.current?.focus({ preventScroll: true });
-    };
-  }, [open]);
-
-  // The panel is portaled to the end of <body>; Tab past either end continues from the
-  // trigger's place in the page, as if the panel were inserted right after it.
-  const handleTabOut = (event: KeyboardEvent<HTMLDivElement>) => {
-    const content = contentRef.current;
-    const anchor = triggerRef.current;
-    if (event.key !== 'Tab' || !content || !anchor) return;
-    const items = getTabbables(content);
-    const current = document.activeElement;
-    const atStart = current === content || current === items[0];
-    const atEnd = current === content || current === items[items.length - 1] || items.length === 0;
-    if (event.shiftKey ? !atStart : !atEnd) return;
-    event.preventDefault();
-    if (event.shiftKey) {
-      anchor.focus();
-    } else {
-      const page = getTabbables(document.body).filter((el) => !content.contains(el));
-      (page[page.indexOf(anchor) + 1] ?? anchor).focus();
-    }
-    setOpen(false);
-  };
-
   return (
     <>
-      <Slot
-        ref={triggerRef}
-        aria-haspopup="dialog"
-        aria-expanded={open}
-        aria-controls={open ? contentId : undefined}
-        onClick={() => setOpen((value) => !value)}
-      >
-        {trigger}
-      </Slot>
+      <Slot {...popover.getTriggerProps()}>{trigger}</Slot>
       <Floating
-        role="dialog"
-        tabIndex={-1}
-        {...rest}
-        {...contentProps}
-        ref={mergeRefs(contentRef, ref, contentPart && (getElementRef(contentPart) as Ref<HTMLDivElement>))}
-        id={contentId}
+        {...popover.getContentProps({
+          ...rest,
+          ...contentProps,
+          ref: mergeRefs(ref, contentPart && (getElementRef(contentPart) as Ref<HTMLDivElement>)),
+          onKeyDown: onKeyDown ? composeHandlers(contentProps.onKeyDown, onKeyDown) : contentProps.onKeyDown,
+        })}
         open={open}
         anchorRef={triggerRef}
         placement={placement}
         offset={offset ?? (arrow ? 12 : 8)}
-        onDismiss={() => setOpen(false)}
-        onKeyDown={composeHandlers(contentProps.onKeyDown, composeHandlers(onKeyDown, handleTabOut))}
+        onDismiss={() => popover.setOpen(false)}
         className={cx('ui-popover', className, contentProps.className)}
         style={contentProps.style || rest.style ? { ...rest.style, ...contentProps.style } : undefined}
         data-arrow={arrow || undefined}

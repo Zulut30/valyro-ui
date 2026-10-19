@@ -180,7 +180,7 @@
 
 .ui-tabs[data-variant='underline'] .ui-tabs__tab {
   height: var(--ui-tabs-underline-tab-h);
-  padding: 0 16px;
+  padding: 0 var(--ui-space-4);
 }
 
 .ui-tabs[data-variant='underline'] .ui-tabs__tab[data-active] {
@@ -297,15 +297,129 @@
   }
 }
 
-/* animation="spring": the indicator springs between tabs (its width on the same spring); the panel area
-   clips only while it eases to a new height (Tabs.tsx animates it). */
+/* animation="spring": the indicator springs between tabs (its width on the same spring); the new panel slides
+   in from the side of the previous tab as it is shown (Tabs.tsx sets data-from at the first switch, so the
+   first render stays still); the panel area clips only while it eases to a new height — a transition from the
+   height Tabs.tsx holds it at to auto where interpolate-size works, else a Web Animation from Tabs.tsx. */
 .ui-tabs[data-motion='spring'] .ui-tabs__indicator {
   transition:
     transform calc(var(--ui-duration-slow) * 1.36) var(--ui-spring-snappy),
     width calc(var(--ui-duration-slow) * 1.36) var(--ui-spring-snappy);
 }
 
+.ui-tabs__panels[data-from] > .ui-tabs__panel:not([hidden]) {
+  animation: ui-tabs-panel-in calc(var(--ui-duration-slow) * 1.36) var(--ui-spring-snappy);
+}
+
+.ui-tabs__panels[data-from='end'],
+.ui-tabs__panels[data-from='start']:dir(rtl) {
+  --_tabs-from-x: var(--ui-motion-distance, 24px);
+}
+
+.ui-tabs__panels[data-from='start'],
+.ui-tabs__panels[data-from='end']:dir(rtl) {
+  --_tabs-from-x: calc(var(--ui-motion-distance, 24px) * -1);
+}
+
+/* Beside a vertical list the panel comes from above or below, the way the tabs run. */
+.ui-tabs[data-orientation='vertical'] > .ui-tabs__panels[data-from] {
+  --_tabs-from-x: 0px;
+}
+
+.ui-tabs[data-orientation='vertical'] > .ui-tabs__panels[data-from='end'] {
+  --_tabs-from-y: calc(var(--ui-motion-distance, 24px) * 2 / 3);
+}
+
+.ui-tabs[data-orientation='vertical'] > .ui-tabs__panels[data-from='start'] {
+  --_tabs-from-y: calc(var(--ui-motion-distance, 24px) * -2 / 3);
+}
+
+@keyframes ui-tabs-panel-in {
+  from {
+    opacity: 0;
+    translate: var(--_tabs-from-x, 0px) var(--_tabs-from-y, 0px);
+  }
+}
+
 .ui-tabs__panels[data-animating] {
   overflow: clip;
   overflow-clip-margin: 4px;
+}
+
+@supports (interpolate-size: allow-keywords) {
+  .ui-tabs[data-motion='spring'] > .ui-tabs__panels {
+    interpolate-size: allow-keywords;
+  }
+
+  .ui-tabs[data-motion='spring'] > .ui-tabs__panels[data-animating] {
+    transition: height calc(var(--ui-duration-slow) * 1.92) var(--ui-spring-smooth);
+  }
+}
+
+/* ── orientation="vertical": the tabs stack in a column at the inline start, the panel beside them; the
+   indicator slides on the Y axis (Tabs.tsx) and the underline becomes a bar on the tabs' inline-start edge. ── */
+.ui-tabs[data-orientation='vertical'] {
+  flex-direction: row;
+  align-items: flex-start;
+}
+
+.ui-tabs[data-orientation='vertical'] > .ui-tabs__panel,
+.ui-tabs[data-orientation='vertical'] > .ui-tabs__panels {
+  flex: 1;
+}
+
+.ui-tabs[data-orientation='vertical'] .ui-tabs__list {
+  flex-direction: column;
+  flex-shrink: 0;
+  align-items: stretch;
+  align-self: flex-start;
+  max-width: none;
+  overflow: visible;
+  margin-inline: 0;
+  mask-image: none;
+}
+
+.ui-tabs[data-orientation='vertical'] .ui-tabs__list::before,
+.ui-tabs[data-orientation='vertical'] .ui-tabs__list::after {
+  content: none;
+}
+
+.ui-tabs[data-orientation='vertical'] .ui-tabs__tab {
+  justify-content: flex-start;
+}
+
+.ui-tabs[data-orientation='vertical'] .ui-tabs__indicator,
+.ui-tabs[data-orientation='vertical'][data-variant] .ui-tabs__indicator {
+  top: 0;
+  bottom: auto;
+  inset-inline: 0;
+  transition:
+    transform var(--ui-duration) var(--ui-ease-spring),
+    height var(--ui-duration) var(--ui-ease-spring);
+}
+
+.ui-tabs[data-orientation='vertical'][data-variant='pills'] .ui-tabs__indicator {
+  inset-inline: 4px;
+}
+
+.ui-tabs[data-orientation='vertical'][data-variant='underline'] .ui-tabs__indicator::after {
+  inset-block: 6px;
+  inset-inline: 0 auto;
+  width: var(--ui-tabs-underline-bar-h);
+  height: auto;
+}
+
+.ui-tabs[data-orientation='vertical'][data-motion='spring'] .ui-tabs__indicator {
+  transition:
+    transform calc(var(--ui-duration-slow) * 1.36) var(--ui-spring-snappy),
+    height calc(var(--ui-duration-slow) * 1.36) var(--ui-spring-snappy);
+}
+
+@media (forced-colors: active) {
+  .ui-tabs[data-orientation='vertical'][data-variant] .ui-tabs__indicator::after {
+    inset-block: 4px;
+    inset-inline: 0 auto;
+    width: 3px;
+    height: auto;
+  }
 }

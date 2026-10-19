@@ -3,7 +3,7 @@ import path from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
 import { parseCli, run, VERSION } from '../src/cli.mjs';
 import { CliError } from '../src/registry.mjs';
-import { fakeIo, fixtureRegistry, tempDir, writeTree, cleanup } from './helpers.mjs';
+import { ITEMS, fakeIo, fixtureRegistry, tempDir, writeTree, cleanup } from './helpers.mjs';
 
 afterAll(cleanup);
 
@@ -95,7 +95,8 @@ describe('run', () => {
     expect(provider.startsWith('export function ThemeProvider')).toBe(true); // 'use client' stripped for Vite
     expect(fs.existsSync(path.join(app, 'src/components/valyro-ui/styles/index.css'))).toBe(true);
     const main = fs.readFileSync(path.join(app, 'src/main.tsx'), 'utf8');
-    expect(main).toContain("import App from './App.tsx'\nimport '@/components/valyro-ui/styles/index.css';");
+    // The kit's base styles load before ./App, whose component stylesheets must win ties.
+    expect(main).toContain("import '@/components/valyro-ui/styles/index.css';\nimport App from './App.tsx'");
     expect(main).toContain('<ThemeProvider theme="glass" mode="dark"><App /></ThemeProvider>');
 
     const again = fakeIo(app);
@@ -137,6 +138,39 @@ describe('run', () => {
     expect(t.errors()).toContain('--theme must be one of: vercel, glass');
     const outside = fakeIo(viteProject());
     expect(await run(['init', '--dir', '../elsewhere', '--registry', fixtureRegistry()], outside.io)).toBe(1);
+  });
+
+  it('init and add keep component CSS out of the components in a Next.js Pages Router app', async () => {
+    const app = writeTree(tempDir('valyro-pages-'), {
+      'package.json': { name: 'app', dependencies: { next: '^16.0.0', react: '^19.0.0' } },
+      'package-lock.json': '{}',
+      'tsconfig.json': '{ "compilerOptions": { "paths": { "@/*": ["./*"] } } }',
+      'pages/_app.tsx': 'import type { AppProps } from "next/app";\n\nexport default function App({ Component, pageProps }: AppProps) {\n  return <Component {...pageProps} />;\n}\n',
+    });
+    const registry = fixtureRegistry();
+    const kit = (rel, content) => ({ path: `valyro-ui/${rel}`, content, type: 'registry:file', target: `components/valyro-ui/${rel}` });
+    writeTree(registry, {
+      'button.json': {
+        ...ITEMS.button,
+        files: [kit('basic/Button.css', '.ui-button {}\n'), kit('basic/Button.tsx', "'use client';\n\nimport './Button.css';\n\nexport function Button() { return null; }\n")],
+      },
+    });
+
+    const init = fakeIo(app);
+    expect(await run(['init', '--registry', registry, '--patch', '--yes'], init.io)).toBe(0);
+    expect(init.text()).toContain('created components/valyro-ui/components.css');
+    expect(init.text()).toContain('pages/_document.tsx');
+    const appFile = fs.readFileSync(path.join(app, 'pages/_app.tsx'), 'utf8');
+    expect(appFile).toContain("import '@/components/valyro-ui/styles/index.css';\nimport '@/components/valyro-ui/components.css';");
+
+    const add = fakeIo(app);
+    expect(await run(['add', 'dialog'], add.io)).toBe(0);
+    expect(add.text()).toContain('updated components/valyro-ui/components.css');
+    expect(fs.readFileSync(path.join(app, 'components/valyro-ui/basic/Button.tsx'), 'utf8')).toBe('export function Button() { return null; }\n');
+    expect(fs.readFileSync(path.join(app, 'components/valyro-ui/components.css'), 'utf8')).toMatch(/\n@import '\.\/basic\/Button\.css';\n$/);
+    const diff = fakeIo(app);
+    expect(await run(['diff', 'button'], diff.io)).toBe(0);
+    expect(diff.text()).toContain('button: up to date with the registry');
   });
 
   it('add resolves dependencies, skips identical files, keeps modified ones and installs npm packages', async () => {

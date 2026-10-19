@@ -7,6 +7,9 @@ export interface SortState {
   direction: SortDirection;
 }
 
+/** `aria-sort` of a sorted column header. */
+export const ARIA_SORT: Record<SortDirection, 'ascending' | 'descending'> = { asc: 'ascending', desc: 'descending' };
+
 export function getCellValue(row: unknown, key: string): unknown {
   return row != null ? (row as Record<string, unknown>)[key] : undefined;
 }
@@ -171,6 +174,28 @@ export function toggleAll(selected: readonly string[], ids: readonly string[]): 
 
 export function toggleOne(selected: readonly string[], id: string): string[] {
   return selected.includes(id) ? selected.filter((x) => x !== id) : [...selected, id];
+}
+
+/**
+ * Shift+click on a row checkbox: selects (or, with `select` false, deselects) every id from `anchor` to `target` in
+ * `ids` order, both included. Only `target` changes when `anchor` is not in `ids` (filtered out, on another page).
+ */
+export function selectRange(
+  selected: readonly string[],
+  ids: readonly string[],
+  anchor: string,
+  target: string,
+  select: boolean,
+): string[] {
+  const from = ids.indexOf(anchor);
+  const to = ids.indexOf(target);
+  const range = from === -1 || to === -1 ? [target] : ids.slice(Math.min(from, to), Math.max(from, to) + 1);
+  if (!select) {
+    const remove = new Set(range);
+    return selected.filter((id) => !remove.has(id));
+  }
+  const set = new Set(selected);
+  return [...selected, ...range.filter((id) => !set.has(id))];
 }
 
 export interface VirtualWindow {

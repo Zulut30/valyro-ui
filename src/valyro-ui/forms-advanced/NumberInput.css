@@ -93,8 +93,14 @@
 }
 
 
-/* Touch: the steppers' hit area reaches 44px tall (WCAG 2.5.5); widths stay, the buttons touch. */
+/* Touch: the steppers' hit area reaches 44px tall (WCAG 2.5.5), as far as the field's clipped edge allows,
+   and the buttons themselves are 44px wide at every size. */
 @media (pointer: coarse) {
+  .ui-number-input,
+  .ui-number-input[data-size] {
+    --_step-w: 44px;
+  }
+
   .ui-number-input__step {
     position: relative;
   }

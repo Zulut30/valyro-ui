@@ -10,7 +10,7 @@ import {
   UploadIcon,
   XIcon,
 } from '../icons';
-import { cx, mergeRefs, useControllableState } from '../primitives';
+import { announce, cx, mergeRefs, useControllableState } from '../primitives';
 import { useLocale } from '../theme/ThemeProvider';
 import { IconButton } from '../basic/IconButton';
 import { ProgressBar } from '../basic/ProgressBar';
@@ -57,6 +57,10 @@ export interface FileUploaderLabels {
   /** Accessible name of a file's progress bar. */
   progress: (fileName: string) => string;
   remove: (fileName: string) => string;
+  /** Read to screen readers after a pick or a drop: the files that were accepted (rejected ones are alerts). */
+  added?: (fileNames: string[]) => string;
+  /** Read to screen readers after a file's Remove button. */
+  removed?: (fileName: string) => string;
 }
 
 export const DEFAULT_FILE_UPLOADER_LABELS: FileUploaderLabels = {
@@ -76,6 +80,9 @@ export const DEFAULT_FILE_UPLOADER_LABELS: FileUploaderLabels = {
   countError: (maxFiles) => `Only ${maxFiles} ${maxFiles === 1 ? 'file' : 'files'} allowed`,
   uploadFailed: 'Upload failed',
   uploaded: 'Uploaded',
+  added: (fileNames) =>
+    fileNames.length === 1 ? `Added ${fileNames[0]}` : `Added ${fileNames.length} files: ${fileNames.join(', ')}`,
+  removed: (fileName) => `Removed ${fileName}`,
   progress: (fileName) => `Uploading ${fileName}`,
   remove: (fileName) => `Remove ${fileName}`,
 };
@@ -148,7 +155,10 @@ export const FileUploader = withRef(function FileUploader({
   const rootRef = useRef<HTMLDivElement>(null);
 
   const remove = (index: number, itemId: string) => {
+    const removed = items.find((i) => i.id === itemId);
     setItems(items.filter((i) => i.id !== itemId));
+    const text = removed && labels.removed?.(removed.file.name);
+    if (text) announce(text, 'polite');
     // The focused Remove button goes with its row: continue on the next row's button, or on the drop zone.
     requestAnimationFrame(() => {
       const root = rootRef.current;
@@ -182,7 +192,12 @@ export const FileUploader = withRef(function FileUploader({
     });
     setItems([...kept, ...incoming]);
     const accepted = incoming.filter((i) => i.status !== 'error');
-    if (accepted.length > 0) onFilesAdded?.(accepted);
+    if (accepted.length > 0) {
+      onFilesAdded?.(accepted);
+      // The new rows appear silently below the drop zone; say what arrived.
+      const text = labels.added?.(accepted.map((i) => i.file.name));
+      if (text) announce(text, 'polite');
+    }
   };
 
   const hintText =

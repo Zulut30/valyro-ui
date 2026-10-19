@@ -2,10 +2,12 @@
 
 import type { ComponentPropsWithRef, ReactNode } from 'react';
 import { cx, useControllableState } from '../primitives';
+import { collectionPart, partsOf } from '../primitives/compound';
 import { CheckIcon } from '../icons';
+import { useFormField } from '../forms-advanced/form-field-context';
 import { nextSelection, useGroupName } from './utils';
 import './ChipGroup.css';
-import { withRef } from '../primitives/react-compat';
+import { withRef, useId } from '../primitives/react-compat';
 
 export interface ChipGroupItem {
   value: string;
@@ -17,9 +19,19 @@ export interface ChipGroupItem {
   disabled?: boolean;
 }
 
+export interface ChipGroupItemPartProps extends Omit<ChipGroupItem, 'label'> {
+  /** The chip's label. */
+  children?: ReactNode;
+}
+
+/** A chip of the compound form (`ChipGroup.Item`; ChipGroupItem is the type of an `items` entry). */
+export const ChipGroupItemPart = collectionPart<ChipGroupItemPartProps>('ChipGroup.Item');
+
 export interface ChipGroupProps extends Omit<ComponentPropsWithRef<'div'>, 'children' | 'defaultValue' | 'onChange'> {
-  /** The chips, in order. */
-  items: ChipGroupItem[];
+  /** The chips, in order. Or compose them as children: `ChipGroup.Item`. */
+  items?: ChipGroupItem[];
+  /** The compound form instead of `items`: `ChipGroup.Item` elements. */
+  children?: ReactNode;
   /** `multiple`: any number of chips (checkboxes); `single`: one at a time (radios). Default `multiple`. */
   selectionMode?: 'single' | 'multiple';
   /** Selected values (controlled). */
@@ -34,10 +46,18 @@ export interface ChipGroupProps extends Omit<ComponentPropsWithRef<'div'>, 'chil
   variant?: 'soft' | 'outline';
   /** Disables every chip. */
   disabled?: boolean;
+  /**
+   * Visible name above the chips, linked to the group. Outside a FormField a group needs a name (this, or an
+   * `aria-label` / `aria-labelledby`); inside one, the field's label names it.
+   */
+  label?: ReactNode;
+  /** Error state, e.g. from a FormField: aria-invalid on the group and a danger edge on the chips. */
+  invalid?: boolean;
 }
 
 export const ChipGroup = withRef(function ChipGroup({
-  items,
+  items: itemsProp,
+  children,
   selectionMode = 'multiple',
   value: valueProp,
   defaultValue,
@@ -46,14 +66,38 @@ export const ChipGroup = withRef(function ChipGroup({
   size = 'md',
   variant = 'soft',
   disabled = false,
+  label,
+  invalid = false,
   className,
   ...rest
 }: ChipGroupProps) {
+  const items =
+    itemsProp ?? partsOf<ChipGroupItemPartProps>(children, ChipGroupItemPart).map(({ props: { children: label, ...item } }) => ({ ...item, label }));
   const [value, setValue] = useControllableState<string[]>({ value: valueProp, defaultValue: defaultValue ?? [], onChange: onValueChange });
   const groupName = useGroupName(name);
   const single = selectionMode === 'single';
+  const field = useFormField();
+  const legendId = `${useId()}-legend`;
+  // A radiogroup carries aria-required; a group of checkboxes cannot, so the field's "required" joins its description.
+  const required = !!field?.required;
   return (
-    <div role={single ? 'radiogroup' : 'group'} className={cx('ui-chip-group', className)} data-size={size} data-variant={variant} {...rest}>
+    <div
+      role={single ? 'radiogroup' : 'group'}
+      className={cx('ui-chip-group', className)}
+      data-size={size}
+      data-variant={variant}
+      data-invalid={invalid || undefined}
+      aria-labelledby={label != null ? legendId : rest['aria-label'] ? undefined : field?.labelId}
+      aria-invalid={invalid || undefined}
+      aria-required={(single && required) || undefined}
+      {...rest}
+      aria-describedby={cx(rest['aria-describedby'], !single && required && field?.requiredId) || undefined}
+    >
+      {label != null && (
+        <span id={legendId} className="ui-chip-group__legend">
+          {label}
+        </span>
+      )}
       {items.map((item) => {
         const checked = value.includes(item.value);
         const off = disabled || item.disabled;
@@ -82,4 +126,4 @@ export const ChipGroup = withRef(function ChipGroup({
       })}
     </div>
   );
-});
+}, { Item: ChipGroupItemPart });

@@ -3,6 +3,7 @@
 import { useRef, useState, type ComponentPropsWithRef, type ReactElement, type ReactNode, type RefObject } from 'react';
 import { ChevronDownIcon } from '../icons';
 import { cx, mergeRefs, Slot, useControllableState, useDirection } from '../primitives';
+import { collectionPart, partsOf } from '../primitives/compound';
 import { Badge } from '../basic/Badge';
 import { Tooltip } from '../basic/Tooltip';
 import { DropdownMenu } from './DropdownMenu';
@@ -32,8 +33,13 @@ export interface SidebarSection {
 }
 
 export interface SidebarProps extends Omit<ComponentPropsWithRef<'aside'>, 'defaultValue' | 'onChange'> {
-  /** Groups of nav items, each with an optional heading (a divider in collapsed mode). */
-  sections: SidebarSection[];
+  /**
+   * Groups of nav items, each with an optional heading (a divider in collapsed mode). Or compose them as children:
+   * `Sidebar.Section` with `Sidebar.Item`s (nested Items make a collapsible group).
+   */
+  sections?: SidebarSection[];
+  /** The compound form instead of `sections`: `Sidebar.Section` elements. */
+  children?: ReactNode;
   /** Id of the active item. */
   value?: string;
   defaultValue?: string;
@@ -46,6 +52,36 @@ export interface SidebarProps extends Omit<ComponentPropsWithRef<'aside'>, 'defa
   footer?: ReactNode;
   /** Accessible name of the navigation. */
   label?: string;
+}
+
+export interface SidebarSectionPartProps {
+  /** Heading of the section (a divider in collapsed mode). */
+  label?: string;
+  /** Its `Sidebar.Item` elements. */
+  children?: ReactNode;
+}
+
+export interface SidebarItemPartProps extends Omit<SidebarItem, 'items'> {
+  /** Nested `Sidebar.Item`s: the item becomes a collapsible group. */
+  children?: ReactNode;
+}
+
+/** A group of nav items of the compound form (`Sidebar.Section`; SidebarSection is the type of a `sections` entry). */
+export const SidebarSectionPart = collectionPart<SidebarSectionPartProps>('Sidebar.Section');
+/** A nav item (`Sidebar.Item`): the props of a SidebarItem; nested Items are its group. */
+export const SidebarItemPart = collectionPart<SidebarItemPartProps>('Sidebar.Item');
+
+function itemsFromParts(children: ReactNode): SidebarItem[] {
+  return partsOf<SidebarItemPartProps>(children, SidebarItemPart).map(({ props: { children: nested, ...item } }) => {
+    const items = itemsFromParts(nested);
+    return items.length ? { ...item, items } : item;
+  });
+}
+
+function sectionsFromParts(children: ReactNode): SidebarSection[] {
+  return partsOf<SidebarSectionPartProps>(children, SidebarSectionPart).map(({ props: { label, children: items } }) =>
+    label === undefined ? { items: itemsFromParts(items) } : { label, items: itemsFromParts(items) },
+  );
 }
 
 /** The rail hides badges behind a dot, so a plain-text badge joins the accessible name. */
@@ -72,7 +108,8 @@ function groupsToOpen(sections: SidebarSection[], activeId: string | undefined, 
 }
 
 export const Sidebar = withRef(function Sidebar({
-  sections,
+  sections: sectionsProp,
+  children,
   value,
   defaultValue,
   onValueChange,
@@ -84,6 +121,7 @@ export const Sidebar = withRef(function Sidebar({
   ref,
   ...rest
 }: SidebarProps) {
+  const sections = sectionsProp ?? sectionsFromParts(children);
   const asideRef = useRef<HTMLElement>(null);
   const navRef = useRef<HTMLElement>(null);
   // Fades the nav's scrolled-past edges (Sidebar.css); re-measured when the rail toggles or the sections change.
@@ -271,7 +309,7 @@ export const Sidebar = withRef(function Sidebar({
       {footer && <div className="ui-sidebar__footer">{footer}</div>}
     </aside>
   );
-});
+}, { Section: SidebarSectionPart, Item: SidebarItemPart });
 
 /**
  * One active-row fill that glides to the newly chosen row (Linear-style). Written straight to the DOM:

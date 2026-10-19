@@ -169,8 +169,8 @@
     position: absolute;
     top: 50%;
     left: 50%;
-    /* Narrower than 44px: a clear button can sit right next to it. */
-    width: 32px;
+    /* 40px, not 44: a clear button can sit right next to it, and each still owns its own centre. */
+    width: 40px;
     height: 44px;
     translate: -50% -50%;
   }

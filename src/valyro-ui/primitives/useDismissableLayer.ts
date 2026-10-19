@@ -56,6 +56,9 @@ export function getOutsideDismissals(stack: readonly Layer[], target: Node): Lay
 }
 
 function handlePointerDown(event: PointerEvent) {
+  // Only a primary press dismisses (React Aria's useInteractOutside): a right click outside a menu opens the page's
+  // own context menu, a middle click scrolls or opens a link in a new tab, and neither should close the layer.
+  if (event.button > 0) return;
   const target = event.target as Node | null;
   if (!target || isInDismissIgnoredRegion(target)) return;
   for (const layer of getOutsideDismissals(layers, target)) layer.onOutside?.();

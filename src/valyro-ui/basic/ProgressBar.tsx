@@ -1,11 +1,49 @@
 'use client';
 
 import { useMemo, useRef, useState, type ComponentPropsWithRef, type CSSProperties, type ReactNode } from 'react';
-import { clamp, cx, useSpringValue } from '../primitives';
+import { clamp, cx, useEventCallback, useSpringValue } from '../primitives';
 import { useLocale } from '../theme/ThemeProvider';
 import '../primitives/motion.css';
 import './ProgressBar.css';
 import { withRef, useId } from '../primitives/react-compat';
+
+/** CSS counter styles for Intl's numbering systems, so the spring count can run in CSS in the locale's digits. */
+const COUNTER_STYLES: Record<string, string> = {
+  latn: 'decimal',
+  arab: 'arabic-indic',
+  arabext: 'persian',
+  beng: 'bengali',
+  deva: 'devanagari',
+  gujr: 'gujarati',
+  guru: 'gurmukhi',
+  hanidec: 'cjk-decimal',
+  khmr: 'khmer',
+  knda: 'kannada',
+  laoo: 'lao',
+  mlym: 'malayalam',
+  mong: 'mongolian',
+  mymr: 'myanmar',
+  orya: 'oriya',
+  tamldec: 'tamil',
+  telu: 'telugu',
+  thai: 'thai',
+  tibt: 'tibetan',
+};
+
+const cssString = (text: string) => `"${text.replace(/["\\]/g, '\\$&')}"`;
+
+/** The text around a percentage's whole number and its digits as CSS (`content` strings, a counter style); null when CSS can't write it. */
+function percentPattern(format: Intl.NumberFormat) {
+  const digits = COUNTER_STYLES[format.resolvedOptions().numberingSystem];
+  const parts = format.formatToParts(0.5);
+  const at = parts.findIndex((part) => part.type === 'integer');
+  if (!digits || at < 0 || parts.some((part, i) => i !== at && part.type !== 'percentSign' && part.type !== 'literal')) return null;
+  const text = (from: number, to?: number) => cssString(parts.slice(from, to).map((part) => part.value).join(''));
+  return { '--_progress-before': text(0, at), '--_progress-after': text(at + 1), '--_progress-digits': digits };
+}
+
+/** The whole percent Intl shows for `ratio` (its rounding, not Math.round of a float). */
+const wholePercent = new Intl.NumberFormat('en-US', { style: 'percent', maximumFractionDigits: 0, useGrouping: false });
 
 export interface ProgressBarProps extends Omit<ComponentPropsWithRef<'div'>, 'children'> {
   /** Omit (or pass a non-finite number) for an indeterminate bar. */
@@ -61,19 +99,29 @@ export const ProgressBar = withRef(function ProgressBar({
   );
   const valueText = indeterminate ? undefined : formatValue ? formatValue(current, safeMax) : percentFormat.format(ratio);
   const spring = animation === 'spring';
+  // Spring with the percentage: the count is a CSS transition of a registered integer, written by a counter in
+  // the locale's digits (ProgressBar.css), so no frame loop runs. A custom formatValue counts in JS.
+  const pattern = useMemo(() => (spring && !formatValue ? percentPattern(percentFormat) : null), [spring, formatValue, percentFormat]);
 
-  // Spring: the shown number counts towards the value frame by frame, written straight to the DOM; React
+  // Spring in JS: the shown number counts towards the value frame by frame, written straight to the DOM; React
   // keeps the first text, so it never overwrites a count in flight. The progressbar's aria-valuetext stays exact.
-  const valueRef = useRef<HTMLSpanElement>(null);
+  const valueRef = useRef<HTMLSpanElement | null>(null);
   const [firstText] = useState(valueText);
   const format = (n: number) => (formatValue ? formatValue(Math.round(n), safeMax) : percentFormat.format(n / safeMax));
+  // The count last written, so a value shown later (showValue turned on) starts from it, not from firstText.
+  const shown = useRef(current ?? 0);
   useSpringValue(
     current ?? 0,
     (n) => {
+      shown.current = n;
       if (valueRef.current) valueRef.current.textContent = format(n);
     },
-    { spring: 'smooth', tempoRef: valueRef, enabled: spring && !indeterminate },
+    { spring: 'smooth', tempoRef: valueRef, enabled: spring && !pattern && !indeterminate },
   );
+  const attachValue = useEventCallback((node: HTMLSpanElement | null) => {
+    valueRef.current = node;
+    if (node && spring && !pattern) node.textContent = format(shown.current);
+  });
 
   const fillStyle: CSSProperties | undefined = indeterminate
     ? undefined
@@ -90,10 +138,20 @@ export const ProgressBar = withRef(function ProgressBar({
               {label}
             </span>
           )}
-          {showValue && valueText && (
-            <span ref={valueRef} className="ui-progress__value" aria-hidden="true">
-              {spring ? firstText : valueText}
-            </span>
+          {showValue && valueText && pattern ? (
+            <span
+              className="ui-progress__value"
+              aria-hidden="true"
+              data-count=""
+              style={{ ...pattern, '--_progress-count': Number.parseInt(wholePercent.format(ratio), 10) } as CSSProperties}
+            />
+          ) : (
+            showValue &&
+            valueText && (
+              <span ref={attachValue} className="ui-progress__value" aria-hidden="true">
+                {spring ? firstText : valueText}
+              </span>
+            )
           )}
         </div>
       )}

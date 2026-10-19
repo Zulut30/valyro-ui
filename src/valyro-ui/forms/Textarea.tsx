@@ -4,12 +4,15 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ComponentPropsW
 import { clamp, cx, mergeRefs } from '../primitives';
 import { useLocale } from '../theme/ThemeProvider';
 import { useFormReset } from './form-reset';
+import { useFormField } from '../forms-advanced/form-field-context';
 import './Textarea.css';
 import { withRef, useId, useLayoutEffect } from '../primitives/react-compat';
 
 export interface TextareaProps extends ComponentPropsWithRef<'textarea'> {
   /** Error border and aria-invalid on the textarea (an explicit `aria-invalid` wins). */
   invalid?: boolean;
+  /** Text size and padding, like TextInput's sm / md / lg. */
+  size?: 'sm' | 'md' | 'lg';
   /** Grow with the content between `minRows` and `maxRows`. */
   autoResize?: boolean;
   /** Visible rows when empty (also the initial height without `autoResize`). Default 3. */
@@ -33,6 +36,7 @@ export function counterState(length: number, maxLength: number | undefined) {
  */
 export const Textarea = withRef(function Textarea({
   invalid = false,
+  size = 'md',
   autoResize = false,
   minRows = 3,
   maxRows,
@@ -51,6 +55,8 @@ export const Textarea = withRef(function Textarea({
   'aria-describedby': describedBy,
   ...rest
 }: TextareaProps) {
+  // FormField's `required` only marks its label (aria-hidden); announce it on the control.
+  const field = useFormField();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const counterId = useId();
   const [innerLength, setInnerLength] = useState(() => String(defaultValue ?? '').length);
@@ -111,6 +117,7 @@ export const Textarea = withRef(function Textarea({
     <div
       className={cx('ui-field', 'ui-textarea', className)}
       style={style}
+      data-size={size}
       data-invalid={invalid || undefined}
       data-disabled={disabled || undefined}
       data-readonly={readOnly || undefined}
@@ -126,6 +133,7 @@ export const Textarea = withRef(function Textarea({
       <textarea
         aria-invalid={ariaInvalid ?? (invalid || undefined)}
         aria-describedby={cx(describedBy, maxLength !== undefined && counterId) || undefined}
+        aria-required={field?.required || undefined}
         {...rest}
         ref={mergeRefs(textareaRef, ref)}
         className="ui-textarea__input"

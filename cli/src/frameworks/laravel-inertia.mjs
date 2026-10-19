@@ -11,6 +11,6 @@ export default {
     anchor: /\{app\}|<App\s+\{\.\.\.props\}\s*\/>/g,
     wrapped: '{app}',
     note: ({ attrs }) =>
-      `Laravel: put ${attrs} on <html> in resources/views/app.blade.php, and drop the starter's body background (resources/css/app.css) and font-sans on <body> so the theme shows.`,
+      `Laravel: put ${attrs} on <html> in resources/views/app.blade.php, and drop the starter's body background (resources/css/app.css), font-sans on <body> and @fonts in <head> (it preloads the starter font, now unused) so the theme shows.`,
   },
 };

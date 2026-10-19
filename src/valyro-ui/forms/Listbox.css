@@ -16,6 +16,13 @@
   scroll-margin-block: var(--ui-space-1);
 }
 
+/* Touch: the same 44px rows as .ui-menu-item (base.css). */
+@media (pointer: coarse) {
+  .ui-listbox__option {
+    min-height: max(var(--ui-menu-item-h), 44px);
+  }
+}
+
 .ui-listbox__text {
   display: flex;
   flex: 1;
@@ -46,7 +53,7 @@
 }
 
 /* The checkmark grows in on the theme's spring curve, like the multi-select checkbox below. */
-.ui-listbox__check[data-checked='true'] {
+.ui-listbox__check[data-checked] {
   opacity: 1;
   transform: none;
 }
@@ -80,12 +87,12 @@
     transform var(--ui-duration) var(--ui-ease-spring);
 }
 
-.ui-listbox__checkbox[data-checked='true'] {
+.ui-listbox__checkbox[data-checked] {
   border-color: var(--ui-primary);
   background: var(--ui-primary);
 }
 
-.ui-listbox__checkbox[data-checked='true'] .ui-icon {
+.ui-listbox__checkbox[data-checked] .ui-icon {
   opacity: 1;
   transform: none;
 }
@@ -109,7 +116,7 @@
   background: var(--ui-listbox-checkbox-bg-highlight);
 }
 
-.ui-menu-item[data-highlighted='true'] .ui-listbox__checkbox[data-checked='true'] {
+.ui-menu-item[data-highlighted='true'] .ui-listbox__checkbox[data-checked] {
   border-color: var(--ui-listbox-checkbox-checked-bg-highlight);
   background: var(--ui-listbox-checkbox-checked-bg-highlight);
   color: var(--ui-listbox-checkbox-checked-fg-highlight);
@@ -130,11 +137,48 @@
   text-align: center;
 }
 
+/* Standalone Listbox: the list sits on the page in a field-like frame and takes focus itself. */
+.ui-listbox[data-standalone] {
+  border: var(--ui-border-width, 1px) solid var(--ui-border-field);
+  border-radius: var(--ui-radius-field);
+  corner-shape: var(--ui-control-corner-shape);
+  background: var(--ui-field-bg);
+  box-shadow: var(--ui-field-shadow);
+  transition:
+    border-color var(--ui-duration-fast) var(--ui-ease),
+    box-shadow var(--ui-duration-fast) var(--ui-ease);
+}
+
+.ui-listbox[data-standalone]:focus-visible {
+  border-color: var(--ui-field-focus-border-color, var(--ui-accent));
+  box-shadow: var(--ui-field-focus-ring, var(--ui-focus-ring));
+}
+
+.ui-listbox[data-standalone][aria-invalid='true'] {
+  border-color: var(--ui-danger);
+}
+
+.ui-listbox[data-standalone][aria-invalid='true']:focus-visible {
+  box-shadow: var(--ui-field-focus-ring-invalid, var(--ui-focus-ring-invalid));
+}
+
+.ui-listbox[data-standalone][aria-disabled='true'] {
+  opacity: var(--ui-disabled-opacity, 0.55);
+  cursor: not-allowed;
+}
+
+/* No options: the empty text stands in for the frame. */
+.ui-listbox[data-standalone]:empty {
+  display: none;
+}
+
 /* Popover that hosts a listbox (Select, MultiSelect, Combobox). */
 .ui-listbox__popover {
   display: flex;
   flex-direction: column;
   max-width: max(var(--ui-anchor-width, 0px), 360px);
+  /* Room on the chosen side (useFloating): the list scrolls instead of the popup leaving the screen. */
+  max-height: var(--ui-available-height, none);
   overflow: hidden;
 }
 
@@ -145,8 +189,8 @@
     background: transparent;
   }
 
-  .ui-listbox__checkbox[data-checked='true'],
-  .ui-menu-item[data-highlighted='true'] .ui-listbox__checkbox[data-checked='true'] {
+  .ui-listbox__checkbox[data-checked],
+  .ui-menu-item[data-highlighted='true'] .ui-listbox__checkbox[data-checked] {
     border-color: currentColor;
     background: transparent;
     color: inherit;

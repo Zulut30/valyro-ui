@@ -23,6 +23,11 @@
   backdrop-filter: none;
 }
 
+/* In the page flow nothing else shows that the palette has focus: its bare search field has no ring. */
+.ui-command-palette[data-inline]:focus-within {
+  box-shadow: var(--ui-highlight), var(--ui-focus-ring), var(--ui-shadow-card);
+}
+
 .ui-command-palette__search {
   display: flex;
   flex: none;
@@ -61,7 +66,7 @@
   display: inline-flex;
   flex: none;
   align-items: center;
-  gap: 4px;
+  gap: var(--ui-space-1);
 }
 
 .ui-command-palette__empty {
@@ -86,7 +91,7 @@
 .ui-command-palette__hint {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--ui-space-1);
 }
 
 /* Shortcut keys on the highlighted row, which a theme may fill with the accent. */

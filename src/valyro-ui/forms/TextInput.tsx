@@ -4,6 +4,7 @@ import { useRef, useState, type ComponentPropsWithRef, type ReactNode } from 're
 import { EyeIcon, EyeOffIcon, XIcon } from '../icons';
 import { cx, mergeRefs } from '../primitives';
 import { useFormReset } from './form-reset';
+import { useFormField } from '../forms-advanced/form-field-context';
 import './TextInput.css';
 import { withRef } from '../primitives/react-compat';
 
@@ -63,6 +64,8 @@ export const TextInput = withRef(function TextInput({
   'aria-invalid': ariaInvalid,
   ...rest
 }: TextInputProps) {
+  // FormField's `required` only marks its label (aria-hidden); announce it on the control.
+  const field = useFormField();
   const labels = { ...defaultTextInputLabels, ...labelsProp };
   const inputRef = useRef<HTMLInputElement>(null);
   const [revealed, setRevealed] = useState(false);
@@ -101,6 +104,7 @@ export const TextInput = withRef(function TextInput({
       {leftIcon && <span className="ui-field__icon">{leftIcon}</span>}
       <input
         aria-invalid={ariaInvalid ?? (invalid || undefined)}
+        aria-required={field?.required || undefined}
         {...rest}
         ref={mergeRefs(inputRef, ref)}
         type={isPassword && revealed ? 'text' : type}

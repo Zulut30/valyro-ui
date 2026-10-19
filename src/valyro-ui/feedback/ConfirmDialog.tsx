@@ -19,6 +19,16 @@ export interface ConfirmDialogProps extends Omit<DialogProps, 'title' | 'footer'
   variant?: 'default' | 'danger';
   /** May return a promise: the dialog shows a spinner and stays open until it settles; a rejection is shown as an error. */
   onConfirm: () => unknown;
+  /**
+   * Ignored: a confirm dialog closes with Cancel or Escape, never with a × button.
+   * @deprecated Has no effect; leave it out.
+   */
+  showClose?: boolean;
+  /**
+   * Ignored, like `showClose`: there is no × button to name.
+   * @deprecated Has no effect; leave it out.
+   */
+  closeLabel?: string;
   /** Called when the dialog closes without confirming. */
   onCancel?: () => void;
   /** The user must type this exact text (e.g. a project name) before confirming. */

@@ -1,8 +1,10 @@
 'use client';
 
 import { useRef, type ComponentPropsWithRef, type ReactNode } from 'react';
-import { animateSpring, cx, mergeRefs, useControllableState } from '../primitives';
+import { cx, mergeRefs, useControllableState } from '../primitives';
 import '../primitives/motion.css';
+import { useFormField } from '../forms-advanced/form-field-context';
+import { useFormReset } from './form-reset';
 import './Checkbox.css';
 import { withRef, useId, useLayoutEffect } from '../primitives/react-compat';
 
@@ -49,8 +51,11 @@ export const Checkbox = withRef(function Checkbox({
 }: CheckboxProps) {
   const [checked, setChecked] = useControllableState({ value: checkedProp, defaultValue: defaultChecked, onChange: onCheckedChange });
   const inputRef = useRef<HTMLInputElement>(null);
-  const boxRef = useRef<HTMLSpanElement>(null);
+  // A form reset brings the uncontrolled value back to its default (forms/form-reset.ts).
+  useFormReset(inputRef, () => setChecked(defaultChecked), checkedProp === undefined);
   const descriptionId = useId();
+  // FormField's `required` only marks its label (aria-hidden); announce it on the control.
+  const field = useFormField();
 
   // `indeterminate` is a DOM property only; a click clears it in the DOM, so it is re-applied on every render.
   useLayoutEffect(() => {
@@ -71,6 +76,7 @@ export const Checkbox = withRef(function Checkbox({
         <input
           aria-invalid={ariaInvalid ?? (invalid || undefined)}
           aria-describedby={cx(describedBy, description != null && descriptionId) || undefined}
+          aria-required={field?.required || undefined}
           {...rest}
           ref={mergeRefs(inputRef, ref)}
           type="checkbox"
@@ -80,13 +86,9 @@ export const Checkbox = withRef(function Checkbox({
           onChange={(event) => {
             onChange?.(event);
             setChecked(event.target.checked);
-            // Only a toggle by the user bounces, not a value set from outside or the first render.
-            if (animation === 'spring' && boxRef.current) {
-              animateSpring(boxRef.current, { transform: [event.target.checked ? 'scale(0.78)' : 'scale(0.9)', 'none'] }, 'bouncy');
-            }
           }}
         />
-        <span ref={boxRef} className="ui-checkbox__box" aria-hidden="true">
+        <span className="ui-checkbox__box" aria-hidden="true">
           <svg className="ui-checkbox__icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
             {indeterminate ? (
               <path d="M4 8h8" />

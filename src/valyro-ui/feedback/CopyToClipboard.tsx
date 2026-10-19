@@ -166,7 +166,10 @@ export const CopySnippet = withRef(function CopySnippet({
           {prompt}
         </span>
       )}
-      <code className="ui-copy-snippet__code">{value}</code>
+      {/* Commands and URLs read left to right in every script (dir="rtl" would reorder "./deploy.sh"). */}
+      <code className="ui-copy-snippet__code" dir="ltr">
+        {value}
+      </code>
       <CopyToClipboard
         className="ui-copy-snippet__button"
         value={value}

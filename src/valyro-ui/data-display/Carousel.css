@@ -190,11 +190,11 @@
 .ui-carousel__thumbs {
   display: flex;
   gap: var(--ui-space-2);
-  padding: 4px;
+  padding: var(--ui-space-1);
   margin: -4px;
   overflow-x: auto;
   /* Tabbing scrolls a thumbnail in with room for its ring, which the padding alone does not keep. */
-  scroll-padding-inline: 4px;
+  scroll-padding-inline: var(--ui-space-1);
   scrollbar-width: none;
 }
 

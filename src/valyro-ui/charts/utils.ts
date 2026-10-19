@@ -2,6 +2,7 @@
 
 import { useMemo, useState, type CSSProperties, type RefObject } from 'react';
 import { formatDate } from '../primitives';
+import { parseColor } from '../theme/createThemeCSS';
 import { useThemeTokens } from '../theme/useThemeTokens';
 import { formatNumber } from './scale';
 import { useId, useLayoutEffect, useSyncExternalStore } from '../primitives/react-compat';
@@ -216,20 +217,11 @@ export function wrapText(text: string, maxWidth: number, measure: MeasureText = 
 
 /* ───────────────────────── Colors ───────────────────────── */
 
-/** Hue (degrees) and HSL saturation of a hex or rgb() colour — the form theme palettes are written in; null otherwise. */
+/** Hue (degrees) and HSL saturation of a hex, rgb() or oklch() colour — the forms theme palettes are written in; null otherwise. */
 export function colorHue(color: string): { hue: number; saturation: number } | null {
-  const value = color.trim();
-  let rgb: number[] | null = null;
-  const hex = /^#([\da-f]{3}|[\da-f]{6})$/i.exec(value);
-  if (hex) {
-    const h = hex[1].length === 3 ? [...hex[1]].map((c) => c + c).join('') : hex[1];
-    rgb = [0, 2, 4].map((k) => parseInt(h.slice(k, k + 2), 16));
-  } else {
-    const fn = /^rgba?\(\s*([\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)/i.exec(value);
-    if (fn) rgb = fn.slice(1, 4).map(Number);
-  }
-  if (!rgb || rgb.some((c) => !Number.isFinite(c))) return null;
-  const [r, g, b] = rgb.map((c) => c / 255);
+  const parsed = parseColor(color);
+  if (!parsed) return null;
+  const [r, g, b] = [parsed.r, parsed.g, parsed.b].map((c) => c / 255);
   const max = Math.max(r, g, b);
   const min = Math.min(r, g, b);
   const d = max - min;

@@ -17,7 +17,44 @@
  *   --ui-motion-lift        scale under the pointer (1.02)
  *   --ui-motion-magnetic    pull towards the pointer, 0–1 (0.3)
  *   --ui-motion-perspective depth of 3D moves (900px)
+ *
+ * Motion that needs no JavaScript at run time, below: the springs as CSS easings, entrances that play when
+ * an element is rendered, and progress values the browser drives from the scroll position.
  */
+
+/* ── Springs ──
+   --ui-spring-smooth / -snappy / -bouncy are damped springs (primitives/spring.ts, SPRINGS) sampled into
+   CSS linear(); a test keeps them in sync with the maths. A spring runs for its own settle time at the
+   theme's tempo — --ui-duration-slow × its settle factor (springFactor: smooth 1.92, snappy 1.36, bouncy
+   2.61; the same test checks every use), so the reduced-motion durations of 1 ms make it instant. Browsers
+   without linear() get a cubic-bezier of the same character:
+     transition: transform calc(var(--ui-duration-slow) * 2.61) var(--ui-spring-bouncy); */
+:root {
+  --ui-spring-smooth: linear(0, 0.0229, 0.079, 0.1536, 0.2366, 0.3214, 0.4037, 0.4809, 0.5516, 0.6153, 0.6717, 0.7213, 0.7643, 0.8015, 0.8333, 0.8605, 0.8835, 0.903, 0.9194, 0.9331, 0.9447, 0.9543, 0.9623, 0.9689, 0.9744, 0.979, 0.9827, 0.9858, 0.9884, 0.9905, 0.9922, 0.9937, 0.9948, 0.9958, 0.9966, 0.9972, 0.9977, 0.9981, 0.9985, 0.9988, 1);
+  --ui-spring-snappy: linear(0, 0.0181, 0.0653, 0.1325, 0.2121, 0.2983, 0.3862, 0.4725, 0.5546, 0.6308, 0.6999, 0.7614, 0.8152, 0.8614, 0.9004, 0.9327, 0.9589, 0.9798, 0.9959, 1.008, 1.0167, 1.0226, 1.0261, 1.0278, 1.0282, 1.0274, 1.026, 1.024, 1.0217, 1.0192, 1.0167, 1.0143, 1.012, 1.0099, 1.008, 1.0064, 1.0049, 1.0036, 1.0026, 1.0017, 1);
+  --ui-spring-bouncy: linear(0, 0.0654, 0.2282, 0.4406, 0.6622, 0.863, 1.024, 1.1364, 1.2001, 1.221, 1.2086, 1.1738, 1.1273, 1.0782, 1.0333, 0.997, 0.9713, 0.9565, 0.9512, 0.9535, 0.9609, 0.971, 0.9819, 0.992, 1.0001, 1.006, 1.0095, 1.0108, 1.0104, 1.0088, 1.0066, 1.0042, 1.0019, 1.0001, 0.9988, 0.9979, 0.9976, 0.9977, 0.998, 0.9985, 1);
+}
+
+/* ── Following: --ui-ease-follow ──
+   The exponential approach (1 − e^(−5t)) / (1 − e^(−5)), for a value that chases a moving target (the scroll
+   position, the pointer). A transition of 5 × τ on this curve, started again from wherever it is on every change
+   of the target, moves exactly like a first-order follower with time constant τ — damp() in motion/core: the
+   exponential forgets where it started, so restarting it changes nothing — and settles the same way once the
+   target stops:
+     transition: --_x calc(var(--_smoothing) * 5s) var(--ui-ease-follow); */
+:root {
+  --ui-ease-follow: linear(0, 0.0491 1%, 0.0958 2%, 0.1825 4%, 0.2973 7%, 0.3961 10%, 0.5312 15%, 0.6364 20%, 0.7821 30%, 0.8705 40%, 0.9241 50%, 0.9677 65%, 0.9883 80%, 1);
+}
+
+@supports not (transition-timing-function: linear(0, 1)) {
+  :root {
+    --ui-spring-smooth: cubic-bezier(0.22, 1, 0.36, 1);
+    --ui-spring-snappy: cubic-bezier(0.2, 0.9, 0.3, 1.04);
+    --ui-spring-bouncy: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --ui-ease-follow: cubic-bezier(0.1, 0.5, 0.3, 1);
+  }
+}
+
 [data-ui-motion='reduce'],
 [data-ui-motion='reduce'] * {
   --ui-duration-fast: 1ms;
@@ -32,9 +69,10 @@
 }
 
 /* What a component turns off in its own prefers-reduced-motion block (endless shimmer, marquee, aurora)
-   stops here too: every CSS animation plays once, instantly. Spinners keep turning — they say "busy". */
+   stops here too: every CSS animation plays once, instantly. Spinners and the indeterminate progress
+   sweep keep moving — they say "busy" (a still sweep would read as a value). */
 [data-ui-motion='reduce'],
-[data-ui-motion='reduce'] *:not(.ui-spinner__spoke),
+[data-ui-motion='reduce'] *:not(.ui-spinner__spoke, .ui-progress__fill),
 [data-ui-motion='reduce'] *::before,
 [data-ui-motion='reduce'] *::after {
   animation-duration: 1ms !important;
@@ -43,4 +81,228 @@
   transition-duration: 1ms !important;
   transition-delay: 0s !important;
   scroll-behavior: auto !important;
+}
+
+/* ── Entrances: data-ui-enter ──
+   The CSS twin of the motion-kit presets (components/motion-kit/entrance.ts) for an element that enters
+   when it is rendered — mounted, or shown again from display: none — with no JavaScript at all:
+     <div data-ui-enter="up">…</div>
+   up / down / start / end (mirrored in RTL) / fade / scale / pop / flip, with the theme's profile (the
+   --ui-motion-* tokens above, read at the element; distance and perspective as lengths). The spring:
+   data-ui-spring="smooth | snappy | bouncy", else the theme's --ui-motion-spring where style queries work,
+   else snappy; pop bounces. --ui-enter-delay waits, so a list staggers with
+   --ui-enter-delay: calc(var(--ui-motion-stagger, 63ms) * <index>). Opacity and the individual translate /
+   scale properties only (flip adds a transform while it plays), so the element's own transform stays its
+   own. Reduced motion: no entrance. Entrances on scroll: Reveal and Stagger. */
+@media (prefers-reduced-motion: no-preference) {
+  [data-ui-enter] {
+    --_ui-enter-distance: var(--ui-motion-distance, 24px);
+    --_ui-enter-x: 0px;
+    --_ui-enter-y: var(--_ui-enter-distance);
+    --_ui-enter-scale: 1;
+
+    animation: ui-enter var(--ui-motion-enter, calc(var(--ui-duration-slow) * 2.2)) var(--_ui-enter-easing, var(--ui-spring-snappy)) var(--ui-enter-delay, 0s) backwards;
+  }
+
+  @container style(--ui-motion-spring: smooth) {
+    [data-ui-enter] {
+      --_ui-enter-easing: var(--ui-spring-smooth);
+    }
+  }
+
+  @container style(--ui-motion-spring: bouncy) {
+    [data-ui-enter] {
+      --_ui-enter-easing: var(--ui-spring-bouncy);
+    }
+  }
+
+  [data-ui-enter='fade'] {
+    --_ui-enter-y: 0px;
+  }
+
+  [data-ui-enter='down'] {
+    --_ui-enter-y: calc(var(--_ui-enter-distance) * -1);
+  }
+
+  [data-ui-enter='start'],
+  [data-ui-enter='end']:dir(rtl) {
+    --_ui-enter-x: calc(var(--_ui-enter-distance) * -1);
+    --_ui-enter-y: 0px;
+  }
+
+  [data-ui-enter='end'],
+  [data-ui-enter='start']:dir(rtl) {
+    --_ui-enter-x: var(--_ui-enter-distance);
+    --_ui-enter-y: 0px;
+  }
+
+  [data-ui-enter='scale'],
+  [data-ui-enter='pop'] {
+    --_ui-enter-y: 0px;
+    --_ui-enter-scale: var(--ui-motion-scale, 0.94);
+  }
+
+  [data-ui-enter='pop'] {
+    --_ui-enter-scale: calc(var(--ui-motion-scale, 0.94) * 0.9);
+    --_ui-enter-easing: var(--ui-spring-bouncy);
+  }
+
+  [data-ui-enter='flip'] {
+    animation-name: ui-enter-flip;
+  }
+
+  [data-ui-enter][data-ui-spring='smooth'] {
+    --_ui-enter-easing: var(--ui-spring-smooth);
+  }
+
+  [data-ui-enter][data-ui-spring='snappy'] {
+    --_ui-enter-easing: var(--ui-spring-snappy);
+  }
+
+  [data-ui-enter][data-ui-spring='bouncy'] {
+    --_ui-enter-easing: var(--ui-spring-bouncy);
+  }
+}
+
+@keyframes ui-enter {
+  from {
+    opacity: 0;
+    translate: var(--_ui-enter-x) var(--_ui-enter-y);
+    scale: var(--_ui-enter-scale);
+  }
+}
+
+@keyframes ui-enter-flip {
+  from {
+    opacity: 0;
+    translate: 0px calc(var(--_ui-enter-distance) / 2);
+    transform: perspective(var(--ui-motion-perspective, 900px)) rotateX(-28deg);
+    transform-origin: 50% 100%;
+  }
+
+  to {
+    transform: perspective(var(--ui-motion-perspective, 900px)) rotateX(0deg);
+    transform-origin: 50% 100%;
+  }
+}
+
+/* ── WebGL scenes: data-ui-intro ──
+   A scene's canvas fades up from nothing on its first frame (components/motion/webgl.ts sets the attribute and
+   --_ui-intro, the theme's entrance time) to whatever opacity the component gives it. */
+canvas[data-ui-intro] {
+  animation: ui-scene-intro var(--_ui-intro, 0s) cubic-bezier(0.33, 1, 0.68, 1) backwards;
+}
+
+@keyframes ui-scene-intro {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ── Folds: data-ui-fold ──
+   A disclosure's content that unfolds and folds (primitives/useFold renders the attribute where this works):
+   height and opacity transition between 0 and auto, from @starting-style when the group mounts open, and back
+   from wherever they are when it is toggled mid-way. data-ui-fold="spring" unfolds on the smooth spring;
+   otherwise on the theme's curve, and folding on a standard ease-out, both at --ui-duration-slow. Clipped
+   while it moves: an open group lets its overflow show (focus rings) once the unfold has played. */
+@supports (interpolate-size: allow-keywords) {
+  [data-ui-fold] {
+    --_ui-fold-time: var(--ui-duration-slow);
+    --_ui-fold-easing: var(--ui-ease);
+
+    interpolate-size: allow-keywords;
+  }
+
+  [data-ui-fold='spring'] {
+    --_ui-fold-time: calc(var(--ui-duration-slow) * 1.92);
+    --_ui-fold-easing: var(--ui-spring-smooth);
+  }
+
+  [data-ui-fold][data-state='open'] {
+    height: auto;
+    transition:
+      height var(--_ui-fold-time) var(--_ui-fold-easing),
+      opacity var(--_ui-fold-time) var(--_ui-fold-easing),
+      overflow 0s var(--_ui-fold-time) allow-discrete;
+  }
+
+  [data-ui-fold][data-state='closed'] {
+    height: 0;
+    overflow: clip;
+    opacity: 0;
+    transition:
+      height var(--ui-duration-slow) cubic-bezier(0.4, 0, 0.2, 1),
+      opacity var(--ui-duration-slow) cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  @starting-style {
+    [data-ui-fold][data-state='open'] {
+      height: 0;
+      overflow: clip;
+      opacity: 0;
+    }
+  }
+}
+
+/* ── Scroll progress: data-ui-scroll-progress / data-ui-view-progress ──
+   The browser writes the scroll position into a number from 0 to 1 — no scroll listener, no JavaScript per
+   frame — and anything on or inside the element follows it in calc():
+     --ui-scroll-progress  how far its nearest scroll container is scrolled (data-ui-scroll-progress="root": the page)
+     --ui-view-progress    how far the element is through its scroll container's view: 0 as its top edge comes in
+                           at the bottom, 1 as its bottom edge leaves at the top (data-ui-view-progress="inline":
+                           sideways). --ui-view-range narrows it to any animation-range: `contain`, `cover 5vh cover 55vh`.
+   Only where scroll-driven animations work; elsewhere the value stays 0, so a component asks
+   supportsScrollTimeline() (motion-kit/timeline.ts) and keeps its scroll listener there. Reduced motion does not
+   stop the value — it is a position, not motion; what moves with it decides. */
+@property --ui-scroll-progress {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+
+@property --ui-view-progress {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+
+@supports (animation-timeline: view()) {
+  [data-ui-scroll-progress] {
+    animation: ui-scroll-progress linear both;
+    animation-timeline: scroll(nearest block);
+  }
+
+  [data-ui-scroll-progress='root'] {
+    animation-timeline: scroll(root block);
+  }
+
+  [data-ui-view-progress] {
+    animation: ui-view-progress linear both;
+    animation-timeline: view(block);
+    animation-range: var(--ui-view-range, cover);
+  }
+
+  [data-ui-view-progress='inline'] {
+    animation-timeline: view(inline);
+  }
+}
+
+@keyframes ui-scroll-progress {
+  from {
+    --ui-scroll-progress: 0;
+  }
+
+  to {
+    --ui-scroll-progress: 1;
+  }
+}
+
+@keyframes ui-view-progress {
+  from {
+    --ui-view-progress: 0;
+  }
+
+  to {
+    --ui-view-progress: 1;
+  }
 }

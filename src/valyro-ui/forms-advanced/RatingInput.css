@@ -106,20 +106,41 @@
   min-width: 0;
 }
 
-/* Touch: stars sit side by side, so only the height grows to the 44px target (WCAG 2.5.5); a 4px gap keeps
-   20px stars 24px apart centre to centre (WCAG 2.5.8 spacing). */
+/* Touch: each star takes taps 40px wide and 44px tall (WCAG 2.5.5). The stars move apart so the hit areas
+   (`--_reach` past each side of the 16 / 20 / 28px star) meet without overlapping; half-star hits reach
+   outwards only, so each half keeps its own side. */
 @media (pointer: coarse) {
-  .ui-rating-input__stars {
-    gap: max(4px, var(--ui-space-1));
+  .ui-rating-input {
+    --_reach: 10px;
+  }
+
+  .ui-rating-input[data-size='sm'] {
+    --_reach: 12px;
+  }
+
+  .ui-rating-input[data-size='lg'] {
+    --_reach: 6px;
+  }
+
+  /* Not read-only: a rating that only shows the value keeps its stars together. */
+  .ui-rating-input[data-size]:not([data-readonly]) .ui-rating-input__stars {
+    gap: calc(2 * var(--_reach));
   }
 
   .ui-rating-input__hit::after {
     content: '';
     position: absolute;
     top: 50%;
-    left: 0;
-    width: 100%;
+    inset-inline: calc(-1 * var(--_reach));
     height: max(100%, 44px);
     translate: 0 -50%;
+  }
+
+  .ui-rating-input__hit[data-half='start']::after {
+    inset-inline-end: 0;
+  }
+
+  .ui-rating-input__hit[data-half='end']::after {
+    inset-inline-start: 0;
   }
 }

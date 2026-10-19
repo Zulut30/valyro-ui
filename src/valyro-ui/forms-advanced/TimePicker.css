@@ -39,6 +39,13 @@
   mask-image: linear-gradient(transparent, #000 16%, #000 84%, transparent);
 }
 
+/* Touch: options are tapped, so each row reaches 40px (the column keeps centring the selected one). */
+@media (pointer: coarse) {
+  .ui-time-picker__column {
+    --_opt-h: max(var(--ui-time-picker-option-h), 40px);
+  }
+}
+
 .ui-time-picker__column::-webkit-scrollbar {
   display: none;
 }

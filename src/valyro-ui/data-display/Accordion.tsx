@@ -1,12 +1,13 @@
 'use client';
 
-import { type ComponentPropsWithRef, type KeyboardEvent, type ReactNode } from 'react';
-import { cx, useControllableState } from '../primitives';
+import { type ComponentPropsWithRef, type ReactNode } from 'react';
+import { cx } from '../primitives';
 import { collectionPart, partsOf } from '../primitives/compound';
 import { ChevronDownIcon } from '../icons';
 import '../primitives/motion.css';
 import './Accordion.css';
-import { withRef, useId, inertAttr } from '../primitives/react-compat';
+import { withRef } from '../primitives/react-compat';
+import { useAccordion } from './useAccordion';
 
 export interface AccordionItem {
   value: string;
@@ -90,87 +91,31 @@ export const Accordion = withRef(function Accordion({
 }: AccordionProps) {
   const items = itemsProp ?? accordionItemsFromParts(children);
   const Heading = `h${headingLevel}` as 'h3';
-  const [value, setValue] = useControllableState({ value: valueProp, defaultValue, onChange: onValueChange });
-  const baseId = useId();
-
-  const toggle = (itemValue: string) => {
-    setValue((prev) => {
-      const open = prev.includes(itemValue);
-      if (type === 'multiple') return open ? prev.filter((v) => v !== itemValue) : [...prev, itemValue];
-      if (open) return collapsible ? [] : prev;
-      return [itemValue];
-    });
-  };
-
-  // WAI-ARIA accordion: arrows / Home / End move between headers of this accordion only (not nested ones).
-  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    onKeyDown?.(event);
-    if (event.defaultPrevented || !['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
-    const triggers = Array.from(
-      event.currentTarget.querySelectorAll<HTMLButtonElement>(
-        ':scope > .ui-accordion__item > .ui-accordion__heading > .ui-accordion__trigger:not(:disabled)',
-      ),
-    );
-    const index = triggers.indexOf(event.target as HTMLButtonElement);
-    if (index === -1) return;
-    event.preventDefault();
-    const last = triggers.length - 1;
-    const next =
-      event.key === 'Home' ? 0 : event.key === 'End' ? last : event.key === 'ArrowDown' ? (index === last ? 0 : index + 1) : index === 0 ? last : index - 1;
-    triggers[next].focus();
-  };
+  // The state, ids and keys come from the headless hook, so `useAccordion` builds the same accordion.
+  const accordion = useAccordion({ type, collapsible, value: valueProp, defaultValue, onValueChange });
 
   return (
     <div
       className={cx('ui-accordion', className)}
       data-motion={animation === 'spring' ? 'spring' : undefined}
-      onKeyDown={handleKeyDown}
-      {...rest}
+      {...accordion.getRootProps({ onKeyDown, ...rest })}
     >
-      {items.map((item, index) => {
-        const open = value.includes(item.value);
-        const triggerId = `${baseId}-trigger-${index}`;
-        const panelId = `${baseId}-panel-${index}`;
-        // A required open section in single mode cannot be closed, so it reports as disabled.
-        const locked = open && type === 'single' && !collapsible;
-        return (
-          <div
-            key={item.value}
-            className="ui-accordion__item"
-            data-state={open ? 'open' : 'closed'}
-            data-disabled={item.disabled || undefined}
-          >
-            <Heading className="ui-accordion__heading">
-              <button
-                type="button"
-                id={triggerId}
-                className="ui-accordion__trigger"
-                aria-expanded={open}
-                aria-controls={panelId}
-                aria-disabled={locked || undefined}
-                disabled={item.disabled}
-                onClick={() => toggle(item.value)}
-              >
-                <span className="ui-accordion__title">{item.title}</span>
-                {/* Glass turns it sideways (pointing at the content edge), so it mirrors under dir="rtl". */}
-                <ChevronDownIcon className="ui-accordion__chevron" data-dir-flip="" />
-              </button>
-            </Heading>
-            <div
-              id={panelId}
-              role="region"
-              aria-labelledby={triggerId}
-              className="ui-accordion__panel"
-              data-state={open ? 'open' : 'closed'}
-              inert={inertAttr(!open)}
-            >
-              <div className="ui-accordion__panel-inner">
-                <div className="ui-accordion__content">{item.content}</div>
-              </div>
+      {items.map((item) => (
+        <div key={item.value} className="ui-accordion__item" {...accordion.getItemProps(item)}>
+          <Heading className="ui-accordion__heading">
+            <button className="ui-accordion__trigger" {...accordion.getTriggerProps(item)}>
+              <span className="ui-accordion__title">{item.title}</span>
+              {/* Glass turns it sideways (pointing at the content edge), so it mirrors under dir="rtl". */}
+              <ChevronDownIcon className="ui-accordion__chevron" data-dir-flip="" />
+            </button>
+          </Heading>
+          <div className="ui-accordion__panel" {...accordion.getPanelProps(item)}>
+            <div className="ui-accordion__panel-inner">
+              <div className="ui-accordion__content">{item.content}</div>
             </div>
           </div>
-        );
-      })}
+        </div>
+      ))}
     </div>
   );
 }, { Item: AccordionItemPart, Trigger: AccordionTrigger, Content: AccordionContent });

@@ -17,10 +17,50 @@ export function destinationOf(file, config) {
 
 const SCRIPT_RE = /\.[cm]?[jt]sx?$/;
 
-/** Registry files carry `'use client'`; drop it outside React Server Components projects. */
+/** `<installDir>/components.css`: the component stylesheets of a project that takes global CSS only from its entry. */
+export const COMPONENT_CSS = 'components.css';
+
+/**
+ * The Next.js Pages Router (a Next app without React Server Components) accepts global CSS only from
+ * pages/_app: the components' stylesheet imports are dropped and collected into COMPONENT_CSS instead.
+ */
+export const collectsComponentCss = (config) => config.framework === 'next' && !config.rsc;
+
+/**
+ * Registry files carry `'use client'`; drop it outside React Server Components projects. Where global CSS
+ * is entry-only (collectsComponentCss), the relative `.css` imports go too.
+ */
 export function transformContent(content, dest, config) {
   if (config.rsc || !SCRIPT_RE.test(dest)) return content;
-  return content.replace(/^(['"])use client\1;?[ \t]*\r?\n(?:[ \t]*\r?\n)?/, '');
+  const code = content.replace(/^(['"])use client\1;?[ \t]*\r?\n(?:[ \t]*\r?\n)?/, '');
+  if (!collectsComponentCss(config)) return code;
+  return code.replace(/^import\s+(['"])\.{1,2}\/[^'"]+\.css\1;?[ \t]*\r?\n/gm, '').replace(/^(?:[ \t]*\r?\n)+/, '');
+}
+
+/**
+ * Adds an `@import` for each component stylesheet of the plan (not styles/, which styles/index.css covers)
+ * to COMPONENT_CSS, after the ones already there, so dependencies stay ahead of the components using them.
+ * @returns {{ dest: string, created: boolean } | null} null when the file is unchanged
+ */
+export function updateComponentCss(plan, config, projectDir) {
+  const installDir = config.installDir.replace(/\\/g, '/').replace(/\/+$/, '');
+  const dest = `${installDir}/${COMPONENT_CSS}`;
+  const abs = ensureInside(projectDir, dest);
+  const before = fs.existsSync(abs) ? fs.readFileSync(abs, 'utf8') : null;
+  const lines = before?.split(/\r?\n/).filter(Boolean) ?? [
+    '/* Written by valyro-cli: the Next.js Pages Router takes global CSS only from pages/_app, which imports this file. */',
+  ];
+  for (const file of plan) {
+    const rel = file.dest.startsWith(`${installDir}/`) ? file.dest.slice(installDir.length + 1) : null;
+    if (!rel?.endsWith('.css') || rel.startsWith('styles/') || rel === COMPONENT_CSS) continue;
+    const line = `@import './${rel}';`;
+    if (!lines.includes(line)) lines.push(line);
+  }
+  const content = `${lines.join('\n')}\n`;
+  if (content === before) return null;
+  fs.mkdirSync(path.dirname(abs), { recursive: true });
+  fs.writeFileSync(abs, content);
+  return { dest, created: before === null };
 }
 
 /**

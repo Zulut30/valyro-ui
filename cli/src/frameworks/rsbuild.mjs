@@ -11,6 +11,6 @@ export default {
     anchor: /<App\s*\/>/g,
     wrapped: '<App />',
     note: ({ attrs }) =>
-      `Rsbuild: put ${attrs} on <html> in your own index.html (html.template in rsbuild.config.ts) so the first paint is themed.`,
+      `Rsbuild: put ${attrs} on <html> in your own index.html (html.template in rsbuild.config.ts) so the first paint is themed, and delete the template's src/App.css and its import in App.tsx: it paints <body> (gradient, white text) over the theme.`,
   },
 };

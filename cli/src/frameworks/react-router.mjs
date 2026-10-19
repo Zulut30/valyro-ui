@@ -15,5 +15,7 @@ export default {
     anchor: /<Outlet\s*\/>/g,
     wrapped: '<Outlet />',
     ssr: true,
+    note: () =>
+      "React Router: delete the template's `html, body { @apply bg-white dark:bg-gray-950; … }` block from app/app.css (keep @import \"tailwindcss\" and @theme): it paints the page over the theme background.",
   },
 };

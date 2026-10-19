@@ -67,6 +67,11 @@
   box-shadow: var(--ui-slider-track-shadow);
 }
 
+/* Error state (`invalid`, e.g. from a FormField): a red edge on the track, as on checkboxes and radios. */
+.ui-slider[data-invalid] .ui-slider__track::before {
+  box-shadow: 0 0 0 var(--ui-border-width, 1px) var(--ui-danger);
+}
+
 .ui-slider__range {
   position: absolute;
   top: 0;
@@ -131,7 +136,8 @@
   backdrop-filter: var(--ui-blur);
 }
 
-.ui-slider:not([data-disabled]) .ui-slider__thumb:focus-visible {
+/* The thumb draws the ring of its hidden range input (data-focus-visible), which is what takes focus. */
+.ui-slider:not([data-disabled]) .ui-slider__thumb:is(:focus-visible, [data-focus-visible]) {
   box-shadow: var(--ui-slider-thumb-shadow-focus);
 }
 
@@ -161,7 +167,7 @@
 }
 
 .ui-slider[data-tooltip='always'] .ui-slider__value,
-.ui-slider[data-tooltip='auto'] .ui-slider__thumb:is(:hover, :focus-visible, [data-dragging]) .ui-slider__value {
+.ui-slider[data-tooltip='auto'] .ui-slider__thumb:is(:hover, :focus-visible, [data-focus-visible], [data-dragging]) .ui-slider__value {
   opacity: 1;
   transform: translate(-50%, 0);
 }

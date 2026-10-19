@@ -269,3 +269,11 @@
     transform: scale(0.86);
   }
 }
+
+/* `label`: the group's visible name, on its own row above the options in either orientation. */
+.ui-radio-group__legend {
+  flex-basis: 100%;
+  color: var(--ui-form-field-label-fg, var(--ui-fg));
+  font-size: var(--ui-text-sm);
+  font-weight: var(--ui-weight-label, var(--ui-weight-medium));
+}

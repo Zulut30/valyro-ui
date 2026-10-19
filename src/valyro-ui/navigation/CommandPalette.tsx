@@ -2,10 +2,13 @@
 
 import { useEffect, useMemo, useRef, useState, type ComponentPropsWithRef, type Dispatch, type KeyboardEvent, type ReactNode, type RefObject, type SetStateAction } from 'react';
 import { SearchIcon } from '../icons';
-import { cx, ModalLayer, useControllableState, useLatest, useListNavigation } from '../primitives';
-import { usePointerMoved } from './internal';
+import { createContainsMatcher, cx, ModalLayer, useAnnounceCount, useControllableState, useLatest } from '../primitives';
+import { useLocale } from '../theme/ThemeProvider';
+import { childElements, collectionPart, partsOf } from '../primitives/compound';
+import type { SelectItem } from '../forms/listbox-items';
+import { useCombobox } from '../forms/useCombobox';
 import './CommandPalette.css';
-import { withRef, useId } from '../primitives/react-compat';
+import { withRef } from '../primitives/react-compat';
 
 export interface CommandPaletteItem {
   id: string;
@@ -24,8 +27,13 @@ export interface CommandPaletteItem {
 }
 
 export interface CommandPaletteProps extends Omit<ComponentPropsWithRef<'div'>, 'children' | 'onSelect'> {
-  /** Searchable commands, listed under their group headings and filtered by label and keywords. */
-  commands: CommandPaletteItem[];
+  /**
+   * Searchable commands, listed under their group headings and filtered by label and keywords. Or compose them as
+   * children: `CommandPalette.Group` and `CommandPalette.Item`.
+   */
+  commands?: CommandPaletteItem[];
+  /** The compound form instead of `commands`: `CommandPalette.Item` elements, alone or in `CommandPalette.Group`s. */
+  children?: ReactNode;
   /** Controlled open state of the modal palette. Ignored when `inline`. */
   open?: boolean;
   /** Initial open state when uncontrolled. Ignored when `inline`. */
@@ -45,6 +53,36 @@ export interface CommandPaletteProps extends Omit<ComponentPropsWithRef<'div'>, 
   labels?: Partial<CommandPaletteLabels>;
 }
 
+export interface CommandPaletteItemProps extends Omit<CommandPaletteItem, 'label' | 'group'> {
+  /** The command's label (plain text: the search reads it). */
+  children: string;
+}
+
+export interface CommandPaletteGroupProps {
+  /** Heading the commands inside are listed under. */
+  heading: string;
+  /** Its `CommandPalette.Item` elements. */
+  children?: ReactNode;
+}
+
+/** A command of the compound form (`CommandPalette.Item`): the props of a CommandPaletteItem, label as children. */
+export const CommandPaletteItemPart = collectionPart<CommandPaletteItemProps>('CommandPalette.Item');
+/** Commands under one heading (`CommandPalette.Group`). */
+export const CommandPaletteGroup = collectionPart<CommandPaletteGroupProps>('CommandPalette.Group');
+
+function commandsFromParts(children: ReactNode): CommandPaletteItem[] {
+  const command = (props: CommandPaletteItemProps, group?: string): CommandPaletteItem => {
+    const { children: label, ...rest } = props;
+    return group === undefined ? { ...rest, label } : { ...rest, label, group };
+  };
+  return childElements(children).flatMap((child) => {
+    if (child.type === CommandPaletteItemPart) return [command(child.props as CommandPaletteItemProps)];
+    if (child.type !== CommandPaletteGroup) return [];
+    const { heading, children: items } = child.props as CommandPaletteGroupProps;
+    return partsOf<CommandPaletteItemProps>(items, CommandPaletteItemPart).map((item) => command(item.props, heading));
+  });
+}
+
 export interface CommandPaletteLabels {
   /** Accessible name of the results list. */
   results: string;
@@ -54,23 +92,30 @@ export interface CommandPaletteLabels {
   close: string;
   /** Escape key cap. */
   escapeKey: string;
+  /** Read to screen readers once the typing pauses: how many commands match ("3 results available"). */
+  resultCount?: (count: number) => string;
 }
 
-export const defaultCommandPaletteLabels: CommandPaletteLabels = {
+export const defaultCommandPaletteLabels: Required<CommandPaletteLabels> = {
   results: 'Commands',
   navigate: 'Navigate',
   run: 'Run',
   close: 'Close',
   escapeKey: 'esc',
+  resultCount: (count) => `${count} ${count === 1 ? 'result' : 'results'} available`,
 };
 
-/** Commands whose label or keywords contain every whitespace-separated term of the query. */
-export function filterCommands(commands: CommandPaletteItem[], query: string) {
-  const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
+/**
+ * Commands whose label or keywords contain every whitespace-separated term of the query, ignoring case and accents
+ * the way `locale` does ("cafe" finds "Café").
+ */
+export function filterCommands(commands: CommandPaletteItem[], query: string, locale?: string) {
+  const terms = query.split(/\s+/).filter(Boolean);
   if (terms.length === 0) return commands;
+  const contains = createContainsMatcher(locale);
   return commands.filter((command) => {
-    const haystack = [command.label, ...(command.keywords ?? [])].join(' ').toLowerCase();
-    return terms.every((term) => haystack.includes(term));
+    const haystack = [command.label, ...(command.keywords ?? [])].join(' ');
+    return terms.every((term) => contains(haystack, term));
   });
 }
 
@@ -91,9 +136,8 @@ function groupCommands(commands: CommandPaletteItem[]): CommandGroup[] {
 }
 
 /** Results in display order: grouped, so keyboard order matches what is on screen. */
-function arrange(commands: CommandPaletteItem[], query: string) {
-  const groups = groupCommands(filterCommands(commands, query));
-  return { groups, flat: groups.flatMap((group) => group.commands) };
+function arrange(commands: CommandPaletteItem[], query: string, locale?: string) {
+  return { groups: groupCommands(filterCommands(commands, query, locale)) };
 }
 
 /** Toggles the palette with ⌘K (macOS) / Ctrl+K anywhere on the page. */
@@ -112,7 +156,8 @@ export function useCommandPaletteHotkey(setOpen: Dispatch<SetStateAction<boolean
 }
 
 export const CommandPalette = withRef(function CommandPalette({
-  commands,
+  commands: commandsProp,
+  children,
   open: openProp,
   defaultOpen = false,
   onOpenChange,
@@ -124,6 +169,7 @@ export const CommandPalette = withRef(function CommandPalette({
   'aria-label': ariaLabel = 'Command palette',
   ...rest
 }: CommandPaletteProps) {
+  const commands = useMemo(() => commandsProp ?? commandsFromParts(children), [commandsProp, children]);
   const [open, setOpen] = useControllableState({ value: openProp, defaultValue: defaultOpen, onChange: onOpenChange });
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -161,13 +207,13 @@ export const CommandPalette = withRef(function CommandPalette({
       />
     </ModalLayer>
   );
-});
+}, { Item: CommandPaletteItemPart, Group: CommandPaletteGroup });
 
 interface PaletteBodyProps {
   commands: CommandPaletteItem[];
   placeholder: string;
   renderEmpty: (query: string) => ReactNode;
-  labels: CommandPaletteLabels;
+  labels: Required<CommandPaletteLabels>;
   inputRef: RefObject<HTMLInputElement | null>;
   /** Closes the modal palette; absent inline, where running a command clears the query instead. */
   onClose?: () => void;
@@ -175,57 +221,54 @@ interface PaletteBodyProps {
 
 /* Mounted per open (ModalLayer unmounts its children when closed), so the query starts empty. */
 function PaletteBody({ commands, placeholder, renderEmpty, labels, inputRef, onClose }: PaletteBodyProps) {
-  const baseId = useId();
-  const listId = `${baseId}-list`;
-  const optionId = (index: number) => `${baseId}-option-${index}`;
   const [query, setQuery] = useState('');
-  const { groups, flat } = useMemo(() => arrange(commands, query), [commands, query]);
-  const firstEnabled = (list: CommandPaletteItem[]) => list.findIndex((command) => !command.disabled);
+  const byId = useMemo(() => new Map(commands.map((command) => [command.id, command])), [commands]);
+  const locale = useLocale();
+  const groups = useMemo(() => arrange(commands, query, locale).groups, [commands, query, locale]);
+  // The commands as useCombobox options, already filtered and grouped (groups keep the order of their first match).
+  const items = useMemo<SelectItem[]>(
+    () =>
+      groups.map((group) => ({
+        label: group.heading,
+        options: group.commands.map((command) => ({ value: command.id, label: command.label, disabled: command.disabled })),
+      })),
+    [groups],
+  );
 
-  const search = (value: string) => {
-    setQuery(value);
-    setActiveIndex(firstEnabled(arrange(commands, value).flat));
-  };
-
-  const run = (command: CommandPaletteItem | undefined) => {
-    if (!command || command.disabled) return;
-    if (onClose) onClose();
-    else if (query) search('');
-    command.onSelect?.();
-  };
-
-  const { activeIndex, setActiveIndex, onKeyDown } = useListNavigation({
-    count: flat.length,
-    isDisabled: (index) => !flat[index] || !!flat[index].disabled,
-    onSelect: (index) => run(flat[index]),
-    initialIndex: firstEnabled(flat),
+  // The behaviour is useCombobox's (valyro-ui/headless) as a command menu: always open, the highlighted row is the
+  // selected one, a pick runs the command instead of filling the field.
+  const combobox = useCombobox({
+    items,
+    filter: false,
+    inputValue: query,
+    onInputValueChange: setQuery,
+    open: true,
+    selectionMode: 'none',
+    onSelect: (option) => run(byId.get(option.value)),
+    floating: false,
+  });
+  const empty = combobox.listbox.options.length === 0;
+  // Filtering is silent for screen readers that do not follow aria-activedescendant: the count is read out
+  // (no matches is already a status message below).
+  useAnnounceCount(combobox.listbox.options.filter((option) => !option.disabled).length, {
+    active: query.trim() !== '',
+    message: labels.resultCount,
+    key: query,
   });
 
-  // Scrolls the list only, never the page: an inline palette below the fold must not pull the page to itself.
-  const listRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const list = listRef.current;
-    const option = activeIndex >= 0 ? document.getElementById(`${baseId}-option-${activeIndex}`) : null;
-    if (!list || !option) return;
-    const bounds = list.getBoundingClientRect();
-    const rect = option.getBoundingClientRect();
-    if (rect.top < bounds.top) list.scrollTop -= bounds.top - rect.top;
-    else if (rect.bottom > bounds.bottom) list.scrollTop += rect.bottom - bounds.bottom;
-  }, [activeIndex, baseId]);
+  function run(command: CommandPaletteItem | undefined) {
+    if (!command || command.disabled) return;
+    if (onClose) onClose();
+    else if (query) combobox.search('');
+    command.onSelect?.();
+  }
 
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    // Only list keys go to the navigation; Space, Home and End keep editing the query.
-    // keyCode 229: Safari reports the IME composition's last keydown with isComposing false.
-    if (event.nativeEvent.isComposing || event.keyCode === 229) return;
-    if (event.key === 'ArrowDown' || event.key === 'ArrowUp' || event.key === 'Enter') onKeyDown(event);
     // Inline there is nothing to close: Escape clears the query instead.
-    else if (event.key === 'Escape' && !onClose && query) {
-      event.preventDefault();
-      search('');
-    }
+    if (event.key !== 'Escape' || onClose || !query || event.nativeEvent.isComposing) return;
+    event.preventDefault();
+    combobox.search('');
   };
-
-  const pointerMoved = usePointerMoved();
 
   let counter = -1;
 
@@ -236,82 +279,50 @@ function PaletteBody({ commands, placeholder, renderEmpty, labels, inputRef, onC
           <SearchIcon size={18} />
         </span>
         <input
-          ref={inputRef}
-          className="ui-field__input ui-command-palette__input"
-          role="combobox"
-          aria-expanded="true"
-          aria-controls={listId}
-          aria-autocomplete="list"
-          aria-activedescendant={activeIndex >= 0 ? optionId(activeIndex) : undefined}
-          autoComplete="off"
-          autoCorrect="off"
-          spellCheck={false}
-          placeholder={placeholder}
-          value={query}
-          onChange={(event) => search(event.target.value)}
-          onKeyDown={handleKeyDown}
+          {...combobox.getInputProps({
+            ref: inputRef,
+            className: 'ui-field__input ui-command-palette__input',
+            autoCorrect: 'off',
+            placeholder,
+            onKeyDown: handleKeyDown,
+          })}
         />
         {onClose && <kbd className="ui-kbd ui-command-palette__esc">{labels.escapeKey}</kbd>}
       </div>
       {/* The listbox has no items to read when nothing matches: say so in a live region instead. */}
       <div className="ui-sr-only" role="status">
-        {flat.length === 0 ? renderEmpty(query.trim()) : null}
+        {empty ? renderEmpty(query.trim()) : null}
       </div>
-      <div ref={listRef} id={listId} role="listbox" aria-label={labels.results} className="ui-command-palette__list">
-        {flat.length === 0 ? (
+      <div {...combobox.getListboxProps({ 'aria-label': labels.results, className: 'ui-command-palette__list' })}>
+        {empty ? (
           <div className="ui-command-palette__empty" role="presentation" aria-hidden="true">
             {renderEmpty(query.trim())}
           </div>
         ) : (
-          groups.map((group, groupIndex) => {
-            const headingId = `${baseId}-group-${groupIndex}`;
-            return (
-              <div
-                key={group.heading}
-                role="group"
-                aria-labelledby={group.heading ? headingId : undefined}
-                className="ui-command-palette__group"
-              >
-                {group.heading && (
-                  <div id={headingId} className="ui-menu-label" role="presentation">
-                    {group.heading}
+          groups.map((group, groupIndex) => (
+            <div key={group.heading} {...combobox.getGroupProps(groupIndex, { className: 'ui-command-palette__group' })}>
+              {group.heading && <div {...combobox.getGroupLabelProps(groupIndex, { className: 'ui-menu-label' })}>{group.heading}</div>}
+              {group.commands.map((command) => {
+                const index = ++counter;
+                return (
+                  <div key={command.id} {...combobox.getOptionProps(index, { className: 'ui-menu-item ui-command-palette__option' })}>
+                    {command.icon && <span className="ui-menu-item__icon">{command.icon}</span>}
+                    <span className="ui-menu-item__label">{command.label}</span>
+                    {command.trailing != null && <span className="ui-command-palette__trailing">{command.trailing}</span>}
+                    {command.shortcut && (
+                      <span className="ui-command-palette__shortcut" aria-hidden="true">
+                        {command.shortcut.map((key) => (
+                          <kbd key={key} className="ui-kbd">
+                            {key}
+                          </kbd>
+                        ))}
+                      </span>
+                    )}
                   </div>
-                )}
-                {group.commands.map((command) => {
-                  const index = ++counter;
-                  return (
-                    <div
-                      key={command.id}
-                      id={optionId(index)}
-                      role="option"
-                      aria-selected={index === activeIndex}
-                      aria-disabled={command.disabled || undefined}
-                      className="ui-menu-item ui-command-palette__option"
-                      data-highlighted={index === activeIndex || undefined}
-                      onPointerMove={(event) => {
-                        if (!pointerMoved(event)) return;
-                        if (!command.disabled && index !== activeIndex) setActiveIndex(index);
-                      }}
-                      onClick={() => run(command)}
-                    >
-                      {command.icon && <span className="ui-menu-item__icon">{command.icon}</span>}
-                      <span className="ui-menu-item__label">{command.label}</span>
-                      {command.trailing != null && <span className="ui-command-palette__trailing">{command.trailing}</span>}
-                      {command.shortcut && (
-                        <span className="ui-command-palette__shortcut" aria-hidden="true">
-                          {command.shortcut.map((key) => (
-                            <kbd key={key} className="ui-kbd">
-                              {key}
-                            </kbd>
-                          ))}
-                        </span>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            );
-          })
+                );
+              })}
+            </div>
+          ))
         )}
       </div>
       <div className="ui-command-palette__footer" aria-hidden="true">

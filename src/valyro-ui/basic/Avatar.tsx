@@ -1,7 +1,7 @@
 'use client';
 
-import { Children, cloneElement, createContext, isValidElement, useContext, useRef, useState, type ComponentPropsWithRef, type CSSProperties, type ReactElement, type ReactNode } from 'react';
-import { cx, mergeRefs } from '../primitives';
+import { Children, cloneElement, createContext, isValidElement, useContext, useEffect, useRef, useState, type ComponentPropsWithRef, type CSSProperties, type ReactElement, type ReactNode } from 'react';
+import { cx, mergeRefs, useDismissableLayer } from '../primitives';
 import '../primitives/motion.css';
 import './Avatar.css';
 import { withRef, useId } from '../primitives/react-compat';
@@ -126,6 +126,8 @@ export interface AvatarGroupProps extends ComponentPropsWithRef<'div'> {
 
 const defaultMoreLabel = (count: number) => `${count} more`;
 
+const HIDE_GRACE_MS = 120;
+
 type AvatarElement = ReactElement<AvatarProps>;
 
 export const AvatarGroup = withRef(function AvatarGroup({
@@ -148,13 +150,25 @@ export const AvatarGroup = withRef(function AvatarGroup({
   // The avatar the tooltip points at: its name and centre, measured once per hover or focus change.
   const [tip, setTip] = useState<{ index: number; name: string; x: number } | null>(null);
 
+  // Leaving an avatar waits a moment, so the pointer can cross onto the tooltip (WCAG 1.4.13, as in Tooltip).
+  const hideTimer = useRef<number | undefined>(undefined);
+  const cancelHide = () => window.clearTimeout(hideTimer.current);
+  useEffect(() => cancelHide, []);
+
   const show = (index: number, name: string, target: HTMLElement) => {
     const group = groupRef.current;
     if (!group || !name) return;
+    cancelHide();
     const box = target.getBoundingClientRect();
     setTip({ index, name, x: box.left + box.width / 2 - group.getBoundingClientRect().left });
   };
   const hide = (index: number) => setTip((current) => (current?.index === index ? null : current));
+  const hideSoon = (index: number) => {
+    cancelHide();
+    hideTimer.current = window.setTimeout(() => hide(index), HIDE_GRACE_MS);
+  };
+  // Escape closes the tooltip; outside presses ignore it and reach the page.
+  useDismissableLayer({ enabled: !!tip, refs: [], onDismiss: () => setTip(null), closeOnOutside: false, passThrough: true });
 
   const avatars =
     tooltips || invertOverlap
@@ -168,7 +182,8 @@ export const AvatarGroup = withRef(function AvatarGroup({
           };
           if (tooltips) {
             Object.assign(cloneProps, {
-              tabIndex: tabIndex ?? 0,
+              // An avatar without a name is hidden from assistive tech and has no tooltip, so it takes no focus.
+              tabIndex: tabIndex ?? (name ? 0 : undefined),
               'aria-describedby': tip?.index === index ? tipId : avatar.props['aria-describedby'],
               onPointerEnter: (event) => {
                 onPointerEnter?.(event);
@@ -176,7 +191,7 @@ export const AvatarGroup = withRef(function AvatarGroup({
               },
               onPointerLeave: (event) => {
                 onPointerLeave?.(event);
-                hide(index);
+                hideSoon(index);
               },
               onFocus: (event) => {
                 onFocus?.(event);
@@ -223,6 +238,8 @@ export const AvatarGroup = withRef(function AvatarGroup({
           className="ui-avatar-group__tip"
           data-visible={tip ? '' : undefined}
           style={{ '--_x': `${tip?.x ?? 0}px` } as CSSProperties}
+          onPointerEnter={cancelHide}
+          onPointerLeave={() => setTip(null)}
         >
           {tip?.name}
         </span>
