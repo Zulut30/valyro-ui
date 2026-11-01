@@ -29,7 +29,7 @@ describe('docs topics', () => {
       .readdirSync(lib, { recursive: true })
       .filter((file) => /\.tsx$/.test(file) && !/\.test\./.test(file))
       .flatMap((file) => [...fs.readFileSync(new URL(file, lib), 'utf8').matchAll(/^export const (\w+) = withRef\((?:(?!^export )[\s\S])*?^\}, \{/gm)].map((m) => m[1]));
-    expect(withParts.length).toBe(33);
+    expect(withParts.length).toBe(35);
     for (const name of withParts) expect(text, name).toContain(name);
   });
 });

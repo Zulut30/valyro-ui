@@ -54,8 +54,8 @@
  *                              and card links). `initial` = none (underlined on hover only); `underline` = always.
  *   --ui-danger-fg             text and icons on --ui-danger fills (danger buttons, error badges and steps, checked
  *                              invalid checkboxes). `initial` = #fff; a theme with a light --ui-danger sets a dark ink.
- *   --ui-choice-border         unchecked edge of checkboxes and radios (Checkbox, RadioGroup, Listbox, DataTable,
- *                              DataGrid, RichTextEditor, ProductFilters). `initial` = --ui-fg-faint, which every theme
+ *   --ui-choice-border         unchecked edge of checkboxes and radios (Checkbox, RadioGroup, Listbox, DataTable and
+ *                              every other list with checkboxes). `initial` = --ui-fg-faint, which every theme
  *                              keeps ≥ 3:1 (WCAG 1.4.11); hovering darkens it to --ui-fg-subtle.
  *   --ui-active-indicator      colour of a 3×16px pill at the inline start of the active sidebar item / navbar sheet
  *                              link and the selected tree row / list item (Windows 11). `initial` = none.
@@ -88,6 +88,14 @@
  *   --ui-chart-mark-stroke     outline of chart marks: bars, area fills, donut segments, funnel bars, treemap
  *                              tiles (default none; treemap tiles keep their tinted 1px rim); with
  *                              --ui-chart-mark-stroke-width (SVG units, default 1).
+ *   --ui-scroll-area-thumb     ScrollArea overlay thumb (default --ui-fg at 30 %, like the native scrollbar-color);
+ *                              -thumb-active: under the pointer and while dragged (default 48 %).
+ *   --ui-scroll-area-size      thickness of the overlay bar (default 6px; 4px more under the pointer).
+ *   --ui-scroll-area-radius    corner of the thumb (default --ui-radius-full, so square themes get square thumbs).
+ *   --ui-scroll-area-edge-size depth of ScrollArea's edge fade or shadow (default 24px).
+ *   --ui-progress-circle-thickness  ProgressCircle ring width as a share of its diameter (default 0.1), e.g. 0.16
+ *                              for a heavy ring; -linecap: ends of the arc (default round; butt for square
+ *                              themes); -track: the unfilled ring (default --ui-surface-3).
  *
  * Effects that already have tokens (no hook needed): glow — add layers to --ui-focus-ring,
  * --ui-button-solid-glow, --ui-checked-shadow, --ui-tabs-underline-bar-shadow, --ui-navbar-link-active-shadow,
@@ -142,4 +150,12 @@
   --ui-toast-fg: initial;
   --ui-chart-mark-stroke: initial;
   --ui-chart-mark-stroke-width: initial;
+  --ui-scroll-area-thumb: initial;
+  --ui-scroll-area-thumb-active: initial;
+  --ui-scroll-area-size: initial;
+  --ui-scroll-area-radius: initial;
+  --ui-scroll-area-edge-size: initial;
+  --ui-progress-circle-thickness: initial;
+  --ui-progress-circle-linecap: initial;
+  --ui-progress-circle-track: initial;
 }

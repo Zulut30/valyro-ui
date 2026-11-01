@@ -1,0 +1,99 @@
+/*
+ * ScrollEffect. The element itself needs no CSS: the presets move it with Web Animations. The layouts some
+ * presets need are below, and each has a sensible static form for the server, reduced motion and the
+ * moment before the effect starts: data-active is set only while it plays.
+ *   clip        image-zoom, drift: the element is a frame that clips the moving inner box.
+ *   layers      parallax-layers: the children share one cell, the first at the back.
+ *   stack       sticky cards that step down by --ui-scroll-effect-stack-peek; static, they still stack.
+ *   horizontal  a frame pinned for the height of the scrollport with a track inside; static, the track
+ *               scrolls sideways on its own.
+ *   text        text-fill: an inline box whose background, clipped to the glyphs, fills line by line.
+ * Tokens: --ui-scroll-effect-gap (stack, horizontal), --ui-scroll-effect-stack-top, --ui-scroll-effect-stack-peek,
+ * --ui-scroll-effect-dim (the share of the colour unfilled text keeps).
+ */
+.ui-scroll-effect {
+  min-width: 0;
+}
+
+/* ── clip ── */
+.ui-scroll-effect[data-layout='clip'] {
+  overflow: clip;
+}
+
+.ui-scroll-effect__inner {
+  min-width: 0;
+}
+
+/* ── layers ── */
+.ui-scroll-effect[data-layout='layers'] {
+  display: grid;
+  overflow: clip;
+  isolation: isolate;
+}
+
+.ui-scroll-effect[data-layout='layers'] > * {
+  grid-area: 1 / 1;
+  min-width: 0;
+}
+
+/* ── stack ── */
+.ui-scroll-effect[data-layout='stack'] {
+  display: grid;
+  gap: var(--ui-scroll-effect-gap, 16px);
+}
+
+.ui-scroll-effect[data-layout='stack'] > * {
+  position: sticky;
+  /* --_i: the card's index, set by ScrollEffect. */
+  top: calc(var(--ui-scroll-effect-stack-top, 0px) + var(--_i, 0) * var(--ui-scroll-effect-stack-peek, 12px));
+}
+
+/* ── horizontal ── */
+.ui-scroll-effect__pin {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+.ui-scroll-effect__track {
+  display: flex;
+  gap: var(--ui-scroll-effect-gap, 16px);
+  width: max-content;
+}
+
+.ui-scroll-effect__track > * {
+  flex: none;
+}
+
+/* --_viewport and --_travel: the scrollport's height and the track's travel, measured by ScrollEffect. */
+.ui-scroll-effect[data-layout='horizontal'][data-active] {
+  height: calc(var(--_viewport, 100vh) + var(--_travel, 0px));
+}
+
+.ui-scroll-effect[data-layout='horizontal'][data-active] > .ui-scroll-effect__pin {
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: center;
+  height: var(--_viewport, 100vh);
+  overflow: clip;
+}
+
+/* ── text ── */
+.ui-scroll-effect[data-layout='text'][data-active]:not([data-tier='cpu']) > .ui-scroll-effect__text {
+  /* The glyphs keep a trace of the colour; the background, clipped to them, is the full colour. */
+  -webkit-text-fill-color: color-mix(in oklab, currentColor var(--ui-scroll-effect-dim, 25%), transparent);
+  background: linear-gradient(currentColor, currentColor) 0 0 / 0% 100% no-repeat;
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.ui-scroll-effect[data-layout='text'][data-active]:not([data-tier='cpu']) > .ui-scroll-effect__text:dir(rtl) {
+  background-position: 100% 0;
+}
+
+@media print {
+  .ui-scroll-effect[data-layout='text'] > .ui-scroll-effect__text {
+    -webkit-text-fill-color: currentColor;
+    background: none;
+  }
+}

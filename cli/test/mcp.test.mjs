@@ -32,7 +32,7 @@ describe('MCP handler', () => {
 
   it('lists the tools with input schemas; only install_skill writes', async () => {
     const res = await handler().handle({ jsonrpc: '2.0', id: 1, method: 'tools/list' });
-    const names = ['list_components', 'search_components', 'get_component', 'get_install_command', 'get_docs', 'list_skills', 'get_skill', 'install_skill'];
+    const names = ['list_components', 'search_components', 'get_component', 'get_install_command', 'plan_screen', 'get_design_checklist', 'check_contrast', 'audit_ui', 'get_docs', 'list_skills', 'get_skill', 'install_skill'];
     expect(res.result.tools.map((t) => t.name)).toEqual(expect.arrayContaining(names));
     expect(res.result.tools.every((t) => t.inputSchema.type === 'object')).toBe(true);
     expect(res.result.tools.filter((t) => !t.annotations.readOnlyHint).map((t) => t.name)).toEqual(['install_skill']);

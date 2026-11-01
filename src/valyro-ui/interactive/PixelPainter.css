@@ -1,0 +1,175 @@
+.ui-pixel-painter {
+  --_checker: color-mix(in srgb, var(--ui-fg) 12%, transparent);
+  --_grid-line: color-mix(in srgb, var(--ui-fg) 14%, transparent);
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-3, 12px);
+  min-width: 0;
+  max-inline-size: 560px;
+  color: var(--ui-fg);
+}
+
+.ui-pixel-painter__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ui-space-2, 8px);
+}
+
+.ui-pixel-painter__tools,
+.ui-pixel-painter__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ui-space-1, 4px);
+}
+
+.ui-pixel-painter__palette {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ui-space-1, 4px);
+}
+
+.ui-pixel-painter__swatch {
+  inline-size: 28px;
+  block-size: 28px;
+  padding: 0;
+  border: var(--ui-border-width, 1px) solid var(--ui-border-strong);
+  border-radius: var(--ui-radius-sm, 8px);
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  background: var(--_swatch);
+  cursor: pointer;
+  /* The chosen colour is marked with a soft ring and a slight lift, not a snap. */
+  transition:
+    outline-color var(--ui-duration, 200ms) cubic-bezier(0.32, 0.72, 0, 1),
+    scale var(--ui-duration-slow, 340ms) cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.ui-pixel-painter__swatch:hover {
+  scale: 1.06;
+}
+
+.ui-pixel-painter__swatch[data-transparent] {
+  background: repeating-conic-gradient(var(--_checker) 0 25%, var(--ui-surface) 0 50%) 0 0 / 10px 10px;
+}
+
+.ui-pixel-painter__swatch[aria-checked='true'] {
+  outline-color: var(--ui-fg);
+  scale: 1.08;
+}
+
+.ui-pixel-painter__swatch:focus-visible {
+  box-shadow: var(--ui-focus-ring);
+}
+
+/* Transparent cells show a checkerboard (2 × 2 squares per cell); white cells are plain white. */
+.ui-pixel-painter__surface {
+  position: relative;
+  inline-size: 100%;
+  aspect-ratio: var(--_w) / var(--_h);
+  overflow: hidden;
+  border: var(--ui-border-width, 1px) solid var(--ui-border-strong);
+  border-radius: var(--ui-radius-sm, 8px);
+  background: repeating-conic-gradient(var(--_checker) 0 25%, var(--ui-surface) 0 50%) 0 0 / calc(100% / var(--_w)) calc(100% / var(--_h));
+  outline: none;
+  cursor: crosshair;
+  /* Drawing starts only inside the grid; elsewhere the page scrolls as usual. */
+  touch-action: none;
+  user-select: none;
+}
+
+.ui-pixel-painter__surface:focus-visible {
+  box-shadow: var(--ui-focus-ring);
+}
+
+.ui-pixel-painter__canvas {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  image-rendering: pixelated;
+}
+
+.ui-pixel-painter__grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, var(--_grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--_grid-line) 1px, transparent 1px);
+  background-size: calc(100% / var(--_w)) calc(100% / var(--_h));
+  pointer-events: none;
+}
+
+/* The keyboard cursor glides from cell to cell and fades in with keyboard focus; painting itself stays instant. */
+.ui-pixel-painter__cursor {
+  position: absolute;
+  inline-size: calc(100% / var(--_w));
+  block-size: calc(100% / var(--_h));
+  outline: 2px solid var(--ui-accent);
+  outline-offset: -1px;
+  box-shadow: 0 0 0 1px var(--ui-surface);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    left var(--ui-duration, 200ms) cubic-bezier(0.32, 0.72, 0, 1),
+    top var(--ui-duration, 200ms) cubic-bezier(0.32, 0.72, 0, 1),
+    opacity var(--ui-duration, 200ms) cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.ui-pixel-painter__surface:focus-visible .ui-pixel-painter__cursor {
+  opacity: 1;
+}
+
+.ui-pixel-painter__error {
+  animation: ui-pixel-painter-note var(--ui-duration-slow, 340ms) cubic-bezier(0.32, 0.72, 0, 1) both;
+  margin: 0;
+  padding: var(--ui-space-3, 12px);
+  border-radius: var(--ui-radius-md, 10px);
+  background: color-mix(in srgb, var(--ui-danger) 10%, transparent);
+  color: var(--ui-danger-text);
+  font-size: var(--ui-text-sm);
+}
+
+@keyframes ui-pixel-painter-note {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+/* Reduced motion: the cursor jumps from cell to cell; colours and messages only fade. */
+@media (prefers-reduced-motion: reduce) {
+  .ui-pixel-painter__swatch {
+    scale: none;
+    transition: outline-color 150ms ease-out;
+  }
+
+  .ui-pixel-painter__cursor {
+    transition: opacity 150ms ease-out;
+  }
+
+  .ui-pixel-painter__error {
+    animation-name: ui-pixel-painter-fade;
+  }
+}
+
+[data-ui-motion='reduce'] .ui-pixel-painter__swatch {
+  scale: none;
+  transition: outline-color 150ms ease-out;
+}
+
+[data-ui-motion='reduce'] .ui-pixel-painter__cursor {
+  transition: opacity 150ms ease-out;
+}
+
+[data-ui-motion='reduce'] .ui-pixel-painter__error {
+  animation-name: ui-pixel-painter-fade;
+}
+
+@keyframes ui-pixel-painter-fade {
+  from {
+    opacity: 0;
+  }
+}

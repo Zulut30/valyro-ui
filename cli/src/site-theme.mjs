@@ -116,7 +116,8 @@ export function lengthToPx(value) {
   return Number(m[1]) * (m[2] === 'px' || m[2] === undefined ? 1 : 16);
 }
 
-function resolveVars(value, vars, depth = 0) {
+/** Replaces `var(--x, fallback)` with the values in `vars` (a Map), nested up to 8 levels. */
+export function resolveVars(value, vars, depth = 0) {
   if (depth > 8 || !value.includes('var(')) return value;
   let out = '';
   let i = 0;

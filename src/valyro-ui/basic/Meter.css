@@ -1,0 +1,100 @@
+.ui-meter {
+  --_c: var(--ui-accent);
+  --_h: 6px;
+  --_dir: 1;
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-2);
+  width: 100%;
+  min-width: 0;
+}
+
+.ui-meter:dir(rtl) {
+  --_dir: -1;
+}
+
+.ui-meter[data-size='sm'] { --_h: 4px; }
+.ui-meter[data-size='lg'] { --_h: 10px; }
+
+.ui-meter[data-color='success'] { --_c: var(--ui-success); }
+.ui-meter[data-color='warning'] { --_c: var(--ui-warning); }
+.ui-meter[data-color='danger'] { --_c: var(--ui-danger); }
+.ui-meter[data-color='neutral'] { --_c: var(--ui-fg); }
+
+.ui-meter__header {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--ui-space-3);
+  font-size: var(--ui-text-sm);
+}
+
+.ui-meter__label {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ui-fg);
+  font-weight: var(--ui-weight-medium);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ui-meter__value {
+  flex-shrink: 0;
+  margin-inline-start: auto;
+  color: var(--ui-fg-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The track and the threshold ticks, which stand a little proud of it. */
+.ui-meter__bar {
+  position: relative;
+}
+
+.ui-meter__track {
+  position: relative;
+  height: calc(var(--_h) * var(--ui-progress-track-scale, 1));
+  overflow: hidden;
+  border-radius: var(--ui-radius-full);
+  background: var(--ui-surface-3);
+  box-shadow: var(--ui-progress-track-shadow);
+}
+
+/* A full-width fill slid in from the inline start (transform only, so it never re-lays out). The ease has no
+   overshoot: a measurement must not fly past a threshold and come back. The colour eases between regions. */
+.ui-meter__indicator {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background-color: var(--_c);
+  background-image: var(--ui-progress-fill-sheen);
+  transform: translateX(calc((var(--_ratio, 0) - 1) * 100% * var(--_dir)));
+  transition:
+    transform var(--ui-duration-slow) var(--ui-ease),
+    background-color var(--ui-duration) var(--ui-ease);
+}
+
+.ui-meter__threshold {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  inset-inline-start: calc(var(--_at, 0) * 100%);
+  width: 2px;
+  margin-inline-start: -1px;
+  border-radius: 1px;
+  background: var(--ui-fg-muted);
+  pointer-events: none;
+}
+
+@media (forced-colors: active) {
+  .ui-meter__track {
+    border: 1px solid CanvasText;
+  }
+
+  .ui-meter__indicator {
+    background: Highlight;
+  }
+
+  .ui-meter__threshold {
+    background: CanvasText;
+  }
+}

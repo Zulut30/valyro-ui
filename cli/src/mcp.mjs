@@ -4,12 +4,14 @@
 import readline from 'node:readline';
 import { componentTokens, formatTokenCatalog, parseStyleTokens, tuneComponents } from './component-tokens.mjs';
 import { categoriesOf, componentSignals, formatComposition, reviewComposition } from './composition.mjs';
-import { CLI_PACKAGE, DEFAULT_REGISTRY_URL, PRICING_URL, SITE_URL, THEMES } from './constants.mjs';
+import { CLI_PACKAGE, DEFAULT_REGISTRY_URL, PRICING_URL, PRO_SITE_URL, SITE_URL, THEMES } from './constants.mjs';
+import { createDesignTools, DESIGN_TOOLS } from './design-tools.mjs';
 import { DOCS_TOPICS, formatTopic, searchTopics } from './docs-topics.mjs';
 import { dlx } from './project.mjs';
-import { CliError, dependencyName, isProStub, searchItems } from './registry.mjs';
+import { CliError, dependencyName, isProStub, propsOf, proHint, searchItems } from './registry.mjs';
 import { buildSiteTheme, fetchSiteCss, formatSiteTheme } from './site-theme.mjs';
 import { createSkillCatalog, DEFAULT_SKILLS_TARGET, formatInstallReport } from './skills.mjs';
+import { auditProject } from './ui-audit.mjs';
 
 export const PROTOCOL_VERSIONS = ['2025-11-25', '2025-06-18', '2025-03-26', '2024-11-05'];
 const PACKAGE_MANAGERS = ['npm', 'pnpm', 'yarn', 'bun'];
@@ -46,12 +48,12 @@ const REGISTRY_TOOLS = [
     name: 'get_component',
     title: 'Get a ValyroUI component',
     description:
-      'Returns a component description, docs link, install command, import line, dependencies and (by default) full source files.',
+      'Returns a component description, docs link, install command, import line, dependencies and (by default) full source files; with includeSource false, its props interfaces instead of the files.',
     inputSchema: {
       type: 'object',
       properties: {
         name: { type: 'string', description: 'Component name from list_components, e.g. "data-table"' },
-        includeSource: { type: 'boolean', description: 'Include file contents (default true)' },
+        includeSource: { type: 'boolean', description: 'Include file contents (default true); false returns the props API only' },
       },
       required: ['name'],
       additionalProperties: false,
@@ -211,7 +213,7 @@ const DOCS_TOOLS = [
   },
 ];
 
-const TOOLS = [...REGISTRY_TOOLS, ...COMPOSITION_TOOLS, ...DOCS_TOOLS, ...SKILL_TOOLS, ...THEME_TOOLS];
+const TOOLS = [...REGISTRY_TOOLS, ...COMPOSITION_TOOLS, ...DESIGN_TOOLS, ...DOCS_TOOLS, ...SKILL_TOOLS, ...THEME_TOOLS];
 
 class ToolInputError extends Error {}
 
@@ -227,7 +229,7 @@ async function loadItem(registry, name, { stub = false } = {}) {
     return (await registry.item(name)).item;
   } catch (err) {
     if (err instanceof CliError && err.code === 'NOT_FOUND') {
-      throw new ToolInputError(`Unknown component "${name}". Use search_components or list_components to find names.`, { cause: err });
+      throw new ToolInputError(`Unknown component "${name}". Use search_components or list_components to find names.${proHint(registry, name)}`, { cause: err });
     }
     if (err instanceof CliError && PRO_CODES.has(err.code)) {
       if (stub && err.item) return { ...err.item, unavailable: err };
@@ -256,13 +258,20 @@ export function createMcpHandler({
   const knownNames = async (names, label) => {
     const index = new Set((await registry.index()).map((item) => item.name));
     const unknown = names.filter((n) => !index.has(n));
-    if (unknown.length) throw new ToolInputError(`Unknown ${label}: ${unknown.join(', ')}. Use search_components or list_components to find names.`);
+    if (unknown.length) throw new ToolInputError(`Unknown ${label}: ${unknown.join(', ')}. Use search_components or list_components to find names.${proHint(registry, unknown[0])}`);
   };
   const importBase = config?.alias ?? (config?.installDir ? `./${config.installDir}` : '@/components/valyro-ui');
 
   const describe = (item) =>
     `- ${item.name}${item.pro ? ' (Pro)' : ''}: ${item.title ?? item.name} — ${item.description ?? ''}${item.categories?.[0] ? ` [${item.categories[0]}]` : ''}`;
   const proNote = `(Pro) items need a ValyroUI Pro licence (${PRICING_URL}); after \`${CLI_PACKAGE} login\` they install like the others.`;
+  // The hosted free registry lists no Pro item; a licensed account's list has them (registry.proListed).
+  const proFooter = (shown) =>
+    shown.some((i) => i.pro)
+      ? `\n\n${proNote}`
+      : registry.kind === 'http' && !registry.proListed
+        ? `\n\nValyroUI Pro (${PRO_SITE_URL}) adds more components and themes that this list does not show. After a licence and \`${CLI_PACKAGE} login\` it lists them too.`
+        : '';
 
   const installCommand = (names, pm) => {
     const runner = dlx(pm);
@@ -275,7 +284,18 @@ export function createMcpHandler({
     ].join('\n');
   };
 
+  const installDir = config?.installDir ?? 'components/valyro-ui';
   const tools = {
+    ...createDesignTools({
+      index: () => registry.index(),
+      // The free hosted registry lists no Pro item: a name it lacks may be one.
+      missingNote: () => (registry.kind === 'http' && !registry.proListed ? 'not in the free registry; ValyroUI Pro, if it exists, needs a licence' : undefined),
+      styleTokens,
+      defaultTheme: config?.theme ?? 'vercel',
+      InputError: ToolInputError,
+      // The kit's own files are not the app's to fix.
+      auditFiles: (paths) => auditProject(projectDir, paths, { skip: [installDir, `src/${installDir}`] }),
+    }),
     async list_components({ category } = {}) {
       let items = await registry.index();
       if (category !== undefined) {
@@ -283,7 +303,7 @@ export function createMcpHandler({
         items = items.filter((item) => item.categories?.includes(category));
         if (!items.length) throw new ToolInputError(`No components in category "${category}"`);
       }
-      return `${items.length} items:\n${items.map(describe).join('\n')}${items.some((i) => i.pro) ? `\n\n${proNote}` : ''}`;
+      return `${items.length} items:\n${items.map(describe).join('\n')}${proFooter(items)}`;
     },
     async search_components({ query, limit = 10 } = {}) {
       if (typeof query !== 'string' || !query.trim()) throw new ToolInputError('"query" must be a non-empty string');
@@ -293,7 +313,7 @@ export function createMcpHandler({
       const topics = searchTopics(query);
       const guides = topics.length ? `Guides (read with get_docs):\n${topics.map((t) => `- ${t.id}: ${t.title} — ${t.url}`).join('\n')}` : '';
       if (!found.length) return guides || `No components match "${query}".`;
-      return `${found.map(describe).join('\n')}${found.some((i) => i.pro) ? `\n\n${proNote}` : ''}${guides ? `\n\n${guides}` : ''}`;
+      return `${found.map(describe).join('\n')}${proFooter(found)}${guides ? `\n\n${guides}` : ''}`;
     },
     async get_component({ name, includeSource = true } = {}) {
       if (typeof name !== 'string' || !name.trim()) throw new ToolInputError('"name" must be a non-empty string');
@@ -345,6 +365,10 @@ export function createMcpHandler({
           const lang = /\.css$/.test(file.path) ? 'css' : /\.tsx$/.test(file.path) ? 'tsx' : 'ts';
           lines.push('', `## ${file.target ?? file.path}`, '', `\`\`\`${lang}`, file.content.replace(/\n$/, ''), '```');
         }
+      } else {
+        // Without the source, the props API is what an agent needs to wire the component.
+        const props = propsOf(item);
+        if (props.length) lines.push('', '## Props', '', '```ts', ...props.join('\n\n').split('\n'), '```');
       }
       return lines.join('\n');
     },
@@ -495,6 +519,7 @@ export function createMcpHandler({
           instructions:
             'Tools for the ValyroUI React component library (React 17, 18 and 19): find components (list_categories, list/search), read their source and docs (get_component), check how several combine on one view (review_composition) and get install commands. Components are installed as source with the valyro CLI (npx valyro-cli). ' +
             'get_docs covers the rest: headless hooks, compound parts and Server Components, Tailwind CSS v4, React versions and React Native. ' +
+            'For design quality: plan_screen turns a screen type or task into sections with live candidates, density and motion budget; get_design_checklist is the review to walk before shipping; check_contrast measures colours and theme tokens (WCAG 2.2 and APCA); audit_ui lints the app\'s UI files for focus, colour, motion and generic-AI slips. ' +
             'create_site_theme fits a theme to a client site; tune_components restyles single components through public tokens. ' +
             'The ValyroUI agent skills (how to set up the kit, pick and combine components, theme and review pages) are prompts and resources; list_skills, get_skill and install_skill do the same for tool-only clients.',
         });

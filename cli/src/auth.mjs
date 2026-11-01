@@ -18,10 +18,10 @@ export function configDir(env) {
 
 export const authFile = (env) => path.join(configDir(env), 'auth.json');
 
-/** The account API base URL, without a trailing slash. Plain http only for a local server. */
-export function apiUrl(env) {
+/** The account API base URL (or `base`, another API of the same server), without a trailing slash. Plain http only for a local server. */
+export function apiUrl(env, base = API_URL) {
   const value = env.VALYRO_API_URL?.trim();
-  if (!value) return API_URL;
+  if (!value) return base;
   let url;
   try {
     url = new URL(value);

@@ -1,0 +1,357 @@
+.ui-hotspots {
+  --_soft: cubic-bezier(0.32, 0.72, 0, 1);
+  --_marker: var(--ui-hotspots-marker-size, 28px);
+  --_marker-bg: var(--ui-hotspots-marker-bg, var(--ui-accent));
+  --_marker-fg: var(--ui-hotspots-marker-fg, var(--ui-accent-fg));
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-3, 12px);
+  min-width: 0;
+  color: var(--ui-fg);
+}
+
+.ui-hotspots__stage {
+  position: relative;
+  inline-size: 100%;
+  overflow: hidden;
+  border: var(--ui-border-width, 1px) solid var(--ui-border);
+  border-radius: var(--ui-radius-card, 16px);
+  background: var(--ui-surface-2);
+}
+
+.ui-hotspots__image {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+
+/* After hydration a picture that is still loading fades in once it has, instead of popping in. */
+.ui-hotspots[data-mounted] .ui-hotspots__image {
+  transition: opacity calc(var(--ui-duration-slow, 340ms) * 1.2) var(--_soft);
+}
+
+.ui-hotspots[data-mounted] .ui-hotspots__stage[data-status='loading'] .ui-hotspots__image {
+  opacity: 0;
+}
+
+.ui-hotspots[data-fit='cover'] .ui-hotspots__image {
+  object-fit: cover;
+}
+
+.ui-hotspots__stage[data-status='loading']::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, var(--ui-hover), transparent);
+  background-size: 200% 100%;
+  animation: ui-hotspots-shimmer 1.4s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes ui-hotspots-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.ui-hotspots__error {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ui-space-2, 8px);
+  padding: var(--ui-space-4, 16px);
+  color: var(--ui-fg-muted);
+  font-size: var(--ui-text-sm);
+  text-align: center;
+}
+
+.ui-hotspots__error svg {
+  flex: none;
+  inline-size: 20px;
+  block-size: 20px;
+  color: var(--ui-danger-text);
+}
+
+/* The visible marker is small; the hit area is 44 px on touch screens. */
+.ui-hotspots__marker {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  inline-size: 44px;
+  block-size: 44px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  translate: -50% -50%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ui-hotspots__marker-face {
+  display: grid;
+  place-items: center;
+  inline-size: var(--_marker);
+  block-size: var(--_marker);
+  border: 2px solid var(--ui-surface, #fff);
+  border-radius: var(--ui-radius-full, 999px);
+  background: var(--_marker-bg);
+  color: var(--_marker-fg);
+  font-size: var(--ui-text-xs);
+  font-weight: var(--ui-weight-semibold);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  box-shadow:
+    0 0 0 0 var(--ui-surface, #fff),
+    0 0 0 0 var(--_marker-bg),
+    0 2px 8px rgba(0, 0, 0, 0.3);
+  transition:
+    transform var(--ui-duration-slow, 340ms) var(--_soft),
+    box-shadow var(--ui-duration-slow, 340ms) var(--_soft);
+}
+
+.ui-hotspots__marker-face svg {
+  inline-size: 60%;
+  block-size: 60%;
+}
+
+.ui-hotspots__marker[data-kind='dot'] .ui-hotspots__marker-face {
+  inline-size: calc(var(--_marker) * 0.55);
+  block-size: calc(var(--_marker) * 0.55);
+}
+
+.ui-hotspots__marker:hover .ui-hotspots__marker-face {
+  transform: scale(1.08);
+}
+
+.ui-hotspots__marker:focus-visible {
+  outline: none;
+}
+
+.ui-hotspots__marker:focus-visible .ui-hotspots__marker-face {
+  box-shadow: var(--ui-focus-ring);
+}
+
+/* Active: a ring and a larger face, not only a colour; the ring grows in with the face. */
+.ui-hotspots__marker[data-active] .ui-hotspots__marker-face {
+  transform: scale(1.16);
+  box-shadow:
+    0 0 0 3px var(--ui-surface, #fff),
+    0 0 0 5px var(--_marker-bg),
+    0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.ui-hotspots[data-pulse] .ui-hotspots__marker:not([data-active]) .ui-hotspots__marker-face {
+  animation: ui-hotspots-pulse 2.4s var(--ui-ease) infinite;
+}
+
+@keyframes ui-hotspots-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--_marker-bg) 55%, transparent);
+  }
+
+  60% {
+    box-shadow: 0 0 0 10px transparent;
+  }
+}
+
+.ui-hotspots__popover {
+  max-inline-size: min(340px, calc(100vw - 32px));
+}
+
+/*
+ * The note under the image folds open and closed (useFold: height and fade). Its spacing is inside the fold, so a
+ * folded note leaves no gap behind and nothing jumps when it leaves the page.
+ */
+.ui-hotspots__fold {
+  display: flow-root;
+}
+
+.ui-hotspots__fold > .ui-hotspots__note {
+  margin-block-start: var(--ui-space-3, 12px);
+}
+
+/* Another point's note: the panel's height glides (useHeightGlide) while the new note fades in. */
+.ui-hotspots__note-swap {
+  animation: ui-hotspots-swap calc(var(--ui-duration-slow, 340ms) * 1.1) var(--_soft) both;
+}
+
+@keyframes ui-hotspots-swap {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+.ui-hotspots__note {
+  padding: var(--ui-space-3, 12px) var(--ui-space-4, 16px);
+  border: var(--ui-border-width, 1px) solid var(--ui-border);
+  border-radius: var(--ui-radius-card, 16px);
+  background: var(--ui-surface);
+  background-image: var(--ui-surface-texture, none);
+}
+
+.ui-hotspots__note-head {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-2, 8px);
+}
+
+.ui-hotspots__note-index,
+.ui-hotspots__item-index {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  min-inline-size: 22px;
+  block-size: 22px;
+  padding-inline: 4px;
+  border-radius: var(--ui-radius-full, 999px);
+  background: var(--_marker-bg);
+  color: var(--_marker-fg);
+  font-size: var(--ui-text-xs);
+  font-weight: var(--ui-weight-semibold);
+  font-variant-numeric: tabular-nums;
+}
+
+.ui-hotspots__note-title {
+  flex: 1;
+  margin: 0;
+  font-size: var(--ui-text-md);
+  font-weight: var(--ui-weight-semibold);
+  line-height: var(--ui-leading-tight, 1.3);
+}
+
+.ui-hotspots__close {
+  flex: none;
+  margin-inline-end: calc(var(--ui-space-1, 4px) * -1);
+}
+
+.ui-hotspots__note-body {
+  margin-block-start: var(--ui-space-2, 8px);
+  color: var(--ui-fg-muted);
+  font-size: var(--ui-text-sm);
+  line-height: var(--ui-leading, 1.5);
+  overflow-wrap: anywhere;
+}
+
+.ui-hotspots__list-title {
+  margin: 0 0 var(--ui-space-2, 8px);
+  color: var(--ui-fg-subtle);
+  font-size: var(--ui-text-xs);
+  font-weight: var(--ui-weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.ui-hotspots__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--ui-space-1, 4px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ui-hotspots__item-button {
+  transition:
+    background-color var(--ui-duration, 200ms) var(--_soft),
+    border-color var(--ui-duration, 200ms) var(--_soft);
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-2, 8px);
+  inline-size: 100%;
+  min-block-size: 44px;
+  padding: var(--ui-space-1, 4px) var(--ui-space-2, 8px);
+  border: var(--ui-border-width, 1px) solid transparent;
+  border-radius: var(--ui-radius-md, 10px);
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: var(--ui-text-sm);
+  text-align: start;
+  cursor: pointer;
+}
+
+.ui-hotspots__item-button:hover {
+  background: var(--ui-hover);
+}
+
+.ui-hotspots__item-button:focus-visible {
+  outline: none;
+  box-shadow: var(--ui-focus-ring);
+}
+
+.ui-hotspots__item-button[data-active] {
+  border-color: var(--ui-border-strong);
+  background: var(--ui-active, var(--ui-hover));
+  font-weight: var(--ui-weight-medium);
+}
+
+.ui-hotspots__item-label {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.ui-hotspots__item-note {
+  color: var(--ui-fg-subtle);
+  font-size: var(--ui-text-xs);
+}
+
+/* Reduced motion: no scaling, pulse or rising; changes fade quickly instead. */
+@media (prefers-reduced-motion: reduce) {
+  .ui-hotspots__stage[data-status='loading']::after,
+  .ui-hotspots[data-pulse] .ui-hotspots__marker:not([data-active]) .ui-hotspots__marker-face {
+    animation: none;
+  }
+
+  .ui-hotspots__marker-face {
+    transition: box-shadow 150ms ease-out;
+  }
+
+  .ui-hotspots__marker:hover .ui-hotspots__marker-face,
+  .ui-hotspots__marker[data-active] .ui-hotspots__marker-face {
+    transform: none;
+  }
+
+  .ui-hotspots__note-swap {
+    animation: ui-hotspots-fade 150ms ease-out both;
+  }
+}
+
+[data-ui-motion='reduce'] .ui-hotspots__stage[data-status='loading']::after,
+[data-ui-motion='reduce'] .ui-hotspots[data-pulse] .ui-hotspots__marker:not([data-active]) .ui-hotspots__marker-face {
+  animation: none;
+}
+
+[data-ui-motion='reduce'] .ui-hotspots__marker-face {
+  transition: box-shadow 150ms ease-out;
+}
+
+[data-ui-motion='reduce'] .ui-hotspots__marker:hover .ui-hotspots__marker-face,
+[data-ui-motion='reduce'] .ui-hotspots__marker[data-active] .ui-hotspots__marker-face {
+  transform: none;
+}
+
+[data-ui-motion='reduce'] .ui-hotspots__note-swap {
+  animation: ui-hotspots-fade 150ms ease-out both;
+}
+
+@keyframes ui-hotspots-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+/* The fold's slot is a plain block: Chromium does not animate a flex item's height to and from auto. */
+.ui-hotspots__fold-slot {
+  display: block;
+  min-inline-size: 0;
+  /* Takes back the flex gap above it; the fold's content adds it inside, so it unfolds with the rest. */
+  margin-block-start: calc(var(--ui-space-3, 12px) * -1);
+}

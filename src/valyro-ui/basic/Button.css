@@ -179,7 +179,7 @@
 
 .ui-button[data-variant='secondary'] {
   --_bg: var(--ui-button-secondary-bg, var(--ui-bg));
-  /* Hover fill and ring follow core tokens in the button's own scope (CTASection re-maps them), so the
+  /* Hover fill and ring follow core tokens in the button's own scope (a section can re-map them), so the
      theme picks a set rather than values: --ui-button-secondary-field / -glass, see the theme files. */
   --_bg-hover: var(
     --ui-button-secondary-bg-hover,

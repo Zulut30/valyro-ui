@@ -1,0 +1,273 @@
+/* A tag is a badge (Badge.css gives the hues, variants and sizes through .ui-badge) with room for an action
+   and a remove button. */
+.ui-tag[data-size] {
+  gap: 0;
+  padding: 0;
+  vertical-align: middle;
+}
+
+.ui-tag__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.4;
+  unicode-bidi: plaintext;
+}
+
+/* Text and icon sit in one padded box, whether it is a plain span, a button or a link. */
+.ui-tag__icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  margin-inline-end: var(--ui-space-1);
+}
+
+.ui-tag__icon > svg {
+  width: 12px;
+  height: 12px;
+}
+
+.ui-tag__icon > img,
+.ui-tag__icon > .ui-avatar {
+  width: 16px;
+  height: 16px;
+  border-radius: var(--ui-radius-full);
+}
+
+.ui-tag > .ui-tag__icon:first-child {
+  margin-inline-start: 8px;
+}
+
+.ui-tag > .ui-tag__label:first-child,
+.ui-tag > .ui-tag__icon + .ui-tag__label {
+  padding-inline-end: 10px;
+}
+
+.ui-tag > .ui-tag__label:first-child {
+  padding-inline-start: 10px;
+}
+
+.ui-tag[data-removable] > .ui-tag__label {
+  padding-inline-end: 2px;
+}
+
+.ui-tag__action {
+  display: inline-flex;
+  align-items: center;
+  align-self: stretch;
+  min-width: 0;
+  padding: 0 10px;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--ui-duration-fast) var(--ui-ease);
+}
+
+.ui-tag[data-removable] > .ui-tag__action {
+  padding-inline-end: 2px;
+  border-start-end-radius: 0;
+  border-end-end-radius: 0;
+}
+
+.ui-tag__action:hover:not(:disabled, [aria-disabled='true']) {
+  background: color-mix(in srgb, currentColor 10%, transparent);
+}
+
+.ui-tag__action:focus-visible {
+  box-shadow: var(--ui-focus-ring);
+}
+
+.ui-tag__action:disabled,
+.ui-tag__action[aria-disabled='true'] {
+  cursor: not-allowed;
+}
+
+/* The ×: a round hit area at the inline end, tinted by the tag's ink on hover. */
+.ui-tag__remove {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  margin-inline: 2px 3px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--ui-radius-full);
+  background: transparent;
+  color: inherit;
+  opacity: 0.72;
+  cursor: pointer;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color var(--ui-duration-fast) var(--ui-ease),
+    opacity var(--ui-duration-fast) var(--ui-ease);
+}
+
+/* A bigger touch target without a bigger glyph. */
+.ui-tag__remove::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+}
+
+.ui-tag__remove {
+  position: relative;
+}
+
+.ui-tag__remove > svg {
+  width: 12px;
+  height: 12px;
+}
+
+.ui-tag__remove:hover:not(:disabled) {
+  background: color-mix(in srgb, currentColor 16%, transparent);
+  opacity: 1;
+}
+
+.ui-tag__remove:active:not(:disabled) {
+  background: color-mix(in srgb, currentColor 24%, transparent);
+}
+
+.ui-tag__remove:focus-visible {
+  opacity: 1;
+  box-shadow: var(--ui-focus-ring);
+}
+
+.ui-tag__remove:disabled {
+  cursor: not-allowed;
+}
+
+.ui-tag[data-disabled] {
+  opacity: 0.55;
+}
+
+.ui-tag[data-size='sm'] .ui-tag__remove {
+  width: 16px;
+  height: 16px;
+  margin-inline-end: 2px;
+}
+
+.ui-tag[data-size='sm'] > .ui-tag__label:first-child,
+.ui-tag[data-size='sm'] > .ui-tag__action {
+  padding-inline-start: 7px;
+}
+
+.ui-tag[data-size='sm']:not([data-removable]) > .ui-tag__label:first-child,
+.ui-tag[data-size='sm']:not([data-removable]) > .ui-tag__action {
+  padding-inline-end: 7px;
+}
+
+.ui-tag[data-size='lg'] > .ui-tag__label:first-child,
+.ui-tag[data-size='lg'] > .ui-tag__action {
+  padding-inline-start: var(--ui-space-3);
+}
+
+.ui-tag[data-size='lg']:not([data-removable]) > .ui-tag__label:first-child,
+.ui-tag[data-size='lg']:not([data-removable]) > .ui-tag__action {
+  padding-inline-end: var(--ui-space-3);
+}
+
+.ui-tag[data-size='lg'] .ui-tag__remove {
+  width: 20px;
+  height: 20px;
+}
+
+/* ── TagGroup ── a wrapping list; tags removed from it fade out where they stood while the rest close ranks. */
+.ui-tag-group {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  /* Lines stay packed at the top while the list's height eases after a change (stretched lines would drift). */
+  align-content: flex-start;
+  align-items: center;
+  gap: var(--ui-space-2);
+  min-width: 0;
+}
+
+.ui-tag-group__item {
+  display: inline-flex;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.ui-tag-group__more-label {
+  animation: ui-fade-in var(--ui-duration) var(--ui-ease);
+}
+
+.ui-tag-group__item[data-exiting] {
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+  /* Standard curve, not the theme's ease-out: an exit that drops most of its opacity in the first frame reads as a blink. */
+  animation: ui-tag-exit var(--ui-duration-slow) cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes ui-tag-exit {
+  to {
+    opacity: 0;
+    scale: 0.9;
+  }
+}
+
+/* "+N" / "Show less": an outline pill the height of the tags. */
+.ui-tag-group__more {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--ui-badge-radius, var(--ui-radius-full));
+  corner-shape: var(--ui-pill-corner-shape, var(--ui-control-corner-shape));
+  background: transparent;
+  box-shadow: inset 0 0 0 var(--ui-border-width, 1px) var(--ui-border-strong);
+  color: var(--ui-fg-muted);
+  font: inherit;
+  font-size: var(--ui-text-xs);
+  font-weight: var(--ui-weight-medium);
+  line-height: 1;
+  white-space: nowrap;
+  /* Its width eases when the label changes ("+3" → "Show less"); the label is clipped meanwhile. */
+  overflow: hidden;
+  cursor: pointer;
+  outline: none;
+  transition:
+    background-color var(--ui-duration-fast) var(--ui-ease),
+    color var(--ui-duration-fast) var(--ui-ease);
+}
+
+.ui-tag-group__more[data-size='sm'] {
+  height: 20px;
+  padding: 0 7px;
+}
+
+.ui-tag-group__more[data-size='lg'] {
+  height: 28px;
+  padding: 0 var(--ui-space-3);
+  font-size: var(--ui-text-sm);
+}
+
+.ui-tag-group__more:hover {
+  background: var(--ui-hover);
+  color: var(--ui-fg);
+}
+
+.ui-tag-group__more:focus-visible {
+  box-shadow:
+    inset 0 0 0 var(--ui-border-width, 1px) var(--ui-border-strong),
+    var(--ui-focus-ring);
+}
+
+@media (forced-colors: active) {
+  .ui-tag-group__more {
+    border: 1px solid ButtonText;
+  }
+}

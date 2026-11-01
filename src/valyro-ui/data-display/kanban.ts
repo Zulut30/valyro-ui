@@ -1,4 +1,4 @@
-/** Pure board operations behind KanbanBoard. */
+/** Pure board operations: find a card and move it within or between columns. */
 
 export interface CardLocation {
   columnIndex: number;

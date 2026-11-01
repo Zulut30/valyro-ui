@@ -28,7 +28,7 @@ function intlOptions({ format = 'number', currency = 'USD', fractionDigits, sign
       : format === 'percent'
         ? { style: 'percent', maximumFractionDigits: 1 }
         : format === 'compact'
-          ? { notation: 'compact', maximumFractionDigits: 1 }
+          ? { notation: 'compact', minimumFractionDigits: 0, maximumFractionDigits: 1 }
           : { maximumFractionDigits: 2 };
   if (fractionDigits !== undefined) {
     base.minimumFractionDigits = fractionDigits;
@@ -38,7 +38,10 @@ function intlOptions({ format = 'number', currency = 'USD', fractionDigits, sign
   return { ...base, ...options };
 }
 
-/** A cached Intl.NumberFormat for the options; currency + compact print "$12.8K". */
+/**
+ * A cached Intl.NumberFormat for the options; currency + compact print "$12.8K" and "$62K".
+ * Compact sets `minimumFractionDigits: 0` on purpose: a currency defaults to 2 and ICU versions disagree on whether that gives "$62.0K".
+ */
 export function numberFormat(locale: string | undefined, opts: FormatNumberOptions = {}) {
   const resolved = intlOptions(opts);
   if (opts.format === 'compact' && opts.currency) Object.assign(resolved, { style: 'currency', currency: opts.currency });

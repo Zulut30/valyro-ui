@@ -1,0 +1,319 @@
+.ui-compare-tray {
+  --_soft: cubic-bezier(0.32, 0.72, 0, 1);
+
+  min-width: 0;
+  color: var(--ui-fg);
+  container: ui-compare-tray / inline-size;
+}
+
+.ui-compare-tray[data-empty] {
+  display: contents;
+}
+
+.ui-compare-tray__panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-2, 8px);
+  padding: var(--ui-space-3, 12px);
+  border: var(--ui-border-width, 1px) solid var(--ui-border);
+  border-radius: var(--ui-radius-card, 16px);
+  background: var(--ui-surface);
+  background-image: var(--ui-surface-texture, none);
+  box-shadow: var(--ui-shadow-card, 0 1px 2px rgba(0, 0, 0, 0.06));
+}
+
+/*
+ * Inline, the tray unfolds and folds away (useFold: height and fade), so the page below it glides. Pinned to the
+ * bottom, it rises in and sinks away instead; its spacer grows and shrinks with it.
+ */
+.ui-compare-tray[data-placement='fixed-bottom'] .ui-compare-tray__fold[data-state='open'] .ui-compare-tray__panel {
+  animation: ui-compare-tray-rise calc(var(--ui-duration-slow, 340ms) * 1.3) var(--_soft) both;
+}
+
+.ui-compare-tray[data-placement='fixed-bottom'] .ui-compare-tray__fold[data-state='closed'] .ui-compare-tray__panel {
+  animation: ui-compare-tray-sink calc(var(--ui-duration-slow, 340ms) * 1.1) var(--_soft) both;
+}
+
+@keyframes ui-compare-tray-rise {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
+
+@keyframes ui-compare-tray-sink {
+  to {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
+
+/* Pinned to the viewport; the spacer before it keeps its height in the flow, so it never covers the page's end. */
+.ui-compare-tray[data-placement='fixed-bottom'] .ui-compare-tray__panel {
+  position: fixed;
+  inset-inline: max(var(--ui-space-3, 12px), env(safe-area-inset-left));
+  inset-block-end: max(var(--ui-space-3, 12px), env(safe-area-inset-bottom));
+  z-index: 40;
+  max-inline-size: 960px;
+  margin-inline: auto;
+  box-shadow: 0 16px 40px -16px rgba(0, 0, 0, 0.45);
+}
+
+.ui-compare-tray__spacer {
+  /* Room for the fixed panel and its offset from the bottom; it grows and shrinks with the panel. */
+  margin-block-end: calc(var(--ui-space-3, 12px) * 2);
+  transition: block-size calc(var(--ui-duration-slow, 340ms) * 1.3) var(--_soft);
+}
+
+.ui-compare-tray__head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--ui-space-2, 8px);
+}
+
+.ui-compare-tray__title {
+  font-size: var(--ui-text-sm);
+  font-weight: var(--ui-weight-semibold);
+}
+
+.ui-compare-tray__count {
+  color: var(--ui-fg-muted);
+  font-size: var(--ui-text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.ui-compare-tray__count[data-full] {
+  color: var(--ui-fg);
+  font-weight: var(--ui-weight-medium);
+}
+
+.ui-compare-tray__toggle {
+  display: none;
+  place-items: center;
+  inline-size: 32px;
+  block-size: 32px;
+  margin-inline-start: auto;
+  border: 0;
+  border-radius: var(--ui-radius-sm, 6px);
+  background: none;
+  color: var(--ui-fg-muted);
+  cursor: pointer;
+}
+
+.ui-compare-tray__toggle svg {
+  inline-size: 18px;
+  block-size: 18px;
+  transition: transform var(--ui-duration-slow, 340ms) var(--_soft);
+}
+
+.ui-compare-tray__toggle[aria-expanded='false'] svg {
+  transform: rotate(180deg);
+}
+
+.ui-compare-tray__toggle:focus-visible {
+  outline: none;
+  box-shadow: var(--ui-focus-ring);
+}
+
+/* The picked items' row; narrow and collapsed it folds to 0fr instead of vanishing. Its spacing is inside. */
+.ui-compare-tray__list-fold {
+  display: grid;
+  grid-template-rows: 1fr;
+  margin-block-start: calc(var(--ui-space-2, 8px) * -1);
+  transition:
+    grid-template-rows calc(var(--ui-duration-slow, 340ms) * 1.2) var(--_soft),
+    opacity var(--ui-duration-slow, 340ms) var(--_soft);
+}
+
+.ui-compare-tray__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ui-space-2, 8px);
+  min-block-size: 0;
+  margin: 0;
+  padding: var(--ui-space-2, 8px) 0 0;
+  overflow: clip;
+  overflow-clip-margin: 6px;
+  list-style: none;
+}
+
+.ui-compare-tray__item {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-2, 8px);
+  min-inline-size: 0;
+  max-inline-size: 260px;
+  padding: 4px 4px 4px 4px;
+  border: var(--ui-border-width, 1px) solid var(--ui-border);
+  border-radius: var(--ui-radius-md, 10px);
+  background: var(--ui-surface-2);
+  animation: ui-compare-tray-chip calc(var(--ui-duration-slow, 340ms) * 1.1) var(--_soft) both;
+}
+
+/* A new chip grows in; a removed one shrinks away in place (Web Animations, from the component). */
+@keyframes ui-compare-tray-chip {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+}
+
+.ui-compare-tray__item[data-leaving] {
+  overflow: hidden;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.ui-compare-tray__item[data-missing] {
+  border-style: dashed;
+  color: var(--ui-fg-subtle);
+}
+
+.ui-compare-tray__thumb {
+  display: block;
+  flex: none;
+  inline-size: 36px;
+  block-size: 36px;
+  overflow: hidden;
+  border-radius: var(--ui-radius-sm, 6px);
+  background: var(--ui-surface);
+}
+
+.ui-compare-tray__thumb img {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+
+.ui-compare-tray__name {
+  flex: 1;
+  min-inline-size: 0;
+  overflow: hidden;
+  font-size: var(--ui-text-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ui-compare-tray__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ui-space-2, 8px);
+}
+
+.ui-compare-tray__status {
+  flex: 1;
+  min-inline-size: 12ch;
+  color: var(--ui-fg-muted);
+  font-size: var(--ui-text-xs);
+}
+
+.ui-compare-tray__status[data-tone='danger'] {
+  color: var(--ui-danger-text);
+}
+
+.ui-compare-tray__table-wrap {
+  overflow-x: auto;
+}
+
+.ui-compare-tray__table {
+  inline-size: 100%;
+  border-collapse: collapse;
+  font-size: var(--ui-text-sm);
+}
+
+.ui-compare-tray__table th,
+.ui-compare-tray__table td {
+  padding: var(--ui-space-2, 8px) var(--ui-space-3, 12px);
+  border-block-end: var(--ui-border-width, 1px) solid var(--ui-border);
+  text-align: start;
+  vertical-align: top;
+}
+
+.ui-compare-tray__table thead th {
+  color: var(--ui-fg);
+  font-weight: var(--ui-weight-semibold);
+  vertical-align: bottom;
+}
+
+.ui-compare-tray__table tbody th {
+  color: var(--ui-fg-muted);
+  font-weight: var(--ui-weight-medium);
+  white-space: nowrap;
+}
+
+.ui-compare-tray__table-image {
+  display: block;
+  inline-size: 56px;
+  block-size: 56px;
+  margin-block-end: var(--ui-space-1, 4px);
+  border-radius: var(--ui-radius-sm, 6px);
+  object-fit: cover;
+}
+
+.ui-compare-tray__nodata {
+  color: var(--ui-fg-subtle);
+  font-style: italic;
+}
+
+/* Narrow: the tray folds to one line with the count; the toggle shows the picked items. */
+@container ui-compare-tray (max-width: 480px) {
+  .ui-compare-tray__toggle {
+    display: inline-grid;
+  }
+
+  .ui-compare-tray__panel[data-collapsed] .ui-compare-tray__list-fold {
+    grid-template-rows: 0fr;
+    opacity: 0;
+  }
+
+  .ui-compare-tray__item {
+    max-inline-size: none;
+    flex: 1 1 100%;
+  }
+}
+
+/* Reduced motion: quick fades; nothing rises, scales or folds. */
+@media (prefers-reduced-motion: reduce) {
+  .ui-compare-tray[data-placement='fixed-bottom'] .ui-compare-tray__fold[data-state='open'] .ui-compare-tray__panel,
+  .ui-compare-tray__item {
+    animation: ui-compare-tray-fade 150ms ease-out both;
+  }
+
+  .ui-compare-tray[data-placement='fixed-bottom'] .ui-compare-tray__fold[data-state='closed'] .ui-compare-tray__panel {
+    animation: ui-compare-tray-fade 150ms ease-out reverse both;
+  }
+
+  .ui-compare-tray__spacer,
+  .ui-compare-tray__list-fold,
+  .ui-compare-tray__toggle svg {
+    transition: none;
+  }
+}
+
+[data-ui-motion='reduce'] .ui-compare-tray[data-placement='fixed-bottom'] .ui-compare-tray__fold[data-state='open'] .ui-compare-tray__panel,
+[data-ui-motion='reduce'] .ui-compare-tray__item {
+  animation: ui-compare-tray-fade 150ms ease-out both;
+}
+
+[data-ui-motion='reduce'] .ui-compare-tray[data-placement='fixed-bottom'] .ui-compare-tray__fold[data-state='closed'] .ui-compare-tray__panel {
+  animation: ui-compare-tray-fade 150ms ease-out reverse both;
+}
+
+[data-ui-motion='reduce'] .ui-compare-tray__spacer,
+[data-ui-motion='reduce'] .ui-compare-tray__list-fold,
+[data-ui-motion='reduce'] .ui-compare-tray__toggle svg {
+  transition: none;
+}
+
+@keyframes ui-compare-tray-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+/* The fold's slot is a plain block: Chromium does not animate a flex item's height to and from auto. */
+.ui-compare-tray__fold-slot {
+  display: block;
+  min-inline-size: 0;
+}

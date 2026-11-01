@@ -1,0 +1,321 @@
+.ui-ticket {
+  --_bg: var(--ui-ticket-bg, var(--ui-surface));
+  --_stub-bg: var(--ui-ticket-stub-bg, var(--ui-surface-2));
+  --_line: var(--ui-ticket-perforation, var(--ui-border-strong));
+  --_radius: var(--ui-radius-card, 16px);
+  /* A soft deceleration for the layout as the ticket opens: no hard start, no hard stop. */
+  --_open-ease: cubic-bezier(0.32, 0.72, 0, 1);
+  --_open-time: calc(var(--ui-duration-slow, 340ms) * 1.6);
+
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  color: var(--ui-fg);
+}
+
+/* The Open button's row; it folds to 0fr with the opening (its spacing is inside, so nothing is left behind). */
+.ui-ticket__actions {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition:
+    grid-template-rows var(--_open-time) var(--_open-ease),
+    opacity var(--ui-duration, 200ms) var(--_open-ease);
+}
+
+.ui-ticket__actions[data-folded] {
+  grid-template-rows: 0fr;
+  opacity: 0;
+}
+
+.ui-ticket__actions-inner {
+  min-block-size: 0;
+  overflow: hidden;
+}
+
+.ui-ticket__open {
+  margin-block-start: var(--ui-space-3, 12px);
+}
+
+/* Columns: front | perforation | the stub's slot; the revealed details unfold in a row below. */
+.ui-ticket__body {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-rows: auto auto;
+  inline-size: 100%;
+  border: var(--ui-border-width, 1px) solid var(--ui-border);
+  border-radius: var(--_radius);
+  background: var(--_bg);
+  background-image: var(--ui-surface-texture, none);
+  box-shadow: 0 10px 30px -18px rgba(0, 0, 0, 0.45);
+}
+
+.ui-ticket[data-orientation='horizontal'] .ui-ticket__body {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto auto auto;
+}
+
+.ui-ticket__front {
+  grid-row: 1;
+  min-width: 0;
+  padding: var(--ui-space-4, 16px) var(--ui-space-5, 20px);
+}
+
+/* The tear line: a dashed rule with a notch cut into each edge. */
+.ui-ticket__perforation {
+  position: relative;
+  grid-row: 1;
+  inline-size: 0;
+  border-inline-start: 2px dashed var(--_line);
+}
+
+.ui-ticket[data-orientation='horizontal'] .ui-ticket__perforation {
+  grid-row: 2;
+  inline-size: auto;
+  block-size: 0;
+  border-inline-start: 0;
+  border-block-start: 2px dashed var(--_line);
+}
+
+.ui-ticket__perforation::before,
+.ui-ticket__perforation::after {
+  content: '';
+  position: absolute;
+  inline-size: 18px;
+  block-size: 18px;
+  border: var(--ui-border-width, 1px) solid var(--ui-border);
+  border-radius: 50%;
+  background: var(--ui-bg);
+  translate: -50% 0;
+  left: -1px;
+}
+
+.ui-ticket__perforation::before {
+  top: -10px;
+}
+
+.ui-ticket__perforation::after {
+  bottom: -10px;
+}
+
+.ui-ticket[data-orientation='horizontal'] .ui-ticket__perforation::before,
+.ui-ticket[data-orientation='horizontal'] .ui-ticket__perforation::after {
+  top: -10px;
+  bottom: auto;
+  translate: 0 0;
+}
+
+.ui-ticket[data-orientation='horizontal'] .ui-ticket__perforation::before {
+  left: -10px;
+}
+
+.ui-ticket[data-orientation='horizontal'] .ui-ticket__perforation::after {
+  left: auto;
+  right: -10px;
+}
+
+/*
+ * The stub's place. When the stub is torn off it leaves the slot, which then shrinks from its size in px (--_slot,
+ * set as the tear starts) to 0 while the front widens: a plain size transition, smooth everywhere.
+ */
+.ui-ticket__slot {
+  display: flex;
+  grid-row: 1;
+  inline-size: var(--_slot, auto);
+  min-inline-size: 0;
+  transition: inline-size var(--_open-time) var(--_open-ease);
+}
+
+.ui-ticket__body[data-opened] .ui-ticket__slot {
+  inline-size: 0;
+}
+
+.ui-ticket[data-orientation='horizontal'] .ui-ticket__slot {
+  grid-row: 3;
+  inline-size: auto;
+  block-size: var(--_slot, auto);
+  min-block-size: 0;
+  transition-property: block-size;
+}
+
+.ui-ticket[data-orientation='horizontal'] .ui-ticket__body[data-opened] .ui-ticket__slot {
+  block-size: 0;
+}
+
+/* The stub turns around its corner at the perforation, like paper coming away. Its pose is set per frame. */
+.ui-ticket__stub {
+  --_lift: 0;
+
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  min-inline-size: 5.5rem;
+  min-block-size: 44px;
+  padding: var(--ui-space-3, 12px);
+  border-start-end-radius: var(--_radius);
+  border-end-end-radius: var(--_radius);
+  background: var(--_stub-bg);
+  cursor: grab;
+  /* Sideways pulls belong to the stub; vertical scrolling stays with the page. */
+  touch-action: pan-y;
+  transform-origin: 0% 100%;
+  box-shadow: 0 calc(var(--_lift) * 10px) calc(var(--_lift) * 22px) calc(var(--_lift) * -6px) rgba(0, 0, 0, 0.35);
+  user-select: none;
+  will-change: transform;
+}
+
+.ui-ticket:dir(rtl) .ui-ticket__stub {
+  transform-origin: 100% 100%;
+}
+
+.ui-ticket[data-orientation='horizontal'] .ui-ticket__stub {
+  min-inline-size: 0;
+  border-radius: 0 0 var(--_radius) var(--_radius);
+  touch-action: pan-x;
+  transform-origin: 0% 0%;
+}
+
+.ui-ticket__stub[data-dragging] {
+  cursor: grabbing;
+}
+
+/* Torn: the stub leaves the layout where it is (its box is set inline) and flies off on its own. */
+.ui-ticket__stub[data-flying] {
+  position: absolute;
+  margin: 0;
+  pointer-events: none;
+}
+
+.ui-ticket__stub-label {
+  color: var(--ui-fg-muted);
+  font-size: var(--ui-text-xs);
+  font-weight: var(--ui-weight-semibold);
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.ui-ticket[data-orientation='vertical'] .ui-ticket__stub-label {
+  writing-mode: vertical-rl;
+}
+
+/* Above the torn stub, on the ticket's own surface: the stub slips away under it as the details unfold. */
+.ui-ticket__reveal {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-column: 1 / -1;
+  grid-row: 2;
+  border-end-start-radius: var(--_radius);
+  border-end-end-radius: var(--_radius);
+  background: var(--_bg);
+  background-image: var(--ui-surface-texture, none);
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--_open-time) var(--_open-ease);
+}
+
+.ui-ticket__body[data-opened] .ui-ticket__reveal {
+  grid-template-rows: 1fr;
+}
+
+.ui-ticket[data-orientation='horizontal'] .ui-ticket__reveal {
+  grid-row: 4;
+}
+
+.ui-ticket__revealed {
+  min-width: 0;
+  min-block-size: 0;
+  overflow: hidden;
+  outline: none;
+}
+
+.ui-ticket__details {
+  padding: var(--ui-space-4, 16px) var(--ui-space-5, 20px);
+  border-block-start: 2px dashed var(--_line);
+}
+
+.ui-ticket[data-orientation='horizontal'] .ui-ticket__details {
+  border-block-start: 0;
+}
+
+/* The details rise into place a moment after the stub comes away. */
+.ui-ticket__revealed[data-animate] {
+  animation: ui-ticket-reveal calc(var(--_open-time) * 0.9) var(--_open-ease) calc(var(--ui-duration-fast, 120ms)) both;
+}
+
+.ui-ticket__revealed:focus-visible {
+  box-shadow: var(--ui-focus-ring);
+}
+
+@keyframes ui-ticket-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+/* Variants */
+.ui-ticket[data-variant='paper'] {
+  --_bg: var(--ui-ticket-bg, #f6efdf);
+  --_stub-bg: var(--ui-ticket-stub-bg, #efe4cc);
+  --_line: var(--ui-ticket-perforation, #b9a57d);
+}
+
+.ui-ticket[data-variant='paper'] .ui-ticket__body {
+  border-color: #dccca6;
+  color: #3b3222;
+  font-family: Georgia, 'Times New Roman', serif;
+}
+
+.ui-ticket[data-variant='paper'] .ui-ticket__stub-label {
+  color: #6a5a38;
+}
+
+.ui-ticket[data-variant='game'] {
+  --_stub-bg: var(--ui-ticket-stub-bg, var(--ui-accent));
+  --_line: var(--ui-ticket-perforation, var(--ui-accent));
+}
+
+.ui-ticket[data-variant='game'] .ui-ticket__body {
+  border: 2px solid var(--ui-accent);
+  box-shadow:
+    0 0 0 4px var(--ui-accent-soft),
+    0 14px 34px -18px rgba(0, 0, 0, 0.6);
+}
+
+.ui-ticket[data-variant='game'] .ui-ticket__stub-label {
+  color: var(--ui-accent-fg);
+}
+
+/* Reduced motion: the layout changes at once and the details fade in; the stub fades instead of flying. */
+@media (prefers-reduced-motion: reduce) {
+  .ui-ticket__slot,
+  .ui-ticket__actions,
+  .ui-ticket__reveal {
+    transition: none;
+  }
+
+  .ui-ticket__revealed[data-animate] {
+    animation: ui-ticket-fade 200ms ease-out both;
+  }
+}
+
+[data-ui-motion='reduce'] .ui-ticket__slot,
+[data-ui-motion='reduce'] .ui-ticket__actions,
+[data-ui-motion='reduce'] .ui-ticket__reveal {
+  transition: none;
+}
+
+[data-ui-motion='reduce'] .ui-ticket__revealed[data-animate] {
+  animation: ui-ticket-fade 200ms ease-out both;
+}
+
+@keyframes ui-ticket-fade {
+  from {
+    opacity: 0;
+  }
+}

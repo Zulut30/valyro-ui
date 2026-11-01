@@ -2,7 +2,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { BUNDLED_THEMES, CORE_THEMES, LIBRARY_PACKAGE, PRO_PACKAGE, THEME_FONTS } from './constants.mjs';
+import { BUNDLED_THEMES, CORE_THEMES, LIBRARY_PACKAGE, PRO_PACKAGE, PRO_SITE_URL, THEME_FONTS } from './constants.mjs';
 import { COMPONENT_CSS, collectsComponentCss } from './files.mjs';
 
 /** The npm package with a theme's CSS and fonts: the free core, or ValyroUI Pro for the other themes. */
@@ -57,7 +57,7 @@ export function setupPlan(framework, config, projectDir) {
   // Registry items are text, so the woff2 files come from the npm package.
   if (fonts.length) {
     notes.push(
-      `The ${theme} theme's fonts are self-hosted in the ${packageFor(theme)} package: install it and import ${fonts.map((id) => `'${packageFor(theme)}/fonts/${id}.css'`).join(', ')} (until then text falls back to the system font).`,
+      `The ${theme} theme's fonts are self-hosted in the ${packageFor(theme)} package: ${packageFor(theme) === PRO_PACKAGE ? `install it from ${PRO_SITE_URL}/account/ (not on the public npm registry)` : 'install it'} and import ${fonts.map((id) => `'${packageFor(theme)}/fonts/${id}.css'`).join(', ')} (until then text falls back to the system font).`,
     );
   }
 

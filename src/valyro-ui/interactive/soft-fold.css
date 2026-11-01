@@ -1,0 +1,29 @@
+/* SoftFold: unfolds and folds by its row (0fr ↔ 1fr) with a soft deceleration, fading in step. */
+.ui-soft-fold {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows calc(var(--ui-duration-slow, 340ms) * 1.1) cubic-bezier(0.32, 0.72, 0, 1),
+    opacity var(--ui-duration-slow, 340ms) cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.ui-soft-fold[data-open] {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.ui-soft-fold__inner {
+  min-block-size: 0;
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-soft-fold {
+    transition: opacity 150ms ease-out;
+  }
+}
+
+[data-ui-motion='reduce'] .ui-soft-fold {
+  transition: opacity 150ms ease-out;
+}

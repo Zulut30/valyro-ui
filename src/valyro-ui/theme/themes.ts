@@ -34,23 +34,7 @@ export interface ThemeInfo {
 export const themes = [
   { name: 'vercel', label: 'Vercel', description: 'Geist: monochrome surfaces, hairline borders and crisp shadows.', group: 'brand', fonts: ['geist', 'geist-mono'], bundled: true },
   { name: 'glass', label: 'Liquid Glass', description: 'Apple Liquid Glass: translucent frosted materials and capsule controls.', group: 'system', fonts: [], bundled: true },
-  { name: 'material', label: 'Material', description: 'Material 3: tonal surfaces from one seed colour, large radii, Roboto Flex.', group: 'system', fonts: ['roboto-flex', 'jetbrains-mono'] },
-  { name: 'fluent', label: 'Fluent', description: 'Fluent 2 (Windows 11): Mica and Acrylic materials, Segoe UI, soft depth.', group: 'system', fonts: ['selawik'] },
-  { name: 'linear', label: 'Linear', description: 'Dark-first SaaS: dense layout, violet accent, subtle gradient edges, Inter.', group: 'brand', fonts: ['inter', 'jetbrains-mono'] },
-  { name: 'stripe', label: 'Stripe', description: 'Fintech clarity: indigo accent, airy white surfaces, soft layered shadows.', group: 'brand', fonts: ['inter', 'jetbrains-mono'] },
-  { name: 'anthropic', label: 'Anthropic', description: 'Warm ivory and clay, serif headings, calm editorial rhythm.', group: 'brand', fonts: ['inter', 'source-serif-4', 'jetbrains-mono'] },
-  { name: 'paper', label: 'Paper', description: 'Notion-like editorial: near-white page, quiet greys, almost no borders.', group: 'style', fonts: ['inter', 'jetbrains-mono'] },
-  { name: 'brutalism', label: 'Brutalism', description: 'Neo-brutalism: thick black outlines, hard offset shadows, loud flat colour.', group: 'style', fonts: ['inter', 'unbounded', 'jetbrains-mono'] },
   { name: 'high-contrast', label: 'High Contrast', description: 'WCAG AAA: black on white, heavy focus rings, no transparency, Atkinson Hyperlegible.', group: 'style', fonts: ['atkinson-hyperlegible-next', 'jetbrains-mono'] },
-  { name: 'terminal', label: 'Terminal', description: 'Monospace everywhere, phosphor green on black with amber accents, square corners.', group: 'style', fonts: ['jetbrains-mono'] },
-  { name: 'pixel', label: 'Pixel', description: '8-bit games: pixel font, blocky bevelled controls, stepped pixel shadows.', group: 'game', fonts: ['jetbrains-mono', 'pixelify-sans', 'press-start-2p'] },
-  { name: 'cyber', label: 'Cyber', description: 'Neon sci-fi HUD: chamfered corners, cyan and magenta glow, technical type.', group: 'game', fonts: ['geist', 'unbounded', 'jetbrains-mono'] },
-  { name: 'fantasy', label: 'Fantasy', description: 'Classic RPG: leather and parchment, forged-gold buttons, ruby-set corner guards, Cinzel and Garamond.', group: 'game', fonts: ['jetbrains-mono', 'cinzel', 'eb-garamond'] },
-  { name: 'playrix', label: 'Playrix', description: 'Casual-game brand: Playrix green candy buttons, sky-blue links, rounded white cards on a leafy page.', group: 'brand', fonts: ['inter', 'unbounded', 'jetbrains-mono'] },
-  { name: 'manacost', label: 'Manacost', description: 'Hearthstone news portal: white pages, portal-blue top rules and table heads, navy accent, yellow markers.', group: 'brand', fonts: ['roboto-flex', 'jetbrains-mono'] },
-  { name: 'mythic', label: 'Mythic', description: 'Obsidian and gold leaf: gold hairlines and corner lozenges, spaced capital labels, Garamond headings over Inter.', group: 'game', fonts: ['inter', 'eb-garamond', 'jetbrains-mono'] },
-  { name: 'frost', label: 'Frost', description: 'Steel and ice: gunmetal night, polished-silver buttons, ice-shard corners, chamfered plates, Cinzel over Inter.', group: 'game', fonts: ['inter', 'cinzel', 'eb-garamond', 'jetbrains-mono'] },
-  { name: 'hearthstone', label: 'Hearthstone', description: 'HearthPulse tavern: parchment and red cloth, timber and gold frames, glossy mana-blue buttons, HSDisplay headings.', group: 'game', fonts: ['hs-display', 'inter', 'jetbrains-mono'] },
 ] as const satisfies readonly ThemeInfo[];
 
 /** A theme shipped with the kit. */

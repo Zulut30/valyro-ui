@@ -1,10 +1,10 @@
 // login / logout / whoami against the account API (server/index.mjs documents the endpoints).
 // `valyro login` signs in through the browser like `gh auth login`: the API hands out a one-time code,
-// the user approves it on valyro.xyz while the CLI polls, and the CLI saves the token it gets back.
+// the user approves it on pro.valyro.xyz while the CLI polls, and the CLI saves the token it gets back.
 
 import os from 'node:os';
 import { apiUrl, authFile, deleteToken, readSavedToken, readToken, saveToken, validateToken } from './auth.mjs';
-import { CLI_PACKAGE, PRICING_URL, SITE_URL } from './constants.mjs';
+import { ACCOUNT_URL, CLI_PACKAGE, PRICING_URL } from './constants.mjs';
 import { CliError } from './registry.mjs';
 
 const TIMEOUT_MS = 20_000;
@@ -58,7 +58,7 @@ export async function login(opts, io) {
   const { device_code: deviceCode, user_code: userCode, verification_url: verificationUrl, expires_in: expiresIn } = start.data ?? {};
   if (!start.ok || typeof deviceCode !== 'string' || typeof userCode !== 'string' || typeof verificationUrl !== 'string') {
     throw new CliError(
-      `Could not start the sign-in: ${start.data?.message ?? `HTTP ${start.status}`} Or create a token at ${SITE_URL}/#/account and run \`${CLI_PACKAGE} login --token <token>\`.`,
+      `Could not start the sign-in: ${start.data?.message ?? `HTTP ${start.status}`} Or create a token at ${ACCOUNT_URL} and run \`${CLI_PACKAGE} login --token <token>\`.`,
     );
   }
   let interval = Number.isFinite(start.data.interval) ? start.data.interval : 5;

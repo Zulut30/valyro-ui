@@ -1,0 +1,238 @@
+.ui-exploded-layers {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-3, 12px);
+  min-width: 0;
+  color: var(--ui-fg);
+  container-type: inline-size;
+}
+
+.ui-exploded-layers__body {
+  display: grid;
+  gap: var(--ui-space-4, 16px);
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@container (min-width: 640px) {
+  .ui-exploded-layers__body {
+    grid-template-columns: minmax(0, 1fr) 240px;
+  }
+}
+
+/* The space is reserved from the canvas size; one cqi of the viewport is the unit of depth. */
+.ui-exploded-layers__viewport {
+  position: relative;
+  container-type: inline-size;
+  overflow: hidden;
+  border: var(--ui-border-width, 1px) solid var(--ui-border);
+  border-radius: var(--ui-radius-card, 16px);
+  background: radial-gradient(ellipse at 50% 40%, var(--ui-surface), var(--ui-surface-2));
+  perspective: 1800px;
+}
+
+/* The scene's tilt and scale and the layers' depth are drawn per frame by a spring (no CSS transition to lag behind). */
+.ui-exploded-layers__scene {
+  --_cap: 0;
+
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.ui-exploded-layers__layer {
+  position: absolute;
+  inset: 0;
+  transform: translateZ(calc(var(--_z, 0) * 1cqi));
+  transform-style: preserve-3d;
+  cursor: pointer;
+  /* Picking a part: the others dim and it glows, softly. */
+  transition: filter var(--ui-duration-slow, 340ms) cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* Only the picture dims, not the caption: its text keeps its contrast (WCAG 1.4.3). */
+.ui-exploded-layers__image,
+.ui-exploded-layers__missing {
+  transition: opacity var(--ui-duration-slow, 340ms) cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.ui-exploded-layers[data-selection] .ui-exploded-layers__layer:not([data-selected]) :is(.ui-exploded-layers__image, .ui-exploded-layers__missing) {
+  opacity: 0.45;
+}
+
+.ui-exploded-layers__layer[data-selected] {
+  filter: drop-shadow(0 0 6px var(--ui-accent));
+}
+
+.ui-exploded-layers__image {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: contain;
+  user-select: none;
+}
+
+.ui-exploded-layers__missing {
+  position: absolute;
+  inset: 12%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ui-space-1, 4px);
+  border: 2px dashed var(--ui-danger);
+  border-radius: var(--ui-radius-md, 10px);
+  color: var(--ui-danger-text);
+  font-size: var(--ui-text-xs);
+}
+
+.ui-exploded-layers__missing svg {
+  inline-size: 14px;
+  block-size: 14px;
+}
+
+/* In the plane's bottom start corner: the layers above sit higher on screen, so they don't cover it. */
+.ui-exploded-layers__caption {
+  position: absolute;
+  inset-block-end: 4%;
+  inset-inline-start: 4%;
+  max-inline-size: 60%;
+  overflow: hidden;
+  padding: 2px 8px;
+  border-radius: var(--ui-radius-full, 999px);
+  background: var(--ui-surface);
+  color: var(--ui-fg);
+  font-size: var(--ui-text-xs);
+  font-weight: var(--ui-weight-medium);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  opacity: var(--_cap);
+  pointer-events: none;
+}
+
+/* A narrow scene has no room for captions: the list of details next to it names every layer. */
+@container (max-width: 480px) {
+  .ui-exploded-layers__caption {
+    display: none;
+  }
+}
+
+.ui-exploded-layers__side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-2, 8px);
+  min-width: 0;
+}
+
+.ui-exploded-layers__heading {
+  margin: 0;
+  color: var(--ui-fg-subtle);
+  font-size: var(--ui-text-xs);
+  font-weight: var(--ui-weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.ui-exploded-layers__list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ui-exploded-layers__part {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-2, 8px);
+  inline-size: 100%;
+  min-block-size: 40px;
+  padding: var(--ui-space-1, 4px) var(--ui-space-2, 8px);
+  border: var(--ui-border-width, 1px) solid transparent;
+  border-radius: var(--ui-radius-md, 10px);
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: var(--ui-text-sm);
+  text-align: start;
+  cursor: pointer;
+}
+
+.ui-exploded-layers__part:hover {
+  background: var(--ui-hover);
+}
+
+.ui-exploded-layers__part[aria-pressed='true'] {
+  border-color: var(--ui-accent);
+  background: var(--ui-accent-soft);
+}
+
+.ui-exploded-layers__part:focus-visible {
+  outline: none;
+  box-shadow: var(--ui-focus-ring);
+}
+
+.ui-exploded-layers__index {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  inline-size: 22px;
+  block-size: 22px;
+  border-radius: var(--ui-radius-full, 999px);
+  background: var(--ui-surface-2);
+  font-size: var(--ui-text-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.ui-exploded-layers__part-label {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.ui-exploded-layers__part-note {
+  color: var(--ui-danger-text);
+  font-size: var(--ui-text-xs);
+}
+
+.ui-exploded-layers__detail {
+  padding: var(--ui-space-3, 12px);
+  border: var(--ui-border-width, 1px) solid var(--ui-border);
+  border-radius: var(--ui-radius-md, 10px);
+  background: var(--ui-surface);
+  font-size: var(--ui-text-sm);
+}
+
+.ui-exploded-layers__detail-title {
+  display: block;
+  font-weight: var(--ui-weight-semibold);
+}
+
+.ui-exploded-layers__detail-text {
+  margin: var(--ui-space-1, 4px) 0 0;
+  color: var(--ui-fg-muted);
+  line-height: var(--ui-leading, 1.5);
+}
+
+.ui-exploded-layers__controls {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-3, 12px);
+}
+
+.ui-exploded-layers__slider {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Reduced motion: the stack takes each separation at once (in the script); picking a part only fades, quickly. */
+@media (prefers-reduced-motion: reduce) {
+  .ui-exploded-layers__layer {
+    transition-duration: 150ms;
+  }
+}
+
+[data-ui-motion='reduce'] .ui-exploded-layers__layer {
+  transition-duration: 150ms;
+}

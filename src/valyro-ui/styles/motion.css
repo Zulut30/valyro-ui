@@ -72,7 +72,7 @@
    stops here too: every CSS animation plays once, instantly. Spinners and the indeterminate progress
    sweep keep moving — they say "busy" (a still sweep would read as a value). */
 [data-ui-motion='reduce'],
-[data-ui-motion='reduce'] *:not(.ui-spinner__spoke, .ui-progress__fill),
+[data-ui-motion='reduce'] *:not(.ui-spinner__spoke, .ui-progress__fill, .ui-progress-circle__spinner),
 [data-ui-motion='reduce'] *::before,
 [data-ui-motion='reduce'] *::after {
   animation-duration: 1ms !important;

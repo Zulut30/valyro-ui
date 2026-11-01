@@ -1,0 +1,326 @@
+/*
+ * ScrollArea: a flex column whose viewport scrolls. Overlay bars sit over the content's inline-end / block-end edge
+ * (they never take width); their thumbs are placed with transforms written once a frame. The edge hints read
+ * --_edge-top / -bottom / -start / -end (0…1, written from the scroll position) times --_edge-size, so a fade grows
+ * with the hidden distance instead of switching on.
+ */
+.ui-scroll-area {
+  --_edge-size: var(--ui-scroll-area-edge-size, 24px);
+  --_bar: var(--ui-scroll-area-size, 6px);
+  --_bar-hover: calc(var(--_bar) + 4px);
+  --_bar-hit: 14px;
+  --_bar-gap: 2px;
+  --_thumb: var(--ui-scroll-area-thumb, color-mix(in srgb, var(--ui-fg) 30%, transparent));
+  --_thumb-active: var(--ui-scroll-area-thumb-active, color-mix(in srgb, var(--ui-fg) 48%, transparent));
+  --_thumb-radius: var(--ui-scroll-area-radius, var(--ui-radius-full));
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-block-size: 0;
+  min-inline-size: 0;
+  isolation: isolate;
+  transition: box-shadow var(--ui-duration-fast) var(--ui-ease);
+}
+
+.ui-scroll-area:has(> .ui-scroll-area__viewport:focus-visible) {
+  box-shadow: var(--ui-focus-ring);
+}
+
+.ui-scroll-area__viewport {
+  flex: 1 1 auto;
+  min-block-size: 0;
+  min-inline-size: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  border-radius: inherit;
+  outline: none;
+}
+
+.ui-scroll-area[data-orientation='vertical'] > .ui-scroll-area__viewport {
+  overflow-x: hidden;
+}
+
+.ui-scroll-area[data-orientation='horizontal'] > .ui-scroll-area__viewport {
+  overflow-y: hidden;
+}
+
+/* The kit's bars (or none) replace the browser's from the first render, so the width never jumps on hydration. */
+.ui-scroll-area:is([data-scrollbars='overlay'], [data-scrollbars='hidden']) > .ui-scroll-area__viewport {
+  scrollbar-width: none;
+}
+
+.ui-scroll-area:is([data-scrollbars='overlay'], [data-scrollbars='hidden']) > .ui-scroll-area__viewport::-webkit-scrollbar {
+  display: none;
+}
+
+/* initialScroll="end": hidden for the one layout pass before it lands at the end (never without script). */
+@media (scripting: enabled) {
+  .ui-scroll-area[data-pending] > .ui-scroll-area__viewport {
+    visibility: hidden;
+  }
+}
+
+.ui-scroll-area:not([data-orientation='vertical']) > .ui-scroll-area__viewport > .ui-scroll-area__content {
+  inline-size: max-content;
+  min-inline-size: 100%;
+}
+
+/* ── Edge hints ── */
+
+.ui-scroll-area[data-edges='fade'] > .ui-scroll-area__viewport {
+  --_t: calc(var(--_edge-top, 0) * var(--_edge-size));
+  --_b: calc(var(--_edge-bottom, 0) * var(--_edge-size));
+  --_s: calc(var(--_edge-start, 0) * var(--_edge-size));
+  --_e: calc(var(--_edge-end, 0) * var(--_edge-size));
+  --_inline-mask: linear-gradient(to right, transparent, #000 var(--_s), #000 calc(100% - var(--_e)), transparent);
+
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 var(--_t), #000 calc(100% - var(--_b)), transparent), var(--_inline-mask);
+  mask-image: linear-gradient(to bottom, transparent, #000 var(--_t), #000 calc(100% - var(--_b)), transparent), var(--_inline-mask);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}
+
+.ui-scroll-area[data-edges='fade']:dir(rtl) > .ui-scroll-area__viewport {
+  --_inline-mask: linear-gradient(to left, transparent, #000 var(--_s), #000 calc(100% - var(--_e)), transparent);
+}
+
+.ui-scroll-area[data-edges='shadow']::after {
+  --_shadow: color-mix(in srgb, var(--ui-fg) 22%, transparent);
+  --_blur: calc(var(--_edge-size) / 2);
+  --_x-start: calc(var(--_edge-start, 0) * var(--_blur));
+  --_x-end: calc(var(--_edge-end, 0) * var(--_blur) * -1);
+
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow:
+    inset 0 calc(var(--_edge-top, 0) * var(--_blur)) var(--_blur) calc(var(--_blur) * -1) var(--_shadow),
+    inset 0 calc(var(--_edge-bottom, 0) * var(--_blur) * -1) var(--_blur) calc(var(--_blur) * -1) var(--_shadow),
+    inset var(--_x-start) 0 var(--_blur) calc(var(--_blur) * -1) var(--_shadow),
+    inset var(--_x-end) 0 var(--_blur) calc(var(--_blur) * -1) var(--_shadow);
+}
+
+.ui-scroll-area[data-edges='shadow']:dir(rtl)::after {
+  --_x-start: calc(var(--_edge-start, 0) * var(--_blur) * -1);
+  --_x-end: calc(var(--_edge-end, 0) * var(--_blur));
+}
+
+/* ── Overlay scrollbars ── */
+
+.ui-scroll-area__scrollbar {
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  box-sizing: border-box;
+  opacity: 0;
+  pointer-events: none;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: opacity var(--ui-duration) var(--ui-ease);
+}
+
+.ui-scroll-area__scrollbar[data-overflow='false'] {
+  display: none;
+}
+
+.ui-scroll-area__scrollbar[data-state='visible'] {
+  opacity: 1;
+  pointer-events: auto;
+  transition-duration: var(--ui-duration-fast);
+}
+
+.ui-scroll-area__scrollbar[data-orientation='vertical'] {
+  inset-block: var(--_bar-gap);
+  inset-inline-end: 0;
+  inline-size: var(--_bar-hit);
+}
+
+.ui-scroll-area__scrollbar[data-orientation='horizontal'] {
+  inset-inline: var(--_bar-gap);
+  inset-block-end: 0;
+  block-size: var(--_bar-hit);
+}
+
+.ui-scroll-area__scrollbar[data-orientation='vertical'][data-corner] {
+  inset-block-end: var(--_bar-hit);
+}
+
+.ui-scroll-area__scrollbar[data-orientation='horizontal'][data-corner] {
+  inset-inline-end: var(--_bar-hit);
+}
+
+/* The faint track and the thumb share one thickness, which grows a little under the pointer. */
+.ui-scroll-area__scrollbar::before,
+.ui-scroll-area__thumb {
+  position: absolute;
+  border-radius: var(--_thumb-radius);
+  transition:
+    inline-size calc(var(--ui-duration-slow) * 1.92) var(--ui-spring-smooth),
+    block-size calc(var(--ui-duration-slow) * 1.92) var(--ui-spring-smooth),
+    background-color var(--ui-duration) var(--ui-ease);
+}
+
+.ui-scroll-area__scrollbar::before {
+  content: '';
+  background: transparent;
+}
+
+.ui-scroll-area__scrollbar[data-orientation='vertical']::before,
+.ui-scroll-area__scrollbar[data-orientation='vertical'] > .ui-scroll-area__thumb {
+  inset-inline-end: var(--_bar-gap);
+  inline-size: var(--_bar);
+}
+
+.ui-scroll-area__scrollbar[data-orientation='vertical']::before {
+  inset-block: 0;
+}
+
+.ui-scroll-area__scrollbar[data-orientation='horizontal']::before,
+.ui-scroll-area__scrollbar[data-orientation='horizontal'] > .ui-scroll-area__thumb {
+  inset-block-end: var(--_bar-gap);
+  block-size: var(--_bar);
+}
+
+.ui-scroll-area__scrollbar[data-orientation='horizontal']::before {
+  inset-inline: 0;
+}
+
+.ui-scroll-area__thumb {
+  inset-block-start: 0;
+  inset-inline-start: auto;
+  background: var(--_thumb);
+  will-change: transform;
+  cursor: default;
+}
+
+.ui-scroll-area__scrollbar[data-orientation='vertical'] > .ui-scroll-area__thumb {
+  block-size: var(--_thumb-size, 0px);
+}
+
+.ui-scroll-area__scrollbar[data-orientation='horizontal'] > .ui-scroll-area__thumb {
+  inset-block-start: auto;
+  inset-inline-start: 0;
+  inline-size: var(--_thumb-size, 0px);
+}
+
+@media (pointer: fine) {
+  .ui-scroll-area__scrollbar:is(:hover, [data-dragging]) {
+    --_bar: var(--_bar-hover);
+  }
+
+  .ui-scroll-area__scrollbar:is(:hover, [data-dragging])::before {
+    background: color-mix(in srgb, var(--ui-fg) 8%, transparent);
+  }
+
+  .ui-scroll-area__scrollbar:is(:hover, [data-dragging]) > .ui-scroll-area__thumb {
+    background: var(--_thumb-active);
+  }
+}
+
+/* A dragged thumb follows the pointer 1:1: nothing eases its thickness or colour mid-drag. */
+.ui-scroll-area__thumb[data-dragging] {
+  transition: none;
+}
+
+/* Fingers scroll the content; the bars are only an indicator there. */
+@media (pointer: coarse) {
+  .ui-scroll-area__scrollbar[data-state='visible'] {
+    pointer-events: none;
+  }
+}
+
+.ui-scroll-area__corner {
+  position: absolute;
+  inset-block-end: 0;
+  inset-inline-end: 0;
+  z-index: 2;
+  display: none;
+  inline-size: var(--_bar-hit);
+  block-size: var(--_bar-hit);
+  pointer-events: none;
+}
+
+.ui-scroll-area__corner[data-visible] {
+  display: block;
+}
+
+/* ── Scroll-to-end button ── */
+
+.ui-scroll-area__scroll-button {
+  position: absolute;
+  z-index: 3;
+  inset-block-end: var(--ui-space-3);
+  inset-inline: 0;
+  margin-inline: auto;
+  inline-size: 32px;
+  block-size: 32px;
+  box-shadow: var(--ui-shadow-popover);
+  transition:
+    opacity var(--ui-duration) var(--ui-ease),
+    transform calc(var(--ui-duration-slow) * 1.36) var(--ui-spring-snappy),
+    background-color var(--ui-duration-fast) var(--ui-ease),
+    box-shadow var(--ui-duration-fast) var(--ui-ease);
+}
+
+@starting-style {
+  .ui-scroll-area__scroll-button[data-state='open'] {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.ui-scroll-area__scroll-button[data-state='closed'] {
+  opacity: 0;
+  transform: translateY(4px);
+  pointer-events: none;
+  transition:
+    opacity var(--ui-duration) var(--ui-ease),
+    transform var(--ui-duration) var(--ui-ease);
+}
+
+.ui-scroll-area__scroll-button[data-orientation='horizontal'] {
+  inset-block: 0;
+  inset-inline: auto var(--ui-space-3);
+  margin-block: auto;
+  margin-inline: 0;
+}
+
+@starting-style {
+  .ui-scroll-area__scroll-button[data-orientation='horizontal'][data-state='open'] {
+    transform: translateX(8px);
+  }
+}
+
+.ui-scroll-area__scroll-button[data-orientation='horizontal'][data-state='closed'] {
+  transform: translateX(4px);
+}
+
+.ui-scroll-area__scroll-button[data-orientation='horizontal']:dir(rtl) svg {
+  transform: scaleX(-1);
+}
+
+/* Reduced motion: bars keep their thickness (colour only) and the button only fades. */
+@media (prefers-reduced-motion: reduce) {
+  .ui-scroll-area__scrollbar:is(:hover, [data-dragging]) {
+    --_bar: var(--ui-scroll-area-size, 6px);
+  }
+
+  .ui-scroll-area__scroll-button,
+  .ui-scroll-area__scroll-button[data-state] {
+    transform: none;
+  }
+}
+
+[data-ui-motion='reduce'] .ui-scroll-area__scrollbar:is(:hover, [data-dragging]) {
+  --_bar: var(--ui-scroll-area-size, 6px);
+}
+
+[data-ui-motion='reduce'] .ui-scroll-area__scroll-button,
+[data-ui-motion='reduce'] .ui-scroll-area__scroll-button[data-state] {
+  transform: none;
+}

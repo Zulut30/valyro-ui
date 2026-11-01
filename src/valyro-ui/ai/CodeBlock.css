@@ -3,7 +3,7 @@
   --_header-bg: var(--ui-code-block-header-bg);
   --_leading: 1.7;
 
-  /* Syntax palette, from the theme (DiffReview and DiffViewer read these too). */
+  /* Syntax palette, from the theme (the diff views read these too). */
   --_tk-keyword: var(--ui-code-block-keyword-fg);
   --_tk-string: var(--ui-code-block-string-fg);
   --_tk-number: var(--ui-code-block-number-fg);

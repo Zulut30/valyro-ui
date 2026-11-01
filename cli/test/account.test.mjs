@@ -5,7 +5,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { readSavedToken, saveToken } from '../src/auth.mjs';
 import { run } from '../src/cli.mjs';
 import { registryFor } from '../src/commands.mjs';
-import { PRICING_URL } from '../src/constants.mjs';
+import { ACCOUNT_URL, API_URL, DEFAULT_REGISTRY_URL, PRICING_URL, PRO_SITE_URL } from '../src/constants.mjs';
 import { createMcpHandler } from '../src/mcp.mjs';
 import { createRegistry } from '../src/registry.mjs';
 import { ITEMS, cleanup, fakeIo, tempDir, writeTree } from './helpers.mjs';
@@ -16,9 +16,9 @@ const PRO = 'vlyt_pro_0123456789abcdefghijklmnopqrstuvwxyzAB';
 const FREE = 'vlyt_free_0123456789abcdefghijklmnopqrstuvwxyzA';
 const PRO_SOURCE = "export function DataGrid() { return 'pro'; }";
 
-/* ── A local stand-in for https://valyro.xyz/api ── */
+/* ── A local stand-in for https://pro.valyro.xyz/api ── */
 
-const api = { requests: [], polls: [], revoked: [] };
+const api = { requests: [], polls: [], revoked: [], failStart: false };
 let server;
 let base;
 
@@ -33,8 +33,10 @@ function fakeApi(req, res) {
       res.end(JSON.stringify(data));
     };
     const route = `${req.method} ${req.url}`;
+    if (route === 'POST /api/cli/device' && api.failStart) return json(503, { message: 'The sign-in is down.' });
     if (route === 'POST /api/cli/device') {
-      return json(200, { device_code: 'D'.repeat(43), user_code: 'BCDF-GHJK', verification_url: 'https://valyro.xyz/#/device?code=BCDF-GHJK', interval: 5, expires_in: 600 });
+      // The server builds the approval link from its PUBLIC_URL: production's is the Pro site.
+      return json(200, { device_code: 'D'.repeat(43), user_code: 'BCDF-GHJK', verification_url: 'https://pro.valyro.xyz/#/device?code=BCDF-GHJK', interval: 5, expires_in: 600 });
     }
     if (route === 'POST /api/cli/device/token') {
       const next = api.polls.shift() ?? { status: 400, body: { error: 'expired_token' } };
@@ -70,6 +72,7 @@ afterEach(() => {
   api.requests.length = 0;
   api.polls.length = 0;
   api.revoked.length = 0;
+  api.failStart = false;
 });
 
 /** fakeIo pointed at the local API; never sleeps, records opened URLs. */
@@ -91,7 +94,7 @@ describe('valyro login (device code)', () => {
     const t = accountIo();
     expect(await run(['login'], t.io)).toBe(0);
     expect(t.text()).toContain('Your one-time code: BCDF-GHJK');
-    expect(t.opened).toEqual(['https://valyro.xyz/#/device?code=BCDF-GHJK']);
+    expect(t.opened).toEqual(['https://pro.valyro.xyz/#/device?code=BCDF-GHJK']);
     expect(t.sleeps).toEqual([5000, 5000, 10000]);
     expect(api.requests[0]).toMatchObject({ method: 'POST', url: '/api/cli/device', body: { name: expect.stringMatching(/^valyro CLI on /) } });
     expect(api.requests.filter((r) => r.url === '/api/cli/device/token').every((r) => r.body.device_code === 'D'.repeat(43))).toBe(true);
@@ -112,10 +115,18 @@ describe('valyro login (device code)', () => {
       const t = accountIo();
       expect(await run(['login', '--no-browser'], t.io)).toBe(1);
       expect(t.opened).toEqual([]);
-      expect(t.text()).toContain('https://valyro.xyz/#/device?code=BCDF-GHJK');
+      expect(t.text()).toContain('https://pro.valyro.xyz/#/device?code=BCDF-GHJK');
       expect(t.errors()).toContain(message);
       expect(readSavedToken(t.io.env)).toBeNull();
     }
+  });
+
+  it('sends a failed sign-in to the token page on the Pro site', async () => {
+    api.failStart = true;
+    const t = accountIo();
+    expect(await run(['login'], t.io)).toBe(1);
+    expect(t.errors()).toContain('The sign-in is down.');
+    expect(t.errors()).toContain('create a token at https://pro.valyro.xyz/account/');
   });
 
   it('explains an API that is not there', async () => {
@@ -126,6 +137,16 @@ describe('valyro login (device code)', () => {
     t.io.env.VALYRO_API_URL = 'http://example.com/api';
     expect(await run(['login'], t.io)).toBe(1);
     expect(t.errors()).toContain('VALYRO_API_URL must use https');
+  });
+});
+
+describe('the CLI addresses', () => {
+  it('sends sign-in, pricing, the account and its API to the Pro site; the anonymous registry stays on valyro.xyz (#38)', () => {
+    expect(PRO_SITE_URL).toBe('https://pro.valyro.xyz');
+    expect(PRICING_URL).toBe('https://pro.valyro.xyz/pricing/');
+    expect(ACCOUNT_URL).toBe('https://pro.valyro.xyz/account/');
+    expect(DEFAULT_REGISTRY_URL).toBe('https://valyro.xyz/r');
+    expect(API_URL).toBe('https://pro.valyro.xyz/api');
   });
 });
 

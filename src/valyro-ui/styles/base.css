@@ -318,6 +318,22 @@ html[data-theme] ::selection {
   line-height: 1;
 }
 
+/* Colour-mode switch (theme/color-mode.ts). Component transitions wait while the mode changes (two frames at once,
+   or the length of the cross-fade), so colours never trail behind at their own speeds; the control that made the
+   switch ([data-ui-mode-keep-motion], e.g. the ColorModeSwitch thumb) keeps its own motion. The cross-fade is one
+   View Transition of the whole page on the theme's curve. */
+:root[data-ui-mode-switching] :not([data-ui-mode-keep-motion], [data-ui-mode-keep-motion] *),
+:root[data-ui-mode-switching] :not([data-ui-mode-keep-motion], [data-ui-mode-keep-motion] *)::before,
+:root[data-ui-mode-switching] :not([data-ui-mode-keep-motion], [data-ui-mode-keep-motion] *)::after {
+  transition: none !important;
+}
+
+:root[data-ui-mode-switching='fade']::view-transition-old(root),
+:root[data-ui-mode-switching='fade']::view-transition-new(root) {
+  animation-duration: var(--ui-duration-slow);
+  animation-timing-function: var(--ui-ease);
+}
+
 /* ── Shared keyframes ── */
 @keyframes ui-fade-in {
   from { opacity: 0; }

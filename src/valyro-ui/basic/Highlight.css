@@ -1,0 +1,67 @@
+/* Highlight: marks keep the text's own colour on the tone's soft fill; the current hit takes the solid tone.
+   The fill changes as the user types: instantly (a small state change). Moving the current hit eases its colour. */
+.ui-highlight__mark {
+  padding: 0 1px;
+  margin: 0 -1px;
+  border-radius: var(--ui-radius-xs);
+  background: var(--ui-accent-soft);
+  color: inherit;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  transition:
+    background-color var(--ui-duration-fast) var(--ui-ease),
+    color var(--ui-duration-fast) var(--ui-ease);
+}
+
+.ui-highlight__mark[data-tone='warning'] {
+  background: var(--ui-warning-soft);
+}
+
+.ui-highlight__mark[data-tone='success'] {
+  background: var(--ui-success-soft);
+}
+
+.ui-highlight__mark[data-tone='danger'] {
+  background: var(--ui-danger-soft);
+}
+
+.ui-highlight__mark[data-tone='info'] {
+  background: var(--ui-info-soft);
+}
+
+.ui-highlight__mark[data-current] {
+  background: var(--ui-accent);
+  color: var(--ui-accent-fg);
+}
+
+.ui-highlight__mark[data-current][data-tone='warning'] {
+  background: var(--ui-warning);
+  color: var(--ui-fg-inverse);
+}
+
+.ui-highlight__mark[data-current][data-tone='success'] {
+  background: var(--ui-success);
+  color: var(--ui-fg-inverse);
+}
+
+.ui-highlight__mark[data-current][data-tone='danger'] {
+  background: var(--ui-danger);
+  color: var(--ui-fg-inverse);
+}
+
+.ui-highlight__mark[data-current][data-tone='info'] {
+  background: var(--ui-info);
+  color: var(--ui-fg-inverse);
+}
+
+@media (forced-colors: active) {
+  .ui-highlight__mark {
+    background: Mark;
+    color: MarkText;
+  }
+
+  .ui-highlight__mark[data-current] {
+    background: Highlight;
+    color: HighlightText;
+  }
+}

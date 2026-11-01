@@ -35,6 +35,7 @@ interface CalendarCommonProps extends Omit<ComponentPropsWithRef<'div'>, 'defaul
 }
 
 export interface CalendarSingleProps extends CalendarCommonProps {
+  /** `single`: one date (default). `range`: a start and an end, with a live preview of the band. */
   mode?: 'single';
   value?: Date | null;
   defaultValue?: Date | null;
@@ -42,6 +43,7 @@ export interface CalendarSingleProps extends CalendarCommonProps {
 }
 
 export interface CalendarRangeProps extends CalendarCommonProps {
+  /** `single`: one date (default). `range`: a start and an end, with a live preview of the band. */
   mode: 'range';
   value?: DateRange;
   defaultValue?: DateRange;

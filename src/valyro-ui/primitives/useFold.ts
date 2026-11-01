@@ -27,9 +27,10 @@ function themeEase(element: Element) {
  * `ref`, `data-state={state}`, `data-ui-fold={cssFold}` and `inert` when closed. `readyRef` is false during
  * the owner's first commit, so groups open from the start just show. `spring`: unfolds on the smooth spring;
  * otherwise on the theme's curve and duration. Durations follow --ui-duration-slow, so the themes'
- * reduced-motion block (1 ms) makes it instant.
+ * reduced-motion block (1 ms) makes it instant. `collapsed` (px): the height it folds to instead of 0 (a
+ * "show more" preview), which stays visible, so it keeps its opacity; style the closed height in CSS too.
  */
-export function useFold<T extends HTMLElement>(open: boolean, readyRef: RefObject<boolean>, spring = false) {
+export function useFold<T extends HTMLElement>(open: boolean, readyRef: RefObject<boolean>, spring = false, collapsed = 0) {
   const { isMounted, state } = usePresence(open, FOLD_MS);
   const ref = useRef<T>(null);
   // Off in the owner's first commit, so a group open from the start has no entrance.
@@ -50,17 +51,19 @@ export function useFold<T extends HTMLElement>(open: boolean, readyRef: RefObjec
         },
         () => {},
       );
+    const low = `${collapsed}px`;
+    const fade = collapsed > 0 ? {} : { opacity: state === 'open' ? [0, 1] : [1, 0] };
     if (state === 'open') {
-      const keyframes = { height: ['0px', height], opacity: [0, 1] };
+      const keyframes = { height: [low, height], ...fade };
       settle(
         spring
           ? animateSpring(group, keyframes, 'smooth')
           : group.animate(keyframes, { duration: themeSlowMs(group), easing: themeEase(group) }),
       );
     } else {
-      group.animate({ height: [height, '0px'], opacity: [1, 0] }, { duration: themeSlowMs(group), easing: FOLD_EASE, fill: 'forwards' });
+      group.animate({ height: [height, low], ...fade }, { duration: themeSlowMs(group), easing: FOLD_EASE, fill: 'forwards' });
     }
-  }, [state, readyRef, spring]);
+  }, [state, readyRef, spring, collapsed]);
 
   return { ref, isMounted, state, cssFold };
 }

@@ -13,6 +13,7 @@ import {
   MODES,
   PRICING_URL,
   PRO_PACKAGE,
+  PRO_SITE_URL,
   SITE_URL,
   THEMES,
 } from './constants.mjs';
@@ -31,7 +32,7 @@ import {
   tsconfigNotes,
   writeConfig,
 } from './project.mjs';
-import { CliError, createRegistry, dependencyName, resolveItems, searchItems } from './registry.mjs';
+import { CliError, createRegistry, dependencyName, proHint, resolveItems, searchItems } from './registry.mjs';
 import { applySetup, cssOnlySteps, setupPlan } from './setup.mjs';
 
 /** Project dir from --cwd (relative to where the CLI was started). */
@@ -66,7 +67,7 @@ async function explainNotFound(promise, registry, refs) {
     const ref = error instanceof CliError && error.code === 'NOT_FOUND' ? refs.find((r) => registry.locate(r) === error.key) : undefined;
     if (ref === undefined) throw error;
     throw new CliError(
-      `Component "${ref}" not found in ${registry.base}. Try \`npx ${CLI_PACKAGE} search ${ref}\` or \`npx ${CLI_PACKAGE} list\`.`,
+      `Component "${ref}" not found in ${registry.base}. Try \`npx ${CLI_PACKAGE} search ${ref}\` or \`npx ${CLI_PACKAGE} list\`.${proHint(registry, ref)}`,
       { cause: error },
     );
   }
@@ -246,6 +247,7 @@ export async function list(opts, io) {
     if (!items.length) throw new CliError(`No components in category "${opts.category}"`);
   }
   printItems(items, opts, io, { grouped: true });
+  if (!opts.json) printProNote(registry, items, io);
   return 0;
 }
 
@@ -257,10 +259,19 @@ export async function search(opts, positionals, io) {
   const found = searchItems(await registry.index(), query);
   if (!found.length && !opts.json) {
     io.out(`No components match "${query}".`);
+    printProNote(registry, found, io);
     return 0;
   }
   printItems(found, opts, io, { grouped: false });
+  if (!opts.json) printProNote(registry, found, io);
   return 0;
+}
+
+/** A hosted registry lists the Pro items only to a licensed account: tell everyone else where they are. */
+function printProNote(registry, shown, io) {
+  if (registry.kind === 'http' && !registry.proListed && !shown.some((item) => item.pro)) {
+    io.out(`ValyroUI Pro adds more components and themes: ${PRO_SITE_URL}. With a licence, \`npx ${CLI_PACKAGE} login\` lists them here too.`);
+  }
 }
 
 function printItems(items, opts, io, { grouped }) {

@@ -1,0 +1,62 @@
+/* Label: the same type as FormField's label (theme tokens --ui-form-field-label-fg and -inset), as a component. */
+.ui-label {
+  display: inline-flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 3px;
+  width: fit-content;
+  padding-inline: var(--ui-form-field-inset);
+  color: var(--ui-form-field-label-fg);
+  font-size: var(--ui-text-sm);
+  font-weight: var(--ui-weight-label);
+  line-height: var(--ui-leading-tight);
+  cursor: default;
+}
+
+.ui-label[data-size='sm'] {
+  font-size: var(--ui-text-xs);
+}
+
+.ui-label[data-disabled] {
+  color: var(--ui-fg-disabled);
+}
+
+.ui-label__required {
+  color: var(--ui-danger-text);
+}
+
+.ui-label__optional {
+  color: var(--ui-fg-muted);
+  font-weight: var(--ui-weight-regular);
+}
+
+.ui-label[data-disabled] .ui-label__required,
+.ui-label[data-disabled] .ui-label__optional {
+  color: inherit;
+}
+
+.ui-label__row {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.ui-label__row > .ui-label {
+  padding-inline-end: 0;
+}
+
+/* A compact round button that does not make the label row taller than the text. */
+.ui-label__info.ui-icon-button {
+  --_size: 22px;
+  inline-size: var(--_size);
+  min-inline-size: var(--_size);
+  block-size: var(--_size);
+  min-block-size: var(--_size);
+  margin-block: -4px;
+  padding: 0;
+  color: var(--ui-fg-muted);
+}
+
+.ui-label__row[data-size='sm'] .ui-label__info.ui-icon-button {
+  --_size: 20px;
+}

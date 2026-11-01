@@ -1,0 +1,136 @@
+.ui-collapsible {
+  min-width: 0;
+}
+
+/* The props form's trigger: a quiet row button with a chevron. The compound form can render any element
+   (asChild) and style it itself. */
+.ui-collapsible__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ui-space-2);
+  max-width: 100%;
+  min-height: var(--ui-control-h-sm);
+  padding: var(--ui-space-1) var(--ui-space-2);
+  margin-inline-start: calc(-1 * var(--ui-space-2));
+  border: 0;
+  border-radius: var(--ui-radius-button);
+  corner-shape: var(--ui-control-corner-shape);
+  background: transparent;
+  color: var(--ui-fg);
+  font: inherit;
+  font-size: var(--ui-text-sm);
+  font-weight: var(--ui-weight-medium);
+  letter-spacing: var(--ui-label-tracking, inherit);
+  text-align: start;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--ui-duration-fast) var(--ui-ease);
+}
+
+.ui-collapsible__trigger:hover:not(:disabled) {
+  background: var(--ui-hover);
+}
+
+.ui-collapsible__trigger:active:not(:disabled) {
+  background: var(--ui-active);
+}
+
+.ui-collapsible__trigger:focus-visible {
+  outline: none;
+  box-shadow: var(--ui-focus-ring);
+}
+
+.ui-collapsible__trigger:disabled {
+  color: var(--ui-fg-disabled);
+  cursor: not-allowed;
+}
+
+/* Turns half a circle as the content opens, on the theme's curve (no overshoot: it is an arrow, not a toy). */
+.ui-collapsible__indicator {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: var(--ui-fg-muted);
+  transition: rotate var(--ui-duration) var(--ui-ease);
+}
+
+.ui-collapsible__indicator > svg {
+  width: var(--ui-icon-sm, 16px);
+  height: var(--ui-icon-sm, 16px);
+}
+
+.ui-collapsible__indicator[data-state='open'] {
+  rotate: 180deg;
+}
+
+/* The content folds by height (primitives/useFold: data-ui-fold, styles/motion.css). Its padding lives on the
+   inner box, so a folded content is exactly 0 high. */
+.ui-collapsible__content {
+  min-width: 0;
+}
+
+/* Closed is 0 high from the first paint, before useFold marks it (data-ui-fold arrives after hydration):
+   the first opening then has a height to grow from. `hidden="until-found"` keeps a box (content-visibility),
+   so @starting-style would not fire for it. */
+.ui-collapsible__content:not([data-partial])[data-state='closed'] {
+  height: 0;
+  overflow: clip;
+  opacity: 0;
+}
+
+.ui-collapsible__inner {
+  padding-block: var(--ui-space-2);
+}
+
+/* collapsedHeight: a preview of the first lines with a faded lower edge. The fade's depth is a registered
+   length, so it eases out as the content unfolds and back in as it folds, instead of switching. */
+@property --_ui-collapsible-fade {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+.ui-collapsible__content[data-partial] {
+  --_ui-collapsible-fade: 0px;
+
+  overflow: clip;
+  mask-image: linear-gradient(to bottom, #000 calc(100% - var(--_ui-collapsible-fade)), transparent);
+  transition: --_ui-collapsible-fade var(--ui-duration-slow) var(--ui-ease);
+}
+
+/* Higher than [data-ui-fold][data-state='closed'] (height 0, opacity 0): the preview stays visible. */
+.ui-collapsible__content[data-partial][data-state='closed'] {
+  --_ui-collapsible-fade: min(48px, var(--_collapsed, 0px));
+
+  height: var(--_collapsed, 0px);
+  opacity: 1;
+}
+
+.ui-collapsible__content[data-partial][data-ui-fold][data-state='closed'] {
+  transition:
+    height var(--ui-duration-slow) cubic-bezier(0.4, 0, 0.2, 1),
+    --_ui-collapsible-fade var(--ui-duration-slow) var(--ui-ease);
+}
+
+.ui-collapsible__content[data-partial][data-ui-fold][data-state='open'] {
+  transition:
+    height var(--_ui-fold-time) var(--_ui-fold-easing),
+    --_ui-collapsible-fade var(--ui-duration-slow) var(--ui-ease);
+}
+
+/* Reduced motion (the OS setting): no height travel — the content shows at once and fades in briefly,
+   so the change still reads as an opening rather than a cut. */
+@media (prefers-reduced-motion: reduce) {
+  .ui-collapsible__content[data-state='open'] > .ui-collapsible__inner {
+    animation: ui-fade-in 140ms ease-out;
+  }
+
+  .ui-collapsible__content[data-partial] > .ui-collapsible__inner {
+    animation: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .ui-collapsible__content[data-partial][data-state='closed'] {
+    mask-image: none;
+  }
+}

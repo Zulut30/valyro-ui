@@ -1,0 +1,60 @@
+/* Kbd: one key is the shared .ui-kbd cap (base.css). A combination is a row of caps: the outer <kbd> drops its own
+   cap and lays out .ui-kbd__key caps with "+" (text format) or nothing (symbols) between them. */
+.ui-kbd[data-size='sm'] {
+  min-width: 16px;
+  height: 16px;
+  padding: 0 3px;
+  font-size: 10px;
+}
+
+.ui-kbd[data-combo] {
+  gap: 2px;
+  min-width: 0;
+  height: auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  vertical-align: baseline;
+  white-space: nowrap;
+}
+
+.ui-kbd__key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border: var(--ui-border-width, 1px) solid var(--ui-border);
+  border-radius: var(--ui-radius-xs);
+  /* A deeper lower edge reads as a key cap; it follows the theme's border colour and width. */
+  box-shadow: inset 0 calc(-1 * var(--ui-border-width, 1px)) 0 var(--ui-border);
+  background: var(--ui-surface-2);
+  color: var(--ui-fg-muted);
+  font: inherit;
+  font-family: var(--ui-kbd-font, var(--ui-font-sans));
+  font-size: 11px;
+  line-height: 1;
+}
+
+.ui-kbd[data-format='symbols'] .ui-kbd__key {
+  padding: 0 3px;
+}
+
+.ui-kbd[data-size='sm'] .ui-kbd__key {
+  min-width: 16px;
+  height: 16px;
+  padding: 0 3px;
+  font-size: 10px;
+}
+
+.ui-kbd__plus,
+.ui-kbd__then {
+  color: var(--ui-fg-subtle, var(--ui-fg-muted));
+  font-family: var(--ui-font-sans);
+  font-size: 11px;
+}
+
+.ui-kbd__then {
+  padding-inline: 2px;
+}

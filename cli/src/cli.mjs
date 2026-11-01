@@ -5,7 +5,7 @@ import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import readline from 'node:readline';
 import { parseArgs } from 'node:util';
-import { CLI_PACKAGE, DEFAULT_REGISTRY_URL, MODES, PRICING_URL, THEMES } from './constants.mjs';
+import { CLI_PACKAGE, DEFAULT_REGISTRY_URL, MCP_API_URL, MODES, PRICING_URL, PRO_SITE_URL, THEMES } from './constants.mjs';
 import { login, logout, whoami } from './account.mjs';
 import { add, diff, init, list, projectDirOf, registryFor, search } from './commands.mjs';
 import { CLIENT_IDS, mcpAdd } from './mcp-clients.mjs';
@@ -105,7 +105,7 @@ export const COMMANDS = {
     ],
   },
   logout: {
-    summary: 'Revoke the saved token on valyro.xyz and delete it',
+    summary: `Revoke the saved token on ${new URL(PRO_SITE_URL).host} and delete it`,
     usage: 'logout',
     positionals: [0, 0],
     options: { help: { type: 'boolean', short: 'h' } },
@@ -125,7 +125,7 @@ export const COMMANDS = {
     options: { ...COMMON, hosted: { type: 'boolean' }, print: { type: 'boolean' }, scope: { type: 'string' } },
     help: [
       ['add <client>', `Add the server to a client's config: ${CLIENT_IDS.join(', ')}`],
-      ['--hosted', 'With add: the hosted server (https://valyro.xyz/api/mcp, your token) instead of the local one'],
+      ['--hosted', `With add: the hosted server (${MCP_API_URL}/mcp, your token) instead of the local one`],
       ['--scope <scope>', 'With add: project (files in the project) or user (your home folder); default per client'],
       ['--print', 'With add: print the config instead of writing it'],
     ],

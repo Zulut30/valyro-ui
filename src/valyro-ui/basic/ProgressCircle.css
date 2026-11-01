@@ -1,0 +1,205 @@
+.ui-progress-circle {
+  --_c: var(--ui-accent);
+  /* The ring width as a share of the diameter, in the SVG's 0…100 units; `thickness` sets it inline. */
+  --_stroke: calc(var(--ui-progress-circle-thickness, 0.1) * 100);
+
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ui-space-2);
+  max-width: 100%;
+  vertical-align: middle;
+}
+
+.ui-progress-circle[data-color='success'] { --_c: var(--ui-success); }
+.ui-progress-circle[data-color='warning'] { --_c: var(--ui-warning); }
+.ui-progress-circle[data-color='danger'] { --_c: var(--ui-danger); }
+.ui-progress-circle[data-color='neutral'] { --_c: var(--ui-fg); }
+
+.ui-progress-circle__ring {
+  position: relative;
+  display: block;
+  flex-shrink: 0;
+  width: var(--_size, 40px);
+  height: var(--_size, 40px);
+}
+
+/* The arc starts at twelve o'clock and fills clockwise, in RTL too (like every clock and competitor). */
+.ui-progress-circle__svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  transform: rotate(-90deg);
+}
+
+.ui-progress-circle__track,
+.ui-progress-circle__range,
+.ui-progress-circle__spinner {
+  fill: none;
+  stroke-width: calc(var(--_stroke) * 1px);
+  r: calc(50px - var(--_stroke) * 0.5px);
+}
+
+.ui-progress-circle__track {
+  stroke: var(--ui-progress-circle-track, var(--ui-surface-3));
+}
+
+.ui-progress-circle__range,
+.ui-progress-circle__spinner {
+  stroke: var(--_c);
+  stroke-linecap: var(--ui-progress-circle-linecap, round);
+}
+
+/* pathLength=1: a dash of the whole ring, pushed back by the part not yet done. The gap of 2 keeps the
+   pattern from wrapping round. */
+.ui-progress-circle__range {
+  stroke-dasharray: 1 2;
+  stroke-dashoffset: calc(1 - var(--_ratio, 0));
+  transition:
+    stroke-dashoffset var(--ui-duration-slow) var(--ui-ease),
+    opacity var(--ui-duration) var(--ui-ease);
+}
+
+.ui-progress-circle[data-motion='spring'] .ui-progress-circle__range {
+  transition:
+    stroke-dashoffset calc(var(--ui-duration-slow) * 1.92) var(--ui-spring-smooth),
+    opacity var(--ui-duration) var(--ui-ease);
+}
+
+/* At 0 a round cap would leave a dot; the empty arc and the paused value under the spinner fade out. */
+.ui-progress-circle:is([data-empty], [data-indeterminate]) .ui-progress-circle__range {
+  opacity: 0;
+}
+
+/* Indeterminate: an arc that grows and shrinks while it turns. It is always there, faded out and paused
+   while a value shows, so switching either way cross-fades from where the arc is instead of jumping. */
+.ui-progress-circle__spinner {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation:
+    ui-progress-circle-turn 2s linear infinite,
+    ui-progress-circle-dash 1.5s ease-in-out infinite;
+  animation-play-state: paused;
+  transition: opacity var(--ui-duration) var(--ui-ease);
+}
+
+.ui-progress-circle[data-indeterminate] .ui-progress-circle__spinner {
+  opacity: 1;
+  animation-play-state: running;
+}
+
+.ui-progress-circle[data-indeterminate][data-offscreen] .ui-progress-circle__spinner {
+  animation-play-state: paused;
+}
+
+@keyframes ui-progress-circle-turn {
+  to { transform: rotate(360deg); }
+}
+
+/* The arc's tail ends where its head starts, so the loop has no seam. */
+@keyframes ui-progress-circle-dash {
+  0% {
+    stroke-dasharray: 0.02 2;
+    stroke-dashoffset: 0;
+  }
+
+  50% {
+    stroke-dasharray: 0.62 2;
+    stroke-dashoffset: -0.2;
+  }
+
+  100% {
+    stroke-dasharray: 0.62 2;
+    stroke-dashoffset: -0.98;
+  }
+}
+
+/* Reduced motion: no turning; a still quarter arc breathes (stroke-opacity, so the fade above still works). */
+@keyframes ui-progress-circle-breathe {
+  50% { stroke-opacity: 0.35; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-progress-circle__spinner {
+    stroke-dasharray: 0.25 2;
+    stroke-dashoffset: 0;
+    animation: ui-progress-circle-breathe 2.4s ease-in-out infinite;
+    animation-play-state: paused;
+  }
+
+  .ui-progress-circle[data-indeterminate]:not([data-offscreen]) .ui-progress-circle__spinner {
+    animation-play-state: running;
+  }
+}
+
+/* The kit's motion switch (styles/motion.css leaves this arc's animation alone, like the spinner's). */
+[data-ui-motion='reduce'] .ui-progress-circle__spinner {
+  stroke-dasharray: 0.25 2;
+  stroke-dashoffset: 0;
+  animation: ui-progress-circle-breathe 2.4s ease-in-out infinite;
+  animation-play-state: paused;
+}
+
+[data-ui-motion='reduce'] .ui-progress-circle[data-indeterminate]:not([data-offscreen]) .ui-progress-circle__spinner {
+  animation-play-state: running;
+}
+
+.ui-progress-circle__centre {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--ui-fg);
+  font-size: max(var(--ui-text-xs), calc(var(--_size, 40px) * 0.25));
+  font-weight: var(--ui-weight-medium);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  white-space: nowrap;
+  transition: opacity var(--ui-duration) var(--ui-ease);
+}
+
+/* The number fades out under the spinner (keeping the last value) and back in with the next one. */
+.ui-progress-circle[data-indeterminate] .ui-progress-circle__centre {
+  opacity: 0;
+}
+
+.ui-progress-circle__value {
+  display: block;
+}
+
+.ui-progress-circle__label {
+  color: var(--ui-fg);
+  font-size: var(--ui-text-sm);
+  text-align: center;
+}
+
+/* The shown percentage counts along on the arc's spring with no frame loop: a registered integer
+   transitions and a counter writes it in the locale's digits. Without @property the count jumps to the
+   value; a custom formatValue counts in JS. */
+@property --_progress-circle-count {
+  syntax: '<integer>';
+  inherits: false;
+  initial-value: 0;
+}
+
+.ui-progress-circle[data-motion='spring'] .ui-progress-circle__value[data-count] {
+  counter-reset: ui-progress-circle-count var(--_progress-circle-count);
+  transition: --_progress-circle-count calc(var(--ui-duration-slow) * 1.92) var(--ui-spring-smooth);
+}
+
+.ui-progress-circle[data-motion='spring'] .ui-progress-circle__value[data-count]::before {
+  content: var(--_progress-before) counter(ui-progress-circle-count, var(--_progress-digits, decimal)) var(--_progress-after);
+}
+
+@media (forced-colors: active) {
+  .ui-progress-circle__track {
+    stroke: GrayText;
+  }
+
+  .ui-progress-circle__range,
+  .ui-progress-circle__spinner {
+    stroke: Highlight;
+  }
+}

@@ -476,6 +476,7 @@ export const ColorPickerPopover = withRef(function ColorPickerPopover({
   ref,
   onClick,
   onKeyDown,
+  'aria-label': ariaLabel,
   ...rest
 }: ColorPickerPopoverProps) {
   const labels = { ...DEFAULT_COLOR_PICKER_POPOVER_LABELS, ...labelsProp };
@@ -498,10 +499,14 @@ export const ColorPickerPopover = withRef(function ColorPickerPopover({
     return () => cancelAnimationFrame(frame);
   }, [open]);
 
+  const shownHex = (normalizeHex(hex) ?? hex).toUpperCase();
+
   return (
     <>
       <PickerTrigger
         {...rest}
+        // The hex stays in the name: a label that drops the visible text breaks voice control (WCAG 2.5.3).
+        aria-label={ariaLabel ? `${ariaLabel} ${shownHex}` : undefined}
         ref={mergeRefs(triggerRef, ref)}
         className={cx('ui-color-picker-trigger', className)}
         icon={
@@ -524,7 +529,7 @@ export const ColorPickerPopover = withRef(function ColorPickerPopover({
           }
         })}
       >
-        {(normalizeHex(hex) ?? hex).toUpperCase()}
+        {shownHex}
       </PickerTrigger>
       <FormValue name={name} values={[normalizeHex(hex) ?? hex]} disabled={disabled} />
       <Floating

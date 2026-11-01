@@ -58,6 +58,11 @@ export {
 export { createVelocityTracker, type VelocityTracker } from './velocity';
 export { useSpringValue, type SpringValueOptions } from './useSpringValue';
 export { useFlip, flipDelta, type FlipBox, type FlipDelta, type FlipOptions } from './useFlip';
+export { useFold } from './useFold';
+export { useImageStatus, type ImageStatus, type ImageStatusState } from './useImageStatus';
+export { useRovingFocus, rovingTarget, type RovingFocus, type RovingFocusOptions, type RovingOrientation } from './useRovingFocus';
+export { useRemovableList, focusAfterRemoval, type RemovableList, type RemovableListOptions } from './useRemovableList';
+export { nextSelection } from './selection';
 export {
   SPRINGS,
   springAt,

@@ -1,0 +1,155 @@
+/* Segments: the kit's fields and buttons plus the group's own text and addon parts. Joined by overlapping
+   their 1px edges, rounded only at the outer ends (logical corners, so RTL mirrors by itself). Hidden
+   inputs and portals between them are skipped by the `of` selectors. */
+.ui-input-group {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  min-width: 0;
+  border-radius: var(--ui-radius-field);
+  corner-shape: var(--ui-control-corner-shape);
+  transition: box-shadow var(--ui-duration-fast) var(--ui-ease);
+}
+
+.ui-input-group[data-orientation='vertical'] {
+  flex-direction: column;
+}
+
+.ui-input-group > :is(.ui-field, .ui-button, .ui-icon-button, .ui-input-group__text, .ui-input-group__addon) {
+  position: relative;
+  margin: 0;
+  border-radius: 0;
+}
+
+.ui-input-group > .ui-field {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+}
+
+.ui-input-group[data-orientation='vertical'] > .ui-field {
+  width: 100%;
+}
+
+/* The field of a group shows no ring of its own: the group draws one round all segments. */
+.ui-input-group > .ui-field:focus-within,
+.ui-input-group > .ui-field:is(input, textarea, select, button):focus-visible {
+  box-shadow: var(--ui-field-shadow);
+}
+
+/* The segment under the pointer or focus lifts above its neighbours, so its whole border shows. */
+.ui-input-group > :is(.ui-field, .ui-button, .ui-icon-button):is(:hover, :focus-within, :focus-visible) {
+  z-index: 1;
+}
+
+.ui-input-group[data-orientation='horizontal']
+  > :nth-child(n + 2 of .ui-field, .ui-button, .ui-icon-button, .ui-input-group__text, .ui-input-group__addon) {
+  margin-inline-start: calc(-1 * var(--ui-border-width, 1px));
+}
+
+.ui-input-group[data-orientation='horizontal']
+  > :nth-child(1 of .ui-field, .ui-button, .ui-icon-button, .ui-input-group__text, .ui-input-group__addon) {
+  border-start-start-radius: var(--ui-radius-field);
+  border-end-start-radius: var(--ui-radius-field);
+}
+
+.ui-input-group[data-orientation='horizontal']
+  > :nth-last-child(1 of .ui-field, .ui-button, .ui-icon-button, .ui-input-group__text, .ui-input-group__addon) {
+  border-start-end-radius: var(--ui-radius-field);
+  border-end-end-radius: var(--ui-radius-field);
+}
+
+.ui-input-group[data-orientation='vertical']
+  > :nth-child(n + 2 of .ui-field, .ui-button, .ui-icon-button, .ui-input-group__text, .ui-input-group__addon) {
+  margin-top: calc(-1 * var(--ui-border-width, 1px));
+}
+
+.ui-input-group[data-orientation='vertical']
+  > :nth-child(1 of .ui-field, .ui-button, .ui-icon-button, .ui-input-group__text, .ui-input-group__addon) {
+  border-start-start-radius: var(--ui-radius-field);
+  border-start-end-radius: var(--ui-radius-field);
+}
+
+.ui-input-group[data-orientation='vertical']
+  > :nth-last-child(1 of .ui-field, .ui-button, .ui-icon-button, .ui-input-group__text, .ui-input-group__addon) {
+  border-end-start-radius: var(--ui-radius-field);
+  border-end-end-radius: var(--ui-radius-field);
+}
+
+/* One ring for the group while the keyboard is in it, or a field has focus (fields always match
+   :focus-visible). Moving between its segments keeps the ring still. */
+.ui-input-group:has(:focus-visible) {
+  box-shadow: var(--ui-field-focus-ring, var(--ui-focus-ring));
+}
+
+.ui-input-group[data-invalid]:has(:focus-visible) {
+  box-shadow: var(--ui-field-focus-ring-invalid, var(--ui-focus-ring-invalid));
+}
+
+.ui-input-group__text,
+.ui-input-group__addon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--ui-space-2);
+  min-height: var(--ui-control-h-md);
+  padding: 0 var(--ui-space-3);
+  border: var(--ui-border-width, 1px) solid var(--ui-border-field);
+  background: var(--ui-surface-2);
+  color: var(--ui-fg-muted);
+  font-size: var(--ui-text-md);
+  white-space: nowrap;
+  corner-shape: var(--ui-control-corner-shape);
+}
+
+.ui-input-group__text {
+  cursor: default;
+  user-select: none;
+  /* Its own direction from its first letter: "https://" and ".ru" stay readable in an RTL form. */
+  unicode-bidi: plaintext;
+}
+
+.ui-input-group[data-size='sm'] > :is(.ui-input-group__text, .ui-input-group__addon) {
+  min-height: var(--ui-control-h-sm);
+  padding: 0 var(--ui-space-2);
+  font-size: var(--ui-text-sm);
+}
+
+.ui-input-group[data-size='lg'] > :is(.ui-input-group__text, .ui-input-group__addon) {
+  min-height: var(--ui-control-h-lg);
+  padding: 0 var(--ui-space-4);
+  font-size: var(--ui-text-lg);
+}
+
+/* A full-width row above or below the field: a toolbar, a counter and a send button. */
+.ui-input-group__addon:is([data-align='block-start'], [data-align='block-end']) {
+  justify-content: space-between;
+  min-height: 0;
+  padding: var(--ui-space-2) var(--ui-space-3);
+  background: var(--ui-field-bg);
+  font-size: var(--ui-text-sm);
+}
+
+/* A key hint in an addon, until the kit has its own key cap. */
+.ui-input-group__addon > kbd {
+  padding: 1px 6px;
+  border: var(--ui-border-width, 1px) solid var(--ui-border);
+  border-radius: var(--ui-radius-sm);
+  background: var(--ui-bg);
+  color: var(--ui-fg-muted);
+  font: inherit;
+  font-family: var(--ui-kbd-font, var(--ui-font-sans));
+  font-size: var(--ui-text-xs);
+  line-height: 1.4;
+}
+
+.ui-input-group[data-disabled] > :is(.ui-input-group__text, .ui-input-group__addon) {
+  opacity: var(--ui-disabled-opacity, 0.55);
+}
+
+@media (forced-colors: active) {
+  .ui-input-group:has(:focus-visible) {
+    outline: 2px solid Highlight;
+    outline-offset: 1px;
+  }
+}

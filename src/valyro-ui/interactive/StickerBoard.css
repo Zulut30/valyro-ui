@@ -1,0 +1,250 @@
+.ui-sticker-board {
+  --_soft: cubic-bezier(0.32, 0.72, 0, 1);
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-2, 8px);
+  min-width: 0;
+  color: var(--ui-fg);
+}
+
+.ui-sticker-board__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ui-space-2, 8px);
+}
+
+.ui-sticker-board__status {
+  min-width: 0;
+  color: var(--ui-fg-muted);
+  font-size: var(--ui-text-sm);
+}
+
+.ui-sticker-board__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+}
+
+.ui-sticker-board__divider {
+  inline-size: 1px;
+  block-size: 20px;
+  margin-inline: var(--ui-space-1, 4px);
+  background: var(--ui-border);
+}
+
+/* One canvas unit is 100cqw / --_cw: text in the items scales with the board, like the layout. */
+.ui-sticker-board__stage {
+  --_unit: calc(100cqw / var(--_cw, 1000));
+
+  position: relative;
+  container-type: inline-size;
+  overflow: hidden;
+  border: var(--ui-border-width, 1px) solid var(--ui-border);
+  border-radius: var(--ui-radius-card, 16px);
+  background-color: var(--ui-surface-2);
+  background-image: radial-gradient(color-mix(in srgb, var(--ui-fg) 12%, transparent) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.ui-sticker-board__item {
+  position: absolute;
+  box-sizing: border-box;
+  font-size: calc(var(--_unit) * 16);
+  transform: translate(-50%, -50%) rotate(var(--_rotate, 0deg));
+  outline: none;
+  cursor: grab;
+  /* Touch drags start from the grip only; elsewhere a swipe scrolls the page. */
+  touch-action: pan-x pan-y pinch-zoom;
+  user-select: none;
+}
+
+.ui-sticker-board[data-readonly] .ui-sticker-board__item,
+.ui-sticker-board__item[data-locked] {
+  cursor: default;
+}
+
+/* The card lifts softly when picked up and settles back down when dropped. Its place and angle are drawn per frame. */
+.ui-sticker-board__content {
+  block-size: 100%;
+  overflow: hidden;
+  border-radius: var(--ui-radius-sm, 8px);
+  outline: 2px solid transparent;
+  outline-offset: 3px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12), 0 6px 16px -10px rgba(0, 0, 0, 0.45);
+  transition:
+    box-shadow var(--ui-duration-slow, 340ms) var(--_soft),
+    outline-color var(--ui-duration, 200ms) var(--_soft),
+    scale var(--ui-duration-slow, 340ms) var(--_soft);
+}
+
+.ui-sticker-board__item[data-surface='paper'] .ui-sticker-board__content {
+  padding: 0.6em 0.7em;
+  border-radius: 2px;
+  background-color: #fff6c7;
+  background-image: var(--ui-surface-texture, none);
+  color: #3b3424;
+  line-height: 1.35;
+}
+
+.ui-sticker-board__item[data-surface='photo'] .ui-sticker-board__content {
+  padding: 0.35em 0.35em 1.4em;
+  border-radius: 3px;
+  background: #fff;
+  color: #222;
+}
+
+.ui-sticker-board__item[data-surface='flat'] .ui-sticker-board__content {
+  padding: 0.6em 0.75em;
+  border: var(--ui-border-width, 1px) solid var(--ui-border);
+  line-height: 1.35;
+  background: var(--ui-surface);
+  box-shadow: none;
+}
+
+.ui-sticker-board__content img {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.ui-sticker-board__item[data-selected] .ui-sticker-board__content {
+  outline-color: var(--ui-accent);
+}
+
+.ui-sticker-board__item:focus-visible .ui-sticker-board__content {
+  box-shadow: var(--ui-focus-ring);
+}
+
+.ui-sticker-board__item[data-dragging] {
+  cursor: grabbing;
+}
+
+.ui-sticker-board__item[data-dragging] .ui-sticker-board__content {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15), 0 18px 32px -12px rgba(0, 0, 0, 0.5);
+  scale: 1.025;
+}
+
+/* The handles of a newly selected item fade in instead of popping up. */
+.ui-sticker-board__grip,
+.ui-sticker-board__rotate {
+  animation: ui-sticker-board-handle var(--ui-duration-slow, 340ms) var(--_soft) both;
+}
+
+@keyframes ui-sticker-board-handle {
+  from {
+    opacity: 0;
+    scale: 0.8;
+  }
+}
+
+.ui-sticker-board__pin {
+  position: absolute;
+  inset-block-start: -10px;
+  inset-inline-end: -10px;
+  display: grid;
+  place-items: center;
+  inline-size: 22px;
+  block-size: 22px;
+  border-radius: var(--ui-radius-full, 999px);
+  background: var(--ui-surface);
+  color: var(--ui-fg-muted);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+.ui-sticker-board__pin svg,
+.ui-sticker-board__grip svg {
+  inline-size: 14px;
+  block-size: 14px;
+}
+
+/* Handles keep a 44 px hit area at any board scale. */
+.ui-sticker-board__grip {
+  position: absolute;
+  inset-block-end: -22px;
+  left: 50%;
+  display: grid;
+  place-items: center;
+  inline-size: 44px;
+  block-size: 44px;
+  translate: -50% 0;
+  color: var(--ui-accent-fg);
+  cursor: grab;
+  touch-action: none;
+}
+
+.ui-sticker-board__grip::before {
+  content: '';
+  position: absolute;
+  inline-size: 26px;
+  block-size: 26px;
+  border-radius: var(--ui-radius-full, 999px);
+  background: var(--ui-accent);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.ui-sticker-board__grip svg {
+  position: relative;
+}
+
+.ui-sticker-board__rotate {
+  position: absolute;
+  inset-block-start: -40px;
+  left: 50%;
+  inline-size: 44px;
+  block-size: 44px;
+  translate: -50% 0;
+  cursor: alias;
+  touch-action: none;
+}
+
+.ui-sticker-board__rotate::before {
+  content: '';
+  position: absolute;
+  inset: 13px;
+  border: 2px solid var(--ui-accent);
+  border-radius: var(--ui-radius-full, 999px);
+  background: var(--ui-surface);
+}
+
+.ui-sticker-board__rotate::after {
+  content: '';
+  position: absolute;
+  inset-block-start: 31px;
+  inset-inline-start: 21px;
+  inline-size: 2px;
+  block-size: 12px;
+  background: var(--ui-accent);
+}
+
+/* Reduced motion: no lift; the handles and the selection only fade. */
+@media (prefers-reduced-motion: reduce) {
+  .ui-sticker-board__item[data-dragging] .ui-sticker-board__content {
+    scale: none;
+  }
+
+  .ui-sticker-board__grip,
+  .ui-sticker-board__rotate {
+    animation-name: ui-sticker-board-fade;
+  }
+}
+
+[data-ui-motion='reduce'] .ui-sticker-board__item[data-dragging] .ui-sticker-board__content {
+  scale: none;
+}
+
+[data-ui-motion='reduce'] .ui-sticker-board__grip,
+[data-ui-motion='reduce'] .ui-sticker-board__rotate {
+  animation-name: ui-sticker-board-fade;
+}
+
+@keyframes ui-sticker-board-fade {
+  from {
+    opacity: 0;
+  }
+}

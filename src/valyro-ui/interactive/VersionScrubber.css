@@ -1,0 +1,239 @@
+.ui-version-scrubber {
+  --_ratio: 1.7778;
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-3, 12px);
+  min-width: 0;
+  color: var(--ui-fg);
+}
+
+/* The area is reserved before any image loads; images fit inside without cropping, so the page never jumps. */
+.ui-version-scrubber__viewer {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: var(--_ratio);
+  inline-size: 100%;
+  overflow: hidden;
+  border: var(--ui-border-width, 1px) solid var(--ui-border);
+  border-radius: var(--ui-radius-card, 16px);
+  background: var(--ui-surface-2);
+}
+
+.ui-version-scrubber__image,
+.ui-version-scrubber__custom {
+  grid-area: 1 / 1;
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+/*
+ * Versions crossfade: the last image that was fully shown stays underneath ([data-under]) while the new one fades in
+ * over it once loaded (420 ms, FADE_MS in the component), so the background never shows between them.
+ */
+.ui-version-scrubber__image {
+  object-fit: contain;
+  opacity: 0;
+}
+
+.ui-version-scrubber__image[data-under] {
+  opacity: 1;
+}
+
+.ui-version-scrubber__image[data-loaded] {
+  opacity: 1;
+  animation: ui-version-scrubber-fade 420ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+.ui-version-scrubber__custom {
+  animation: ui-version-scrubber-fade 420ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+.ui-version-scrubber__custom[data-under] {
+  animation: none;
+}
+
+@keyframes ui-version-scrubber-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+.ui-version-scrubber__loading {
+  position: absolute;
+  inset-block-end: var(--ui-space-3, 12px);
+  inset-inline-start: var(--ui-space-3, 12px);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ui-space-2, 8px);
+  padding: var(--ui-space-1, 4px) var(--ui-space-2, 8px);
+  border-radius: var(--ui-radius-full, 999px);
+  background: var(--ui-surface);
+  color: var(--ui-fg-muted);
+  font-size: var(--ui-text-xs);
+}
+
+.ui-version-scrubber__state {
+  grid-area: 1 / 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ui-space-2, 8px);
+  margin: 0;
+  padding: var(--ui-space-4, 16px);
+  color: var(--ui-fg-muted);
+  font-size: var(--ui-text-sm);
+  text-align: center;
+}
+
+.ui-version-scrubber__state[data-state] svg {
+  flex: none;
+  inline-size: 18px;
+  block-size: 18px;
+  color: var(--ui-danger-text);
+}
+
+.ui-version-scrubber__caption {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--ui-space-1, 4px) var(--ui-space-3, 12px);
+}
+
+.ui-version-scrubber__step {
+  color: var(--ui-fg-subtle);
+  font-size: var(--ui-text-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.ui-version-scrubber__title {
+  font-size: var(--ui-text-md);
+  font-weight: var(--ui-weight-semibold);
+}
+
+.ui-version-scrubber__date {
+  color: var(--ui-fg-muted);
+  font-size: var(--ui-text-sm);
+}
+
+/* The text of a step: it fades in when the step changes; its box's height follows softly (SoftHeight). */
+.ui-version-scrubber__text {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--ui-space-1, 4px) var(--ui-space-3, 12px);
+  min-inline-size: 0;
+  animation: ui-version-scrubber-text var(--ui-duration-slow, 340ms) cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+@keyframes ui-version-scrubber-text {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+}
+
+.ui-version-scrubber__description {
+  flex-basis: 100%;
+  color: var(--ui-fg-muted);
+  font-size: var(--ui-text-sm);
+  line-height: var(--ui-leading, 1.5);
+}
+
+.ui-version-scrubber__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ui-space-2, 8px);
+}
+
+.ui-version-scrubber__track {
+  flex: 1 1 160px;
+  min-inline-size: 0;
+  padding-inline: var(--ui-space-2, 8px);
+  /* The slider is horizontal; vertical scrolling stays with the page. */
+  touch-action: pan-y;
+}
+
+[dir='rtl'] .ui-version-scrubber__nav svg {
+  transform: scaleX(-1);
+}
+
+.ui-version-scrubber__thumbs {
+  display: flex;
+  gap: var(--ui-space-2, 8px);
+  margin: 0;
+  padding: 0;
+  overflow-x: auto;
+  list-style: none;
+}
+
+.ui-version-scrubber__thumb {
+  transition:
+    border-color var(--ui-duration-slow, 340ms) cubic-bezier(0.32, 0.72, 0, 1),
+    opacity var(--ui-duration-slow, 340ms) cubic-bezier(0.32, 0.72, 0, 1),
+    transform var(--ui-duration-slow, 340ms) cubic-bezier(0.32, 0.72, 0, 1);
+  display: grid;
+  place-items: center;
+  inline-size: 72px;
+  aspect-ratio: var(--_ratio);
+  padding: 0;
+  overflow: hidden;
+  border: 2px solid var(--ui-border);
+  border-radius: var(--ui-radius-sm, 6px);
+  background: var(--ui-surface-2);
+  color: var(--ui-fg-muted);
+  font: inherit;
+  font-size: var(--ui-text-xs);
+  cursor: pointer;
+}
+
+.ui-version-scrubber__thumb img {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+
+.ui-version-scrubber__thumb:hover {
+  border-color: var(--ui-border-strong);
+}
+
+.ui-version-scrubber__thumb:focus-visible {
+  outline: none;
+  box-shadow: var(--ui-focus-ring);
+}
+
+.ui-version-scrubber__thumb:not([aria-current]) {
+  opacity: 0.78;
+}
+
+.ui-version-scrubber__thumb[aria-current] {
+  border-color: var(--ui-accent);
+  transform: translateY(-2px);
+}
+
+/* Reduced motion: a short plain crossfade, nothing slides. */
+@media (prefers-reduced-motion: reduce) {
+  .ui-version-scrubber__image[data-loaded],
+  .ui-version-scrubber__custom,
+  .ui-version-scrubber__text {
+    animation: ui-version-scrubber-fade 150ms ease-out both;
+  }
+
+  .ui-version-scrubber__thumb[aria-current] {
+    transform: none;
+  }
+}
+
+[data-ui-motion='reduce'] .ui-version-scrubber__image[data-loaded],
+[data-ui-motion='reduce'] .ui-version-scrubber__custom,
+[data-ui-motion='reduce'] .ui-version-scrubber__text {
+  animation: ui-version-scrubber-fade 150ms ease-out both;
+}
+
+[data-ui-motion='reduce'] .ui-version-scrubber__thumb[aria-current] {
+  transform: none;
+}

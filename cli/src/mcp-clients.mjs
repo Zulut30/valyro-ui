@@ -11,7 +11,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { apiUrl, authFile, configDir, readToken } from './auth.mjs';
-import { CLI_PACKAGE, SITE_URL } from './constants.mjs';
+import { ACCOUNT_URL, CLI_PACKAGE, MCP_API_URL } from './constants.mjs';
 import { CliError } from './registry.mjs';
 
 export const SERVER_NAME = 'valyro';
@@ -19,7 +19,6 @@ export const TOKEN_ENV = 'VALYRO_TOKEN';
 export const LOCAL_COMMAND = ['npx', '-y', `${CLI_PACKAGE}@latest`, 'mcp'];
 const [COMMAND, ...ARGS] = LOCAL_COMMAND;
 const VSCODE_INPUT = 'valyro-token';
-const ACCOUNT_URL = `${SITE_URL}/#/account`;
 
 const homeOf = (env) => env.HOME || env.USERPROFILE || os.homedir();
 const xdgConfig = (env) => env.XDG_CONFIG_HOME || path.join(homeOf(env), '.config');
@@ -200,7 +199,8 @@ export function mcpAdd(opts, clientId, io, projectDir) {
   const scope = opts.scope ?? client.defaultScope;
   if (!client.scopes.includes(scope)) throw new CliError(`${client.label} supports --scope ${client.scopes.join(' or ')}.`);
   const kind = opts.hosted ? 'hosted' : 'local';
-  const url = `${apiUrl(io.env)}/mcp`;
+  // On valyro.xyz, not on the account API's host (#38): the hosted server is the free site's, as the docs show it.
+  const url = `${apiUrl(io.env, MCP_API_URL)}/mcp`;
   const file = client.file(scope, io.env, projectDir);
   const shown = display(file, io.env, projectDir);
 

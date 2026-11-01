@@ -1,0 +1,298 @@
+.ui-swipe-action {
+  --_radius: var(--ui-radius-card, 16px);
+  --_ease: cubic-bezier(0.32, 0.72, 0, 1);
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-1, 4px);
+  min-width: 0;
+  color: var(--ui-fg);
+}
+
+.ui-swipe-action__track {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--_radius);
+  background: var(--ui-surface-2);
+  isolation: isolate;
+}
+
+/*
+ * A tray lies under the card on its logical side and is exactly as wide as the strip the card uncovers (set per
+ * frame), so the actions grow in from under the card. --_reveal is how far it has grown (0…1 of its full width);
+ * --_arm how far the full-swipe action has taken over the strip.
+ */
+.ui-swipe-action__tray {
+  --_reveal: 0;
+  --_arm: 0;
+
+  position: absolute;
+  inset-block: 0;
+  display: flex;
+  inline-size: 0;
+  overflow: hidden;
+}
+
+.ui-swipe-action__tray[data-side='start'] {
+  inset-inline-start: 0;
+}
+
+.ui-swipe-action__tray[data-side='end'] {
+  inset-inline-end: 0;
+  flex-direction: row-reverse;
+}
+
+.ui-swipe-action__action {
+  --_tone-bg: var(--ui-surface-3, var(--ui-surface-2));
+  --_tone-fg: var(--ui-fg);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-block-size: 44px;
+  padding: var(--ui-space-2, 8px);
+  border: 0;
+  background: var(--_tone-bg);
+  color: var(--_tone-fg);
+  font: inherit;
+  font-size: var(--ui-text-xs);
+  font-weight: var(--ui-weight-medium);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: filter var(--ui-duration-fast) var(--ui-ease);
+}
+
+.ui-swipe-action__tray .ui-swipe-action__action {
+  flex: 1 1 0;
+  min-inline-size: 0;
+  overflow: hidden;
+}
+
+/* The full-swipe action takes the strip over as the swipe arms; the others make room. */
+.ui-swipe-action__tray .ui-swipe-action__action[data-full] {
+  flex-grow: calc(1 + var(--_arm) * 40);
+}
+
+.ui-swipe-action__tray .ui-swipe-action__action:not([data-full]) {
+  flex-grow: calc(1 - var(--_arm));
+  padding-inline: calc(var(--ui-space-2, 8px) * (1 - var(--_arm)));
+  opacity: calc(1 - var(--_arm));
+}
+
+/* While the app works, the strip keeps its colour (its buttons are only disabled, not unavailable). */
+.ui-swipe-action[data-state='pending'] .ui-swipe-action__tray .ui-swipe-action__action:disabled {
+  opacity: 1;
+  cursor: default;
+}
+
+.ui-swipe-action[data-state='pending'] .ui-swipe-action__tray .ui-swipe-action__action:not([data-full]):disabled {
+  opacity: calc(1 - var(--_arm));
+}
+
+/* Icon and label grow in with the strip, and stay at the card's edge once the full action has taken over. */
+.ui-swipe-action__tray .ui-swipe-action__action-icon,
+.ui-swipe-action__tray .ui-swipe-action__action-label {
+  opacity: clamp(0, calc(var(--_reveal) * 1.6 - 0.35), 1);
+  transform: scale(calc(0.6 + min(var(--_reveal), 1) * 0.4));
+}
+
+.ui-swipe-action__tray[data-side='start'] .ui-swipe-action__action[data-full] {
+  align-items: flex-end;
+  padding-inline-end: calc(var(--ui-space-4, 16px) * var(--_arm) + var(--ui-space-2, 8px));
+}
+
+.ui-swipe-action__tray[data-side='end'] .ui-swipe-action__action[data-full] {
+  align-items: flex-start;
+  padding-inline-start: calc(var(--ui-space-4, 16px) * var(--_arm) + var(--ui-space-2, 8px));
+}
+
+.ui-swipe-action__action[data-tone='accent'] {
+  --_tone-bg: var(--ui-accent);
+  --_tone-fg: var(--ui-accent-fg);
+}
+
+.ui-swipe-action__action[data-tone='success'] {
+  --_tone-bg: var(--ui-success);
+  --_tone-fg: #fff;
+}
+
+.ui-swipe-action__action[data-tone='warning'] {
+  --_tone-bg: var(--ui-warning);
+  --_tone-fg: #1b1b1b;
+}
+
+.ui-swipe-action__action[data-tone='danger'] {
+  --_tone-bg: var(--ui-danger);
+  --_tone-fg: #fff;
+}
+
+.ui-swipe-action__action:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.ui-swipe-action__action:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px currentColor, var(--ui-focus-ring);
+}
+
+.ui-swipe-action__action:disabled {
+  cursor: not-allowed;
+  opacity: var(--ui-disabled-opacity, 0.55);
+}
+
+.ui-swipe-action__action-icon {
+  display: inline-flex;
+}
+
+.ui-swipe-action__action-icon svg {
+  inline-size: 18px;
+  block-size: 18px;
+}
+
+/* The card's position is written per frame; a lifted shadow while it moves. */
+.ui-swipe-action__card {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--ui-space-2, 8px);
+  padding: var(--ui-space-3, 12px) var(--ui-space-2, 8px) var(--ui-space-3, 12px) var(--ui-space-4, 16px);
+  border: var(--ui-border-width, 1px) solid var(--ui-border);
+  border-radius: var(--_radius);
+  /* Lifted above the tray, so denser than a panel in Glass: text on a thin translucent card fails the contrast ratio. */
+  background: var(--ui-elevated);
+  background-image: var(--ui-surface-texture, none);
+  /* Horizontal swipes belong to the card; vertical movement scrolls the page. */
+  touch-action: pan-y;
+  will-change: transform;
+  transition:
+    box-shadow var(--ui-duration) var(--_ease),
+    opacity var(--ui-duration) var(--_ease);
+}
+
+.ui-swipe-action[data-state='dragging'] .ui-swipe-action__card,
+.ui-swipe-action[data-state='armed'] .ui-swipe-action__card,
+.ui-swipe-action[data-state='revealed'] .ui-swipe-action__card {
+  box-shadow: 0 6px 20px -10px rgba(0, 0, 0, 0.45);
+}
+
+.ui-swipe-action[data-state='dragging'] .ui-swipe-action__card,
+.ui-swipe-action[data-state='armed'] .ui-swipe-action__card {
+  user-select: none;
+}
+
+.ui-swipe-action__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.ui-swipe-action__more {
+  flex: none;
+}
+
+.ui-swipe-action[data-state='pending'] .ui-swipe-action__card {
+  opacity: 0.72;
+}
+
+/* Disabled: the card's text is content, not a control, so it keeps full contrast (WCAG 1.4.3, e.g. the reason it is
+   unavailable); the sunken surface and the cursor say the swipe is off, and the "more" button dims itself. */
+.ui-swipe-action[data-disabled] .ui-swipe-action__card {
+  background: var(--ui-surface-2, var(--ui-surface));
+  cursor: not-allowed;
+}
+
+/* The Actions toolbar unfolds under the card (0fr → 1fr) instead of popping in. */
+.ui-swipe-action__menu {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows var(--ui-duration-slow, 340ms) var(--_ease),
+    opacity var(--ui-duration, 200ms) var(--_ease);
+}
+
+.ui-swipe-action__menu[data-open] {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.ui-swipe-action__menu-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ui-space-1, 4px);
+  min-block-size: 0;
+  overflow: hidden;
+}
+
+.ui-swipe-action__menu-list .ui-swipe-action__action {
+  flex-direction: row;
+  min-inline-size: 0;
+  margin-block-start: var(--ui-space-1, 4px);
+  padding-inline: var(--ui-space-3, 12px);
+  border-radius: var(--ui-radius-md, 10px);
+}
+
+.ui-swipe-action__status {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-2, 8px);
+  min-block-size: 0;
+  padding-inline: var(--ui-space-2, 8px);
+  color: var(--ui-fg-muted);
+  font-size: var(--ui-text-sm);
+}
+
+.ui-swipe-action__status:empty {
+  display: none;
+}
+
+.ui-swipe-action__note {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ui-space-2, 8px);
+  animation: ui-swipe-action-note var(--ui-duration-slow, 340ms) var(--_ease) both;
+}
+
+.ui-swipe-action__note[data-tone='danger'] {
+  color: var(--ui-danger-text);
+}
+
+@keyframes ui-swipe-action-note {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+/* Reduced motion: the card still follows the finger and settles quickly without overshoot (in the script); the
+   toolbar and the status only fade. */
+@media (prefers-reduced-motion: reduce) {
+  .ui-swipe-action__menu {
+    transition: opacity 150ms ease-out;
+  }
+
+  .ui-swipe-action__note {
+    animation: ui-swipe-action-fade 150ms ease-out both;
+  }
+
+  .ui-swipe-action__tray .ui-swipe-action__action-icon,
+  .ui-swipe-action__tray .ui-swipe-action__action-label {
+    transform: none;
+  }
+}
+
+[data-ui-motion='reduce'] .ui-swipe-action__menu {
+  transition: opacity 150ms ease-out;
+}
+
+[data-ui-motion='reduce'] .ui-swipe-action__note {
+  animation: ui-swipe-action-fade 150ms ease-out both;
+}
+
+@keyframes ui-swipe-action-fade {
+  from {
+    opacity: 0;
+  }
+}

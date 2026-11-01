@@ -1,0 +1,20 @@
+/* Icon: a box of --_size around any icon. The box carries .ui-icon, so base.css gives it the theme's stroke width,
+   which a foreign <svg> inherits; the kit's own icons read the same token. */
+span.ui-icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  inline-size: var(--_size, 1em);
+  block-size: var(--_size, 1em);
+  color: inherit;
+  line-height: 0;
+  vertical-align: -0.125em;
+}
+
+span.ui-icon > svg {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+}
+

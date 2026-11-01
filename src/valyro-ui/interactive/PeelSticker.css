@@ -1,0 +1,154 @@
+.ui-peel-sticker {
+  --_face: var(--ui-peel-sticker-face, var(--ui-surface));
+  --_back: var(--ui-peel-sticker-back, color-mix(in srgb, var(--ui-surface-2) 85%, var(--ui-fg) 15%));
+  --_radius: var(--ui-radius-card, 16px);
+  --_handle: max(44px, 24%);
+
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--ui-space-2, 8px);
+  min-width: 0;
+  color: var(--ui-fg);
+}
+
+.ui-peel-sticker__surface {
+  position: relative;
+  display: grid;
+  inline-size: 100%;
+  border-radius: var(--_radius);
+}
+
+/* The content and the sticker share one grid cell: the larger of the two sets the size. */
+.ui-peel-sticker__content,
+.ui-peel-sticker__cover,
+.ui-peel-sticker__lift {
+  grid-area: 1 / 1;
+  min-width: 0;
+  border-radius: var(--_radius);
+}
+
+.ui-peel-sticker__content {
+  padding: var(--ui-space-4, 16px);
+  border: var(--ui-border-width, 1px) dashed var(--ui-border-strong);
+  background: var(--ui-surface-2);
+  outline: none;
+}
+
+.ui-peel-sticker__content:focus-visible {
+  box-shadow: var(--ui-focus-ring);
+}
+
+.ui-peel-sticker__cover {
+  position: relative;
+  z-index: 1;
+  padding: var(--ui-space-4, 16px);
+  border: var(--ui-border-width, 1px) solid var(--ui-border);
+  background: var(--_face);
+  background-image: var(--ui-surface-texture, none);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+  /* Shaped per frame by the peel (clip-path); no CSS transition, the spring does the motion. */
+  will-change: clip-path;
+}
+
+/*
+ * The reverse side of the folded corner. Its shadow on the sticker grows as the corner lifts (--_peel), and the
+ * whole flap fades as the last of it slides off (--_fade).
+ */
+.ui-peel-sticker__lift {
+  --_peel: 0;
+  --_fade: 1;
+
+  position: relative;
+  z-index: 2;
+  pointer-events: none;
+  opacity: var(--_fade);
+  filter: drop-shadow(
+    calc(-2px - var(--_peel) * 6px) calc(-2px - var(--_peel) * 6px) calc(3px + var(--_peel) * 10px) rgba(0, 0, 0, calc(0.18 + var(--_peel) * 0.14))
+  );
+}
+
+/* The curl: lighter along the fold, darker toward the tip (--_angle points from the fold to the tip). */
+.ui-peel-sticker__flap {
+  --_angle: 315deg;
+
+  position: absolute;
+  inset: 0;
+  border-radius: var(--_radius);
+  background: linear-gradient(var(--_angle), color-mix(in srgb, var(--_back) 70%, #fff 30%) 0%, var(--_back) 55%, color-mix(in srgb, var(--_back) 88%, #000 12%) 100%);
+  will-change: clip-path;
+}
+
+.ui-peel-sticker[data-corner='top-start'] .ui-peel-sticker__lift {
+  filter: drop-shadow(
+    calc(2px + var(--_peel) * 6px) calc(2px + var(--_peel) * 6px) calc(3px + var(--_peel) * 10px) rgba(0, 0, 0, calc(0.18 + var(--_peel) * 0.14))
+  );
+}
+
+.ui-peel-sticker__handle {
+  position: absolute;
+  z-index: 3;
+  inline-size: var(--_handle);
+  block-size: var(--_handle);
+  max-inline-size: 50%;
+  max-block-size: 50%;
+  cursor: grab;
+  /* The peel needs both axes; outside the corner the page scrolls as usual. */
+  touch-action: none;
+}
+
+.ui-peel-sticker[data-corner='bottom-end'] .ui-peel-sticker__handle {
+  inset-block-end: 0;
+  inset-inline-end: 0;
+}
+
+.ui-peel-sticker[data-corner='top-start'] .ui-peel-sticker__handle {
+  inset-block-start: 0;
+  inset-inline-start: 0;
+}
+
+.ui-peel-sticker[data-state='dragging'] .ui-peel-sticker__handle {
+  cursor: grabbing;
+}
+
+/* Open: the peel has taken the cover away; what is left of it no longer takes the pointer. */
+.ui-peel-sticker[data-state='open'] .ui-peel-sticker__cover {
+  pointer-events: none;
+}
+
+.ui-peel-sticker[data-disabled] .ui-peel-sticker__surface {
+  opacity: var(--ui-disabled-opacity, 0.55);
+}
+
+/* Materials: one mechanic, three surfaces. */
+.ui-peel-sticker[data-material='gloss'] .ui-peel-sticker__cover {
+  background:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 35%, rgba(255, 255, 255, 0) 65%, rgba(255, 255, 255, 0.25) 100%),
+    var(--_face);
+}
+
+.ui-peel-sticker[data-material='gloss'] {
+  --_back: var(--ui-peel-sticker-back, #f2f0ea);
+}
+
+.ui-peel-sticker[data-material='foil'] {
+  --_face: var(--ui-peel-sticker-face, linear-gradient(125deg, #c9ccd3 0%, #f4f5f8 22%, #a8adb8 45%, #e9ebef 62%, #9aa0ad 100%));
+  --_back: var(--ui-peel-sticker-back, #dcdfe4);
+}
+
+.ui-peel-sticker[data-material='foil'] .ui-peel-sticker__cover {
+  border-color: rgba(0, 0, 0, 0.15);
+  background: var(--_face);
+  color: #1d2129;
+}
+
+/* Reduced motion: the component fades the cover instead of peeling it (see fadeCover); the shadow stays still. */
+@media (prefers-reduced-motion: reduce) {
+  .ui-peel-sticker__lift {
+    filter: drop-shadow(-2px -2px 3px rgba(0, 0, 0, 0.18));
+  }
+}
+
+[data-ui-motion='reduce'] .ui-peel-sticker__lift {
+  filter: drop-shadow(-2px -2px 3px rgba(0, 0, 0, 0.18));
+}

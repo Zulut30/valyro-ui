@@ -12,19 +12,33 @@ export interface IconProps extends ComponentPropsWithRef<'svg'> {
 
 export type IconComponent = (props: IconProps) => ReactNode;
 
+export interface CreateIconOptions {
+  /** Mirror the icon in right-to-left layouts (arrows, chevrons). */
+  directional?: boolean;
+  /** The drawing's coordinate box. Default "0 0 24 24", the kit's grid. */
+  viewBox?: string;
+}
+
 /**
- * Stroke icons on a 24×24 grid (Lucide-compatible geometry, ISC).
- * `directional` icons carry `data-dir-flip`, so base.css mirrors them in right-to-left
- * layouts; pass `data-dir-flip={false}` to keep one unmirrored.
+ * Turns SVG children into an icon component that behaves like the kit's own: `size` (default 16), the theme's
+ * stroke width (`--ui-icon-stroke`) unless `strokeWidth` is set, `currentColor`, decorative (`aria-hidden`) and
+ * never focusable. The kit's icons are stroke icons on a 24×24 grid (Lucide-compatible geometry, ISC); for a
+ * filled shape set `fill="currentColor"` on its path. `directional` icons carry `data-dir-flip`, so base.css
+ * mirrors them in right-to-left layouts; pass `data-dir-flip={false}` to keep one unmirrored.
+ *
+ * ```tsx
+ * const RocketIcon = createIcon('Rocket', <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2" />);
+ * ```
  */
-function createIcon(name: string, body: ReactNode, directional = false): IconComponent {
+export function createIcon(name: string, body: ReactNode, options: boolean | CreateIconOptions = false): IconComponent {
+  const { directional = false, viewBox = '0 0 24 24' } = typeof options === 'boolean' ? { directional: options } : options;
   const Icon = withRef(function Icon({ size = 16, strokeWidth, className, ...rest }: IconProps) {
     return (
       <svg
         xmlns="http://www.w3.org/2000/svg"
         width={size}
         height={size}
-        viewBox="0 0 24 24"
+        viewBox={viewBox}
         fill="none"
         stroke="currentColor"
         strokeWidth={strokeWidth}

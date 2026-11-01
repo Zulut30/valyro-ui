@@ -1,0 +1,243 @@
+.ui-split-flap {
+  /* Set by the component from its duration (flapMotion); the fallbacks are close cubic-bezier curves. */
+  --_fold-time: 134ms;
+  --_land-time: 250ms;
+  --_cell-w: 1.05em;
+  --_cell-h: 1.6em;
+  --_gap: 3px;
+  --_tile: var(--ui-split-flap-tile, #1d1f24);
+  --_tile-edge: var(--ui-split-flap-edge, #0c0d10);
+  --_ink: var(--ui-split-flap-ink, #f4f1e8);
+  --_seam: var(--ui-split-flap-seam, rgba(0, 0, 0, 0.55));
+
+  display: inline-flex;
+  flex-direction: column;
+  gap: var(--ui-space-2, 8px);
+  max-inline-size: 100%;
+  min-width: 0;
+  color: var(--ui-fg);
+  font-size: var(--ui-text-xl);
+}
+
+.ui-split-flap__label {
+  color: var(--ui-fg-muted);
+  font-size: var(--ui-text-xs);
+  font-weight: var(--ui-weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.ui-split-flap__board {
+  display: flex;
+  flex-direction: column;
+  gap: var(--_gap);
+  max-inline-size: 100%;
+  overflow-x: auto;
+  padding: calc(var(--_gap) * 2);
+  border-radius: var(--ui-radius-md, 10px);
+  background: var(--_tile-edge);
+}
+
+.ui-split-flap__row {
+  display: flex;
+  gap: var(--_gap);
+}
+
+/* Every cell has the same geometry, so spaces, punctuation and digits never shift the grid. */
+.ui-split-flap__cell {
+  position: relative;
+  flex: none;
+  inline-size: var(--_cell-w);
+  block-size: var(--_cell-h);
+  color: var(--_ink);
+  font-family: var(--ui-font-mono, ui-monospace, monospace);
+  font-weight: var(--ui-weight-semibold, 600);
+  line-height: var(--_cell-h);
+  text-align: center;
+  perspective: 300px;
+}
+
+.ui-split-flap__top,
+.ui-split-flap__bottom,
+.ui-split-flap__fold,
+.ui-split-flap__land {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 4px;
+  background: var(--_tile);
+  backface-visibility: hidden;
+}
+
+.ui-split-flap__top,
+.ui-split-flap__fold {
+  clip-path: inset(0 0 50% 0);
+  background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.07), transparent 50%);
+}
+
+.ui-split-flap__bottom,
+.ui-split-flap__land {
+  clip-path: inset(50% 0 0 0);
+  background-image: linear-gradient(to top, rgba(0, 0, 0, 0.18), transparent 50%);
+}
+
+/* The thin seam between the halves. */
+.ui-split-flap__cell::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  top: calc(50% - 0.5px);
+  z-index: 3;
+  block-size: 1px;
+  background: var(--_seam);
+}
+
+/*
+ * One motion across the seam: the top flap falls with gravity and passes the vertical at full speed; the bottom flap
+ * carries on at that speed and settles against its stop with one small bounce (a spring sampled into linear()).
+ */
+.ui-split-flap__fold {
+  z-index: 2;
+  transform-origin: 50% 50%;
+  animation: ui-split-flap-fold var(--_fold-time) cubic-bezier(0.55, 0, 1, 0.45) var(--_delay, 0ms) both;
+}
+
+.ui-split-flap__land {
+  z-index: 2;
+  transform-origin: 50% 50%;
+  animation: ui-split-flap-land var(--_land-time) cubic-bezier(0.2, 0.9, 0.3, 1.25) calc(var(--_delay, 0ms) + var(--_fold-time)) both;
+}
+
+@supports (animation-timing-function: linear(0, 1)) {
+  .ui-split-flap__fold {
+    animation-timing-function: var(--_fold-ease);
+  }
+
+  .ui-split-flap__land {
+    animation-timing-function: var(--_land-ease);
+  }
+}
+
+/* The falling flap's shadow on the half it is about to cover, gone as the new half lands. */
+.ui-split-flap__cell[data-flip] .ui-split-flap__bottom {
+  animation: ui-split-flap-shade calc(var(--_fold-time) * 2) cubic-bezier(0.32, 0.72, 0, 1) var(--_delay, 0ms) both;
+}
+
+@keyframes ui-split-flap-shade {
+  50% {
+    filter: brightness(0.72);
+  }
+
+  to {
+    filter: brightness(1);
+  }
+}
+
+@keyframes ui-split-flap-fold {
+  from {
+    transform: rotateX(0deg);
+    filter: brightness(1);
+  }
+
+  to {
+    transform: rotateX(-90deg);
+    filter: brightness(0.6);
+  }
+}
+
+@keyframes ui-split-flap-land {
+  from {
+    transform: rotateX(90deg);
+    filter: brightness(1.3);
+  }
+
+  to {
+    transform: rotateX(0deg);
+    filter: brightness(1);
+  }
+}
+
+/* A character the halves cannot draw (an emoji) sits in its cell as plain text. */
+.ui-split-flap__cell[data-plain] .ui-split-flap__top {
+  clip-path: none;
+}
+
+.ui-split-flap__cell[data-plain] .ui-split-flap__bottom,
+.ui-split-flap__cell[data-plain]::after {
+  display: none;
+}
+
+/* Variants */
+.ui-split-flap[data-variant='sign'] {
+  --_cell-w: 1.25em;
+  --_cell-h: 1.85em;
+  --_gap: 4px;
+
+  font-size: calc(var(--ui-text-xl) * 1.4);
+}
+
+.ui-split-flap[data-variant='sign'] .ui-split-flap__board {
+  padding: var(--ui-space-3, 12px);
+  border-radius: var(--ui-radius-card, 16px);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.06),
+    0 12px 30px -16px rgba(0, 0, 0, 0.6);
+}
+
+.ui-split-flap[data-variant='minimal'] {
+  --_tile: var(--ui-split-flap-tile, var(--ui-surface-2));
+  --_ink: var(--ui-split-flap-ink, var(--ui-fg));
+  --_seam: var(--ui-split-flap-seam, var(--ui-border));
+}
+
+.ui-split-flap[data-variant='minimal'] .ui-split-flap__board {
+  padding: 0;
+  background: none;
+}
+
+.ui-split-flap[data-variant='minimal'] .ui-split-flap__top,
+.ui-split-flap[data-variant='minimal'] .ui-split-flap__fold,
+.ui-split-flap[data-variant='minimal'] .ui-split-flap__bottom,
+.ui-split-flap[data-variant='minimal'] .ui-split-flap__land {
+  background-image: none;
+}
+
+/* Reduced motion: no flip; a changed character fades in where it stands. */
+.ui-split-flap__cell[data-fade] > span {
+  animation: ui-split-flap-fade 180ms ease-out both;
+}
+
+@keyframes ui-split-flap-fade {
+  from {
+    opacity: 0.2;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-split-flap__fold,
+  .ui-split-flap__land {
+    display: none;
+    animation: none;
+  }
+
+  .ui-split-flap__cell[data-flip] .ui-split-flap__bottom {
+    animation: none;
+  }
+}
+
+[data-ui-motion='reduce'] .ui-split-flap__fold,
+[data-ui-motion='reduce'] .ui-split-flap__land {
+  display: none;
+  animation: none;
+}
+
+[data-ui-motion='reduce'] .ui-split-flap__cell[data-flip] .ui-split-flap__bottom {
+  animation: none;
+}
+
+@media print {
+  .ui-split-flap__fold,
+  .ui-split-flap__land {
+    display: none;
+  }
+}

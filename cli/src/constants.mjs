@@ -1,11 +1,22 @@
 // Shared by the CLI and scripts/build-registry.mjs so both agree on URLs and layout.
 
+/** The free site: the public registry (`/r`), the hosted MCP server (`/api/mcp`) and the docs of the free core. */
 export const SITE_URL = 'https://valyro.xyz';
 export const DEFAULT_REGISTRY_URL = `${SITE_URL}/r`;
+/** The Pro site: pricing, sign-in, the account, CLI device approval and the account API (valyro.xyz sends those addresses here). */
+export const PRO_SITE_URL = 'https://pro.valyro.xyz';
 /** ValyroUI Pro: where to buy a licence. */
-export const PRICING_URL = `${SITE_URL}/#/pricing`;
-/** The account API (`valyro login`, `whoami`, the licensed registry, the hosted MCP server); VALYRO_API_URL overrides it. */
-export const API_URL = `${SITE_URL}/api`;
+export const PRICING_URL = `${PRO_SITE_URL}/pricing/`;
+/** Where tokens are created and listed (the page `valyro login --token` asks for). */
+export const ACCOUNT_URL = `${PRO_SITE_URL}/account/`;
+/**
+ * The account API (`valyro login`, `whoami`, `logout`, the licensed registry): what needs an account or a licence lives
+ * on the Pro site (#38); VALYRO_API_URL overrides it. valyro.xyz/api answers too (one server behind both hosts), so
+ * tokens saved before keep working.
+ */
+export const API_URL = `${PRO_SITE_URL}/api`;
+/** The hosted MCP server stays on the free site, with the registry it serves (src/docs/site.ts); VALYRO_API_URL overrides it too. */
+export const MCP_API_URL = `${SITE_URL}/api`;
 export const PRO_REGISTRY_URL = `${API_URL}/registry`;
 export const CLI_PACKAGE = 'valyro-cli';
 /** The npm package with the components and `styles.css`: the free core. */

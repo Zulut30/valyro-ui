@@ -1,0 +1,181 @@
+.ui-image {
+  position: relative;
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  border-radius: var(--ui-radius-md);
+  isolation: isolate;
+}
+
+/* Positioned, so it paints over the placeholder; with a reserved box it fills that box. */
+.ui-image__img {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  transition:
+    opacity var(--ui-duration-slow) var(--ui-ease),
+    filter var(--ui-duration-slow) var(--ui-ease);
+}
+
+.ui-image[data-sized] .ui-image__img,
+.ui-image__img[data-layer='previous'] {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+}
+
+.ui-image[data-fit='contain'] .ui-image__img { object-fit: contain; }
+.ui-image[data-fit='fill'] .ui-image__img { object-fit: fill; }
+.ui-image[data-fit='none'] .ui-image__img { object-fit: none; }
+.ui-image[data-fit='scale-down'] .ui-image__img { object-fit: scale-down; }
+
+/* Hidden at once while loading; the fade runs only on the way in. A picture already in the cache is
+   `loaded` before the first paint, so it never fades. */
+.ui-image__img[data-status='loading'] {
+  opacity: 0;
+  transition: none;
+}
+
+.ui-image__img[data-status='error'] {
+  visibility: hidden;
+}
+
+/* Shown after the first paint (a new source, a mode switch): fades in over the picture underneath even
+   when the browser already has it. */
+.ui-image__img[data-enter][data-status='loaded'] {
+  animation: ui-image-fade-in var(--ui-duration-slow) var(--ui-ease);
+}
+
+/* The picture underneath, when nothing replaces it (an empty source, an error): fades out. */
+.ui-image__img[data-leaving] {
+  opacity: 0;
+  transition: opacity var(--ui-duration) var(--ui-ease);
+}
+
+/* The blurred preview's picture sharpens as it fades in. */
+.ui-image[data-placeholder='blur'] .ui-image__img[data-status='loading'] {
+  filter: blur(12px);
+}
+
+.ui-image[data-priority] .ui-image__img {
+  transition: none;
+  animation: none;
+}
+
+/* Under the picture while it loads; fades out when it is in, then leaves the layout (display at the end of
+   the fade). It is not shown before the status is known (server markup over an already loaded picture). */
+.ui-image__placeholder {
+  position: absolute;
+  inset: 0;
+  display: none;
+  overflow: hidden;
+  background-color: var(--ui-skeleton-bg);
+  opacity: 0;
+  /* Off screen, the sheen inside is not drawn. */
+  content-visibility: auto;
+  /* It goes only once the picture over it is opaque: fading both at once would dip through the card. */
+  transition:
+    opacity var(--ui-duration) var(--ui-ease) var(--ui-duration-slow),
+    display calc(var(--ui-duration) + var(--ui-duration-slow)) allow-discrete;
+}
+
+.ui-image[data-status='loading'] .ui-image__placeholder {
+  display: block;
+  opacity: 1;
+  transition: none;
+}
+
+.ui-image[data-placeholder='shimmer'] .ui-image__placeholder::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(90deg, transparent 0%, var(--ui-skeleton-shine) 50%, transparent 100%);
+  transform: translateX(-100%);
+  animation: ui-image-sweep 1.6s ease-in-out infinite;
+}
+
+.ui-image[data-placeholder='shimmer'] .ui-image__placeholder:dir(rtl)::after {
+  animation-direction: reverse;
+}
+
+@keyframes ui-image-sweep {
+  to { transform: translateX(100%); }
+}
+
+.ui-image[data-placeholder='blur'] .ui-image__placeholder {
+  background: var(--_blur-src) center / cover no-repeat;
+  filter: blur(16px);
+  transform: scale(1.12);
+}
+
+.ui-image[data-placeholder='custom'] .ui-image__placeholder {
+  display: none;
+  background: none;
+}
+
+.ui-image[data-placeholder='custom'][data-status='loading'] .ui-image__placeholder {
+  display: grid;
+  place-items: center;
+}
+
+.ui-image__fallback {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  min-height: var(--ui-control-h-lg);
+  background: var(--ui-surface-2);
+  color: var(--ui-fg-muted);
+  animation: ui-image-fade-in var(--ui-duration) var(--ui-ease);
+}
+
+.ui-image[data-sized] .ui-image__fallback {
+  position: absolute;
+  inset: 0;
+}
+
+.ui-image__fallback > svg {
+  width: clamp(20px, 18%, 48px);
+  height: auto;
+}
+
+@keyframes ui-image-fade-in {
+  from { opacity: 0; }
+}
+
+/* Reduced motion: no sheen and no blur; the picture still cross-fades, briefly, instead of popping in. */
+@media (prefers-reduced-motion: reduce) {
+  .ui-image[data-placeholder='shimmer'] .ui-image__placeholder::after {
+    content: none;
+  }
+
+  .ui-image[data-placeholder='blur'] .ui-image__img[data-status='loading'] {
+    filter: none;
+  }
+
+  .ui-image__img {
+    transition: opacity 160ms ease-out;
+  }
+
+  .ui-image__img[data-enter][data-status='loaded'] {
+    animation-duration: 160ms;
+  }
+
+  .ui-image__img[data-leaving] {
+    transition-duration: 160ms;
+  }
+
+  .ui-image__placeholder {
+    transition:
+      opacity 160ms ease-out 160ms,
+      display 320ms allow-discrete;
+  }
+}
+
+@media (forced-colors: active) {
+  .ui-image__fallback {
+    border: 1px solid CanvasText;
+  }
+}

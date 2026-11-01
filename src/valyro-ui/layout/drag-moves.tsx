@@ -6,8 +6,8 @@ import { cx } from '../primitives';
 import './drag-moves.css';
 
 /*
- * The alternative to dragging that every drag-and-drop list in the kit shares (Sortable, KanbanBoard, CrmPipeline,
- * TierList). Keyboard users lift an item with Space and move it with the arrows; that is not enough:
+ * The alternative to dragging that every drag-and-drop list in the kit shares (Sortable, the boards and the ranked
+ * lists). Keyboard users lift an item with Space and move it with the arrows; that is not enough:
  * - a screen reader in browse mode (NVDA, JAWS) or on a phone (VoiceOver, TalkBack) sends a click, not the keys;
  * - WCAG 2.5.7 asks for a single-pointer way to do what a drag does.
  * So a lifted item shows buttons that move it one step, drop it or cancel, and a list without a visible handle gets a

@@ -22,6 +22,34 @@ export class CliError extends Error {
 /** A Pro item in the free registry: metadata only, the source comes from the licensed API. */
 export const isProStub = (item) => item?.pro === true && !item.files?.length;
 
+/**
+ * The metadata of a Pro item without its source: title, description, docs link and public exports, no files or
+ * dependencies, so `shadcn add` cannot fetch it. The pro edition's `/r` lists Pro items this way, and the hosted MCP
+ * server describes them to accounts without a licence.
+ */
+export const proStub = (item) => ({
+  $schema: item.$schema,
+  name: item.name,
+  type: item.type,
+  title: item.title,
+  description: item.description,
+  pro: true,
+  registryDependencies: [],
+  files: [],
+  docs: `${item.title} is part of ValyroUI Pro (${PRICING_URL}). With a licence: \`npx ${CLI_PACKAGE} login\`, then \`npx ${CLI_PACKAGE} add ${item.name}\`.`,
+  categories: item.categories,
+  meta: { ...item.meta, pricingUrl: PRICING_URL },
+});
+
+/**
+ * The free registry has no entry for a Pro item, so a Pro name looks like a typo to someone who is not signed in.
+ * Said once for a hosted registry without a token; empty otherwise (the licensed API has already answered).
+ */
+export const proHint = (registry, name) =>
+  registry.kind === 'http' && !registry.hasToken
+    ? ` If "${name}" is a ValyroUI Pro item, it needs a licence (${PRICING_URL}); then run \`npx ${CLI_PACKAGE} login\`.`
+    : '';
+
 const NAME_RE = /^[a-z0-9][a-z0-9._-]*$/i;
 const isHttp = (s) => /^https?:\/\//i.test(s);
 
@@ -87,8 +115,42 @@ export function createRegistry(
     return cache.get(key);
   };
 
-  /** The full item from the licensed API, or an explanation of why it is unavailable. */
-  async function readPro(stub, key) {
+  /**
+   * The licensed API's answer for `url` as parsed JSON, or the reason it is unavailable. `what` names the item for the
+   * messages; `hosted` says the item is not in the free registry at all (so the licence is only a guess at why).
+   */
+  async function readLicensed(url, what, { key, item, hosted = false } = {}) {
+    let res;
+    try {
+      res = await fetchImpl(url, { headers: { accept: 'application/json', authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(timeoutMs) });
+    } catch (error) {
+      throw new CliError(`Cannot fetch ${url}: ${error.message}`, { cause: error });
+    }
+    if (res.status === 401) {
+      throw new CliError(`Your ValyroUI token was not accepted (401). Sign in again with \`npx ${CLI_PACKAGE} login\`.`, { code: 'PRO_UNAUTHORIZED', key, item });
+    }
+    if (res.status === 402 || res.status === 403) {
+      throw new CliError(
+        hosted
+          ? `"${what}" is not in the free registry, and your account has no active ValyroUI Pro licence (${res.status}). If it is a Pro item, plans: ${PRICING_URL}`
+          : `Your account has no active ValyroUI Pro licence (${res.status}), so "${what}" is not available. Plans: ${PRICING_URL}`,
+        { code: 'PRO_LICENSE', key, item },
+      );
+    }
+    if (res.status === 404) throw new CliError(`Not found: ${url}`, { code: 'NOT_FOUND', key });
+    if (!res.ok) throw new CliError(`${url} responded with ${res.status} ${res.statusText}`);
+    try {
+      return JSON.parse(await res.text());
+    } catch (error) {
+      throw new CliError(`${url} is not valid JSON: ${error.message}`, { cause: error });
+    }
+  }
+
+  /**
+   * The full item from the licensed API, or an explanation of why it is unavailable. `stub` is the public stub of the
+   * item (pro.valyro.xyz/r, an older registry) or just `{ name }` when the free registry has no such item.
+   */
+  async function readPro(stub, key, { hosted = false } = {}) {
     const what = stub.categories?.includes('themes') ? 'theme' : 'component';
     if (!token) {
       throw new CliError(
@@ -97,53 +159,64 @@ export function createRegistry(
       );
     }
     const url = `${proUrl.replace(/\/+$/, '')}/${encodeURIComponent(stub.name)}`;
-    let res;
-    try {
-      res = await fetchImpl(url, { headers: { accept: 'application/json', authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(timeoutMs) });
-    } catch (error) {
-      throw new CliError(`Cannot fetch ${url}: ${error.message}`, { cause: error });
-    }
-    if (res.status === 401) {
-      throw new CliError(`Your ValyroUI token was not accepted (401). Sign in again with \`npx ${CLI_PACKAGE} login\`.`, { code: 'PRO_UNAUTHORIZED', key, item: stub });
-    }
-    if (res.status === 402 || res.status === 403) {
-      throw new CliError(
-        `Your account has no active ValyroUI Pro licence (${res.status}), so "${stub.name}" is not available. Plans: ${PRICING_URL}`,
-        { code: 'PRO_LICENSE', key, item: stub },
-      );
-    }
-    if (res.status === 404) throw new CliError(`Not found: ${url}`, { code: 'NOT_FOUND', key });
-    if (!res.ok) throw new CliError(`${url} responded with ${res.status} ${res.statusText}`);
-    let item;
-    try {
-      item = JSON.parse(await res.text());
-    } catch (error) {
-      throw new CliError(`${url} is not valid JSON: ${error.message}`, { cause: error });
-    }
+    const item = await readLicensed(url, stub.name, { key, item: hosted ? undefined : stub, hosted });
     validateItem(item, url);
     if (item.name !== stub.name || isProStub(item)) throw new CliError(`${url} did not return the source of "${stub.name}"`);
     return item;
   }
 
   const pro = new Map();
-  const loadPro = (stub, key) => {
-    if (!pro.has(key)) pro.set(key, readPro(stub, key));
+  const loadPro = (stub, key, options) => {
+    if (!pro.has(key)) pro.set(key, readPro(stub, key, options));
     return pro.get(key);
   };
+
+  /** `<base>/<name>.json` of this registry's own folder -> `name`, else null. */
+  const ownName = (key) => (key.startsWith(`${base}/`) ? /^([a-z0-9][a-z0-9._-]*)\.json$/i.exec(key.slice(base.length + 1))?.[1] ?? null : null);
+
+  /** The licensed index (every item, Pro ones included, without file contents), or null when this account has none. */
+  let licensedIndex;
+  const loadLicensedIndex = () => {
+    licensedIndex ??= (async () => {
+      if (!token || kind !== 'http') return null;
+      try {
+        const index = await readLicensed(proUrl.replace(/\/+$/, ''), 'the Pro index');
+        return Array.isArray(index?.items) ? index.items.filter((entry) => entry && typeof entry.name === 'string') : null;
+      } catch {
+        // No Pro licence, a rejected token or no network: the free index still lists the free core.
+        return null;
+      }
+    })();
+    return licensedIndex;
+  };
+  let listedPro = false;
 
   return {
     kind,
     base,
     locate,
     hasToken: Boolean(token),
+    /** True once `index()` has listed the Pro items too (a licensed account on a hosted registry). */
+    get proListed() {
+      return listedPro;
+    },
     /**
      * A Pro stub is swapped for the licensed item; without a licence it fails with code PRO_REQUIRED
-     * (or PRO_UNAUTHORIZED / PRO_LICENSE) and the stub as `error.item`.
+     * (or PRO_UNAUTHORIZED / PRO_LICENSE) and the stub as `error.item`. The free hosted registry has no entry for a
+     * Pro item at all: its 404 is asked of the licensed API when there is a token (unknown there too: NOT_FOUND),
+     * and without one it stays NOT_FOUND (`registry.hasToken` is false: the caller can say a Pro item may be meant).
      * @returns {Promise<{ key: string, item: object }>}
      */
     async item(ref) {
       const key = locate(ref);
-      const item = await load(key);
+      let item;
+      try {
+        item = await load(key);
+      } catch (error) {
+        const name = error?.code === 'NOT_FOUND' && kind === 'http' && token ? ownName(key) : null;
+        if (!name) throw error;
+        return { key, item: await loadPro({ name }, key, { hosted: true }) };
+      }
       validateItem(item, key);
       return { key, item: isProStub(item) ? await loadPro(item, key) : item };
     },
@@ -151,9 +224,26 @@ export function createRegistry(
       const key = kind === 'http' ? `${base}/registry.json` : path.join(base, 'registry.json');
       const index = await load(key);
       if (!index || !Array.isArray(index.items)) throw new CliError(`${key} is not a registry index (missing "items")`);
-      return index.items.filter((item) => item && typeof item.name === 'string');
+      const items = index.items.filter((item) => item && typeof item.name === 'string');
+      const licensed = await loadLicensedIndex();
+      listedPro = Boolean(licensed);
+      return licensed ? mergeIndexes(items, licensed) : items;
     },
   };
+}
+
+/**
+ * The free index and the licensed one as one list: the licensed order (components, themes, setup items), each entry from
+ * the free index where it has one, then whatever only the free index has.
+ */
+export function mergeIndexes(free, licensed) {
+  const freeByName = new Map(free.map((item) => [item.name, item]));
+  const seen = new Set();
+  const merged = licensed.map((item) => {
+    seen.add(item.name);
+    return freeByName.get(item.name) ?? item;
+  });
+  return [...merged, ...free.filter((item) => !seen.has(item.name))];
 }
 
 export function validateItem(item, key) {
@@ -247,3 +337,31 @@ export function searchItems(items, query) {
 }
 
 export const dependencyName = (ref) => ref.replace(/^.*[/\\]/, '').replace(/\.json$/, '');
+
+/** `export interface <name> { … }` (with its doc comment) from TypeScript source, or null. */
+export function extractInterface(code, name) {
+  const m = new RegExp(String.raw`^(?:/\*\*(?:(?!\*/)[\s\S])*\*/\s*)?export\s+interface\s+${name}\b[^{]*\{`, 'm').exec(code);
+  if (!m) return null;
+  let depth = 0;
+  for (let i = m.index + m[0].length - 1; i < code.length; i++) {
+    const ch = code[i];
+    if (ch === '/' && code[i + 1] === '/') i = code.indexOf('\n', i);
+    else if (ch === '/' && code[i + 1] === '*') {
+      const end = code.indexOf('*/', i + 2);
+      i = end === -1 ? -1 : end + 1;
+    }
+    else if (ch === "'" || ch === '"' || ch === '`') {
+      for (i++; i < code.length && code[i] !== ch; i++) if (code[i] === '\\') i++;
+    } else if (ch === '{') depth++;
+    else if (ch === '}' && --depth === 0) return code.slice(m.index, i + 1);
+    if (i < 0) return null;
+  }
+  return null;
+}
+
+/** The `<Export>Props` interfaces of an item's exported components, in export order. */
+export function propsOf(item) {
+  const code = (item.files ?? []).filter((f) => /\.tsx?$/.test(f.path)).map((f) => f.content).join('\n');
+  const names = [...new Set(Object.values(item.meta?.exports ?? {}).flat())];
+  return names.map((name) => extractInterface(code, `${name}Props`)).filter(Boolean);
+}

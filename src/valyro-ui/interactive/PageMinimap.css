@@ -1,0 +1,217 @@
+.ui-minimap {
+  --_width: var(--ui-minimap-width, 96px);
+  --_soft: cubic-bezier(0.32, 0.72, 0, 1);
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-2, 8px);
+  inline-size: calc(var(--_width) + var(--ui-space-2, 8px) * 2);
+  padding: var(--ui-space-2, 8px);
+  border: var(--ui-border-width, 1px) solid var(--ui-border);
+  border-radius: var(--ui-radius-md, 10px);
+  background: var(--ui-surface);
+  color: var(--ui-fg);
+}
+
+.ui-minimap[hidden] {
+  display: none;
+}
+
+.ui-minimap[data-placement='fixed'] {
+  position: fixed;
+  z-index: 20;
+  inset-block-start: 50%;
+  inset-inline-end: var(--ui-space-4, 16px);
+  translate: 0 -50%;
+  box-shadow: var(--ui-shadow-sm, 0 2px 8px rgba(0, 0, 0, 0.12));
+}
+
+.ui-minimap__inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-2, 8px);
+}
+
+/* Narrow: the block folds open and shut by its row (0fr ↔ 1fr), with a transition once the reader toggles it. */
+.ui-minimap[data-narrow] .ui-minimap__body {
+  display: grid;
+  grid-template-rows: 1fr;
+}
+
+.ui-minimap[data-narrow] .ui-minimap__body[data-collapsed] {
+  grid-template-rows: 0fr;
+  opacity: 0;
+}
+
+.ui-minimap[data-narrow] .ui-minimap__body[data-animate] {
+  transition:
+    grid-template-rows calc(var(--ui-duration-slow, 340ms) * 1.1) var(--_soft),
+    opacity var(--ui-duration-slow, 340ms) var(--_soft);
+}
+
+.ui-minimap[data-narrow] .ui-minimap__inner {
+  min-block-size: 0;
+  overflow: hidden;
+}
+
+/* The map: blocks to scale once measured; before that (server, first paint) a plain column of blocks. */
+.ui-minimap__map {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  inline-size: var(--_width);
+  min-block-size: 96px;
+  border-radius: var(--ui-radius-sm, 6px);
+  background: var(--ui-surface-2);
+  cursor: pointer;
+  user-select: none;
+}
+
+.ui-minimap__section {
+  flex: 1 1 0;
+  min-block-size: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--_color, var(--ui-fg-subtle)) 35%, transparent);
+  cursor: pointer;
+}
+
+/* Blocks move softly when the page's layout changes (an image loads); the frame itself follows scrolling directly. */
+.ui-minimap__section[data-measured] {
+  position: absolute;
+  inset-inline: 6px;
+  min-block-size: 0;
+  transition:
+    top var(--ui-duration-slow, 340ms) var(--_soft),
+    height var(--ui-duration-slow, 340ms) var(--_soft),
+    background-color var(--ui-duration-slow, 340ms) var(--_soft);
+}
+
+.ui-minimap__section {
+  transition: background-color var(--ui-duration-slow, 340ms) var(--_soft);
+}
+
+.ui-minimap__section:hover {
+  background: color-mix(in srgb, var(--_color, var(--ui-fg-subtle)) 60%, transparent);
+}
+
+.ui-minimap__section:focus-visible {
+  z-index: 2;
+  outline: none;
+  box-shadow: var(--ui-focus-ring);
+}
+
+.ui-minimap__section[aria-current] {
+  background: var(--_color, var(--ui-accent));
+}
+
+.ui-minimap__frame {
+  position: absolute;
+  z-index: 1;
+  inset-inline: 0;
+  border: 2px solid var(--ui-accent);
+  border-radius: var(--ui-radius-sm, 6px);
+  background: color-mix(in srgb, var(--ui-accent) 10%, transparent);
+  cursor: grab;
+  /* The frame is the only touch target that drags; the rest of the map leaves scrolling to the page. */
+  touch-action: none;
+}
+
+.ui-minimap[data-state='dragging'] .ui-minimap__frame {
+  cursor: grabbing;
+}
+
+.ui-minimap__current {
+  animation: ui-minimap-current var(--ui-duration-slow, 340ms) var(--_soft) both;
+  margin: 0;
+  color: var(--ui-fg-muted);
+  font-size: var(--ui-text-xs);
+  line-height: var(--ui-leading-tight, 1.3);
+  overflow-wrap: anywhere;
+}
+
+.ui-minimap__position {
+  inline-size: var(--_width);
+}
+
+.ui-minimap__empty {
+  margin: 0;
+  color: var(--ui-fg-muted);
+  font-size: var(--ui-text-xs);
+}
+
+.ui-minimap__toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ui-space-2, 8px);
+  min-block-size: 36px;
+  padding: 0 var(--ui-space-2, 8px);
+  border: 0;
+  border-radius: var(--ui-radius-sm, 6px);
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: var(--ui-text-sm);
+  font-weight: var(--ui-weight-medium);
+  cursor: pointer;
+}
+
+.ui-minimap__toggle:focus-visible {
+  outline: none;
+  box-shadow: var(--ui-focus-ring);
+}
+
+.ui-minimap__toggle svg {
+  inline-size: 16px;
+  block-size: 16px;
+  transition: transform var(--ui-duration-slow, 340ms) var(--_soft);
+}
+
+@keyframes ui-minimap-current {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+}
+
+.ui-minimap__toggle[aria-expanded='true'] svg {
+  transform: rotate(180deg);
+}
+
+/* Narrow screens: a compact block in the flow that opens on demand, never over the text. */
+.ui-minimap[data-narrow] {
+  position: static;
+  inline-size: auto;
+  translate: none;
+}
+
+/* Reduced motion: things change in place, with at most a short fade. */
+@media (prefers-reduced-motion: reduce) {
+  .ui-minimap__toggle svg,
+  .ui-minimap__section,
+  .ui-minimap__section[data-measured] {
+    transition: none;
+  }
+
+  .ui-minimap[data-narrow] .ui-minimap__body[data-animate] {
+    transition: opacity 150ms ease-out;
+  }
+
+  .ui-minimap__current {
+    animation: none;
+  }
+}
+
+[data-ui-motion='reduce'] .ui-minimap__toggle svg,
+[data-ui-motion='reduce'] .ui-minimap__section,
+[data-ui-motion='reduce'] .ui-minimap__section[data-measured] {
+  transition: none;
+}
+
+[data-ui-motion='reduce'] .ui-minimap__current {
+  animation: none;
+}

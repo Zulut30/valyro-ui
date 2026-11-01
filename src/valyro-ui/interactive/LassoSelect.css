@@ -1,0 +1,107 @@
+.ui-lasso {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-2, 8px);
+  min-width: 0;
+  min-height: 0;
+  color: var(--ui-fg);
+}
+
+.ui-lasso__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ui-space-1, 4px) var(--ui-space-2, 8px);
+}
+
+.ui-lasso__count {
+  margin-inline-end: auto;
+  font-size: var(--ui-text-sm);
+  font-weight: var(--ui-weight-medium);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The gesture surface; it scrolls when the block is given a height. */
+.ui-lasso__area {
+  position: relative;
+  flex: 1;
+  min-block-size: 0;
+  overflow: auto;
+  border-radius: var(--ui-radius-card, 16px);
+  outline: none;
+}
+
+.ui-lasso[data-selecting] .ui-lasso__area {
+  cursor: crosshair;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Shown while the lasso is drawn (data-visible); it fades in quickly and out softly where it was let go. */
+.ui-lasso__rect {
+  position: absolute;
+  z-index: 5;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  border: 1px solid var(--ui-accent);
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--ui-accent) 14%, transparent);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--ui-duration-slow, 340ms) cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.ui-lasso__rect[data-visible] {
+  opacity: 1;
+  transition-duration: var(--ui-duration-fast, 120ms);
+}
+
+/* Items are the app's elements; the selected state reads without colour: a ring and the checked box. */
+.ui-lasso__area [data-lasso-item] {
+  position: relative;
+  /* The ring follows the lasso softly as items come in and out of it. */
+  transition: box-shadow var(--ui-duration, 200ms) cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.ui-lasso__area [data-lasso-item][data-selected] {
+  box-shadow: 0 0 0 2px var(--ui-accent);
+}
+
+.ui-lasso__area [data-lasso-item][data-disabled] {
+  opacity: 0.6;
+}
+
+.ui-lasso[data-multi] .ui-lasso__area [data-lasso-item]:not([data-disabled]) {
+  cursor: pointer;
+}
+
+.ui-lasso__checkbox {
+  inline-size: 20px;
+  block-size: 20px;
+  margin: 0;
+  accent-color: var(--ui-accent);
+  cursor: pointer;
+}
+
+/* Touch screens: a bigger target for the checkbox. */
+@media (pointer: coarse) {
+  .ui-lasso__checkbox {
+    inline-size: 26px;
+    block-size: 26px;
+  }
+}
+
+/* Reduced motion: short fades only. */
+@media (prefers-reduced-motion: reduce) {
+  .ui-lasso__area [data-lasso-item],
+  .ui-lasso__rect,
+  .ui-lasso__rect[data-visible] {
+    transition-duration: 120ms;
+  }
+}
+
+[data-ui-motion='reduce'] .ui-lasso__area [data-lasso-item],
+[data-ui-motion='reduce'] .ui-lasso__rect,
+[data-ui-motion='reduce'] .ui-lasso__rect[data-visible] {
+  transition-duration: 120ms;
+}

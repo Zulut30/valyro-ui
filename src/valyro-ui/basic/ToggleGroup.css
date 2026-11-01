@@ -1,0 +1,322 @@
+/* Toggle buttons on one track (attached, the default) or spaced apart. The pressed fill is the segmented
+   control's thumb (its tokens), so a toolbar and a mode switch look like one family in every theme. */
+.ui-toggle-group {
+  --_h: var(--ui-control-h-md);
+  --_pad: var(--ui-segmented-control-pad);
+  --_radius: var(--ui-segmented-control-radius);
+  --_item-radius: calc(var(--_radius) - var(--_pad));
+  /* Gradient directions for the edge fades of a scrolling row. */
+  --_to-end: to right;
+  --_to-start: to left;
+
+  display: inline-flex;
+  min-width: 0;
+  max-width: 100%;
+  vertical-align: middle;
+}
+
+.ui-toggle-group:dir(rtl) {
+  --_to-end: to left;
+  --_to-start: to right;
+}
+
+.ui-toggle-group[data-orientation='vertical'] {
+  /* A pill radius suits a row; a column takes the button group's vertical rounding. */
+  --_radius: max(var(--_pad), var(--ui-button-group-radius-vertical));
+}
+
+.ui-toggle-group[data-size='sm'] {
+  --_h: var(--ui-control-h-sm);
+}
+
+.ui-toggle-group[data-size='lg'] {
+  --_h: var(--ui-control-h-lg);
+  --_pad: var(--ui-segmented-control-pad-lg);
+}
+
+.ui-toggle-group[data-attached] {
+  border-radius: var(--_radius);
+  corner-shape: var(--ui-control-corner-shape);
+  background: var(--ui-segmented-control-bg);
+  box-shadow: var(--ui-segmented-control-shadow);
+}
+
+.ui-toggle-group__viewport {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  align-items: stretch;
+  min-width: 0;
+}
+
+.ui-toggle-group[data-attached] > .ui-toggle-group__viewport {
+  padding: var(--_pad);
+}
+
+.ui-toggle-group[data-orientation='vertical'] > .ui-toggle-group__viewport {
+  flex-direction: column;
+}
+
+/* Spaced apart: separate buttons that wrap onto more lines when the row runs out of room. */
+.ui-toggle-group:not([data-attached]) > .ui-toggle-group__viewport {
+  flex-wrap: wrap;
+  gap: var(--ui-space-2);
+}
+
+/* An attached row too wide for its container scrolls sideways with faded edges (useOverflowScroll sets
+   data-overflow only then, so a row that fits keeps its focus rings unclipped). */
+.ui-toggle-group[data-attached][data-orientation='horizontal'] > .ui-toggle-group__viewport[data-overflow='true'] {
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scroll-padding-inline: 24px;
+  scrollbar-width: none;
+}
+
+.ui-toggle-group__viewport::-webkit-scrollbar {
+  display: none;
+}
+
+.ui-toggle-group__viewport[data-fade-start] {
+  mask-image: linear-gradient(var(--_to-end), transparent, #000 32px);
+}
+
+.ui-toggle-group__viewport[data-fade-end] {
+  mask-image: linear-gradient(var(--_to-start), transparent, #000 32px);
+}
+
+.ui-toggle-group__viewport[data-fade-start][data-fade-end] {
+  mask-image: linear-gradient(var(--_to-end), transparent, #000 32px, #000 calc(100% - 32px), transparent);
+}
+
+.ui-toggle-group__item {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: calc(var(--_h) - 2 * var(--_pad));
+  min-height: calc(var(--_h) - 2 * var(--_pad));
+  padding: 0 var(--ui-space-3);
+  border: 0;
+  border-radius: var(--_item-radius);
+  corner-shape: var(--ui-control-corner-shape);
+  background: transparent;
+  color: var(--ui-segmented-control-item-fg);
+  font: inherit;
+  font-size: var(--ui-text-sm);
+  font-weight: var(--ui-weight-medium);
+  line-height: 1;
+  letter-spacing: var(--ui-label-tracking, var(--ui-segmented-control-item-tracking));
+  text-transform: var(--ui-label-transform, inherit);
+  white-space: nowrap;
+  cursor: pointer;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    color var(--ui-duration-fast) var(--ui-ease),
+    scale var(--ui-duration) var(--ui-ease);
+}
+
+.ui-toggle-group[data-orientation='vertical'] .ui-toggle-group__item {
+  justify-content: flex-start;
+}
+
+.ui-toggle-group[data-size='sm'] .ui-toggle-group__item {
+  padding: 0 10px;
+}
+
+.ui-toggle-group[data-size='lg'] .ui-toggle-group__item {
+  padding: 0 var(--ui-space-4);
+  font-size: var(--ui-text-md);
+}
+
+.ui-toggle-group__item[data-icon-only] {
+  padding: 0;
+}
+
+/* The pressed fill: fades in and settles from a slightly smaller size, so pressing reads as a key going
+   down, not a colour switch. Painted under the label (z-index -1 inside the button's stacking context). */
+.ui-toggle-group__item::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  corner-shape: inherit;
+  background: var(--ui-segmented-control-thumb-bg);
+  box-shadow: var(--ui-segmented-control-thumb-shadow);
+  opacity: 0;
+  scale: 0.94;
+  pointer-events: none;
+  transition:
+    opacity var(--ui-duration) var(--ui-ease),
+    scale calc(var(--ui-duration-slow) * 1.36) var(--ui-spring-snappy);
+}
+
+.ui-toggle-group__item[data-state='on']::before {
+  opacity: 1;
+  scale: 1;
+}
+
+/* With the sliding indicator, the indicator is the fill (each button's own fill shows only before it is
+   measured: server markup, the first paint). */
+.ui-toggle-group[data-indicator-ready] .ui-toggle-group__item::before {
+  opacity: 0;
+  transition: none;
+}
+
+.ui-toggle-group__item:hover:not(:disabled),
+.ui-toggle-group__item[data-state='on'] {
+  color: var(--ui-fg);
+}
+
+.ui-toggle-group__item:active:not(:disabled) {
+  scale: 0.97;
+  transition:
+    color var(--ui-duration-fast) var(--ui-ease),
+    scale var(--ui-duration-fast) var(--ui-ease);
+}
+
+.ui-toggle-group__item:disabled {
+  color: var(--ui-fg-disabled);
+  cursor: not-allowed;
+}
+
+.ui-toggle-group__item:focus-visible {
+  box-shadow: var(--ui-focus-ring);
+}
+
+.ui-toggle-group__viewport[data-overflow='true'] > .ui-toggle-group__item:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--ui-focus-color);
+}
+
+/* Spaced apart: each button has its own edge; the pressed one takes the accent's soft tint. */
+.ui-toggle-group:not([data-attached]) .ui-toggle-group__item {
+  min-width: var(--_h);
+  min-height: var(--_h);
+  border-radius: var(--ui-radius-button);
+  background: var(--ui-bg);
+  box-shadow: inset 0 0 0 var(--ui-border-width, 1px) var(--ui-border-field);
+  color: var(--ui-fg-muted);
+}
+
+.ui-toggle-group:not([data-attached]) .ui-toggle-group__item::before {
+  background: var(--ui-accent-soft);
+  box-shadow: inset 0 0 0 var(--ui-border-width, 1px) color-mix(in srgb, var(--ui-accent) 55%, transparent);
+}
+
+.ui-toggle-group:not([data-attached]) .ui-toggle-group__item[data-state='on'] {
+  color: var(--ui-accent-text);
+}
+
+.ui-toggle-group:not([data-attached]) .ui-toggle-group__item:hover:not(:disabled, [data-state='on']) {
+  background: var(--ui-hover);
+  color: var(--ui-fg);
+}
+
+.ui-toggle-group:not([data-attached]) .ui-toggle-group__item:focus-visible {
+  box-shadow:
+    inset 0 0 0 var(--ui-border-width, 1px) var(--ui-border-field),
+    var(--ui-focus-ring);
+}
+
+.ui-toggle-group__icon {
+  display: inline-flex;
+}
+
+.ui-toggle-group[data-size='lg'] .ui-toggle-group__icon .ui-icon {
+  width: var(--ui-icon-lg);
+  height: var(--ui-icon-lg);
+}
+
+.ui-toggle-group__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  unicode-bidi: plaintext;
+}
+
+/* One fill for `single` with `indicator`: it slides to the pressed button on the snappy spring (position by
+   transform, its size on the same spring, so both edges arrive together) and fades where it is when the
+   button is released. */
+.ui-toggle-group__indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: var(--_item-radius);
+  corner-shape: var(--ui-control-corner-shape);
+  background: var(--ui-segmented-control-thumb-bg);
+  box-shadow: var(--ui-segmented-control-thumb-shadow);
+  -webkit-backdrop-filter: var(--ui-blur);
+  backdrop-filter: var(--ui-blur);
+  pointer-events: none;
+  transition:
+    transform calc(var(--ui-duration-slow) * 1.36) var(--ui-spring-snappy),
+    width calc(var(--ui-duration-slow) * 1.36) var(--ui-spring-snappy),
+    height calc(var(--ui-duration-slow) * 1.36) var(--ui-spring-snappy),
+    opacity var(--ui-duration-fast) var(--ui-ease);
+}
+
+.ui-toggle-group:not([data-attached]) .ui-toggle-group__indicator {
+  border-radius: var(--ui-radius-button);
+  background: var(--ui-accent-soft);
+  box-shadow: inset 0 0 0 var(--ui-border-width, 1px) color-mix(in srgb, var(--ui-accent) 55%, transparent);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* Spaced-apart buttons paint their own background; the indicator then sits above it, under the label. */
+.ui-toggle-group:not([data-attached])[data-indicator-ready] .ui-toggle-group__item {
+  background: transparent;
+}
+
+.ui-toggle-group__indicator[data-hidden] {
+  opacity: 0;
+}
+
+/* Back from hidden, or a resize: it appears in place, only its opacity eases. */
+.ui-toggle-group__indicator[data-jump] {
+  transition: opacity var(--ui-duration-fast) var(--ui-ease);
+}
+
+/* Reduced motion: the fill only fades; nothing scales or slides. */
+@media (prefers-reduced-motion: reduce) {
+  .ui-toggle-group__item:active:not(:disabled) {
+    scale: none;
+  }
+
+  .ui-toggle-group__item::before {
+    scale: none;
+  }
+}
+
+[data-ui-motion='reduce'] .ui-toggle-group__item:active:not(:disabled),
+[data-ui-motion='reduce'] .ui-toggle-group__item::before {
+  scale: none;
+}
+
+@media (forced-colors: active) {
+  .ui-toggle-group[data-attached] {
+    border: 1px solid CanvasText;
+  }
+
+  .ui-toggle-group__item {
+    forced-color-adjust: none;
+    color: ButtonText;
+  }
+
+  .ui-toggle-group__item::before,
+  .ui-toggle-group__indicator {
+    background: Highlight;
+  }
+
+  .ui-toggle-group__item[data-state='on'] {
+    color: HighlightText;
+  }
+
+  .ui-toggle-group__item:disabled {
+    color: GrayText;
+  }
+}
